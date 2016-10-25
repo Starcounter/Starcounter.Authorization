@@ -13,8 +13,8 @@ namespace Starcounter.Authorization.Tests.Core
         private AuthorizationEnforcement _authorizationEnforcement;
         private Mock<IAuthorizationRulesSource> _rulesMock;
         private Mock<IAuthenticationBackend> _authenticationMock;
-        private readonly List<Func<IEnumerable<Claim>, FakePermission, bool>> _rules = new List<Func<IEnumerable<Claim>, FakePermission, bool>>();
-        private readonly List<Claim> _claims = new List<Claim>();
+        private List<Func<IEnumerable<Claim>, FakePermission, bool>> _rules;
+        private List<Claim> _claims;
 
         [SetUp]
         public void SetUp()
@@ -25,6 +25,8 @@ namespace Starcounter.Authorization.Tests.Core
 
             _rulesMock.Setup(source => source.Get<FakePermission>()).Returns(() => _rules);
             _authenticationMock.Setup(backend => backend.GetCurrentClaims()).Returns(() => _claims);
+            _rules = new List<Func<IEnumerable<Claim>, FakePermission, bool>>();
+            _claims = new List<Claim>();
         }
 
         [Test]
