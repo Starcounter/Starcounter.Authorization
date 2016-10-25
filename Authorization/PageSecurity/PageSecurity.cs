@@ -297,23 +297,32 @@ namespace Starcounter.Authorization.PageSecurity
             //            };
         }
 
-        private static Action<TApp> DataCheckTemplate<TApp, TPermission, TData>() where TPermission : Permission<TData> where TApp : Json
+        private static Action<TApp> DataCheckTemplate<TApp, TPermission, TData>() where TPermission : Permission, new() where TApp : Json
         {
-            return app => {
-                if (!AuthorizationRules.Check<TPermission, TData>((TData)app.Data))
-                {
-                    throw new UnauthorizedAccessException();
-                }
-            };
+            var permissionCtor = typeof(TPermission).GetConstructor(new[] {typeof(TData)});
+            if (permissionCtor == null)
+            {
+                throw new Exception($"Could not find suitable ctor for type {typeof(TPermission)}. Make sure it has ctor that accepts {typeof(TData)} as argument");
+            }
+            var appParameter = Expression.Parameter(typeof(TApp), "app");
+            var createPermission = Expression.New(permissionCtor, Expression.MakeMemberAccess(appParameter, typeof(TApp).GetProperty("Data")));
+            var authEnforcement = Expression.MakeMemberAccess(null, typeof(AuthorizationStatic).GetProperty(nameof(AuthorizationStatic.Enforcement), BindingFlags.Static));
+            var tryPermissionOrThrow = typeof(AuthorizationEnforcement).GetMethod(nameof(AuthorizationEnforcement.TryPermissionOrThrow));
+
+
+            return
+                Expression.Lambda<Action<TApp>>(
+                    Expression.Call(authEnforcement, tryPermissionOrThrow, createPermission),
+                    appParameter).Compile();
+//            return app => {
+//                AuthorizationStatic.Enforcement.TryPermissionOrThrow(new TPermission((TData)app.Data));
+//            };
         }
 
-        private static Action<TApp> NonDataCheckTemplate<TApp, TPermission>() where TPermission : Permission<Unit> where TApp : Json
+        private static Action<TApp> NonDataCheckTemplate<TApp, TPermission>() where TPermission : Permission, new() where TApp : Json
         {
             return app => {
-                if (!AuthorizationRules.Check<TPermission>())
-                {
-                    throw new UnauthorizedAccessException();
-                }
+                AuthorizationStatic.Enforcement.TryPermissionOrThrow(new TPermission());
             };
         }
     }
