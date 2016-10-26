@@ -314,9 +314,10 @@ namespace Starcounter.Authorization.PageSecurity
                 Expression.Lambda<Action<TApp>>(
                     Expression.Call(authEnforcement, tryPermissionOrThrow, createPermission),
                     appParameter).Compile();
-//            return app => {
-//                AuthorizationStatic.Enforcement.TryPermissionOrThrow(new TPermission((TData)app.Data));
-//            };
+            // generated code should look like this:
+            // return app => {
+            //    AuthorizationStatic.Enforcement.TryPermissionOrThrow(new TPermission((TData)app.Data));
+            // };
         }
 
         private static Action<TApp> NonDataCheckTemplate<TApp, TPermission>() where TPermission : Permission, new() where TApp : Json
