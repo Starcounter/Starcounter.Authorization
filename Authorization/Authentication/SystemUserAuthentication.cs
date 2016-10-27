@@ -5,7 +5,7 @@ using Starcounter.Authorization.Core;
 
 namespace Starcounter.Authorization.Authentication
 {
-    class SystemUserAuthentication : IAuthenticationBackend
+    public class SystemUserAuthentication : IAuthenticationBackend
     {
         public IEnumerable<Claim> GetCurrentClaims()
         {
