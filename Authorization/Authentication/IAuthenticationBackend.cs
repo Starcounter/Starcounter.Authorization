@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using Starcounter.Authorization.Core;
 
-namespace Starcounter.Authorization.Core
+namespace Starcounter.Authorization.Authentication
 {
     //    // AuthorizationEnforcement?
     //    public static partial class AuthorizationRules

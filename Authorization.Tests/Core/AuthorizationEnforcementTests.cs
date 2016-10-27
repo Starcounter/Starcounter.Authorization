@@ -4,6 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
+using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Core;
 
 namespace Starcounter.Authorization.Tests.Core
