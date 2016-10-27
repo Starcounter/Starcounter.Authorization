@@ -2,6 +2,11 @@
 
 namespace Starcounter.Authorization.PageLoader
 {
+    public interface ISecurePage
+    {
+        Json Init(params object[] args);
+    }
+
     public class PageLoader
     {
         static PageLoader()
