@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Starcounter.Authorization</RootNamespace>
     <AssemblyName>Starcounter.Authorization</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -60,16 +61,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\Authentication.cs" />
+    <Compile Include="Authentication\Authentication.cs" />
+    <Compile Include="Authentication\SystemUserAuthentication.cs" />
     <Compile Include="Core\Rules\AuthorizationConfiguratorExtensions.cs" />
     <Compile Include="Core\AuthorizationEnforcement.cs" />
     <Compile Include="Core\Rules\AuthorizationRules.cs" />
     <Compile Include="Core\AuthorizationStatic.cs" />
-    <Compile Include="Core\IAuthenticationBackend.cs" />
+    <Compile Include="Authentication\IAuthenticationBackend.cs" />
     <Compile Include="Core\Rules\IAuthorizationConfigurator.cs" />
     <Compile Include="Core\Rules\IAuthorizationRulesSource.cs" />
     <Compile Include="Core\Misc.cs" />
     <Compile Include="Core\PersonClaim.cs" />
+    <Compile Include="Core\SystemUserClaim.cs" />
     <Compile Include="Examples\OrganizationKiller.cs" />
     <Compile Include="Core\RolePersonGroup.cs" />
     <Compile Include="Examples\SetupExample.cs" />

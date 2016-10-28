@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Starcounter.Authorization.Authentication;
 
 namespace Starcounter.Authorization.Core
 {
