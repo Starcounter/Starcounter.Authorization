@@ -1,0 +1,66 @@
+﻿<link rel="import" href="/sys/polymer/polymer.html">
+
+<style>
+    .people-group-member-autocomplete {
+        display: block;
+        background-color: white;
+        box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.37);
+        list-style-type: none;
+        padding: 0;
+        position: absolute;
+        min-width: 250px;
+        line-height: 32px;
+        z-index: 10;
+    }
+
+    .people-group-member-autocomplete__item {
+        padding: 0;
+        cursor: pointer;
+    }
+
+        .people-group-member-autocomplete__item:hover {
+            background-color: #00a7d0;
+            color: #ffffff;
+        }
+
+    .people-group-member-autocomplete__item-text {
+        padding: 0 20px;
+    }
+</style>
+<template>
+    <template is="dom-bind">
+        <ul>
+            <template is="dom-repeat" items="{{model.CurrentMembers}}">
+                <li><span>{{item.Name}}</span><button value="{{item.Remove$::click}}" onclick="++this.value">X</button></li>
+            </template>
+        </ul>
+        <input type="text" class="form-control" value="{{model.Query$::input}}" placeholder="Search to add..."/>
+        <ul class="people-group-member-autocomplete">
+            <template is="dom-repeat" items="{{model.Results}}">
+                <li class="people-group-member-autocomplete__item" on-mousedown="selectResult" item="{{item}}">
+                    <div class="people-group-member-autocomplete__item-text">
+                        <span class="glyphicon glyphicon-user"></span>
+                        <span>{{item.Name}}</span>
+                    </div>
+                </li>
+            </template>
+        </ul>
+    </template>
+    <script>
+        (function () {
+            var script = document._currentScript || document.currentScript;
+            var template = script.previousElementSibling;
+
+            template.selectResult = function (ev) {
+                var key = ev.currentTarget.item.Key;
+                for (var item in template.model.Results) {
+                    var selectedResult = template.model.Results[item];
+                    if (selectedResult.Key == key) {
+                        ++selectedResult.Select$;
+                        break;
+                    }
+                }
+            };
+        })();
+    </script>
+</template>
