@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Starcounter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
       <Private>False</Private>
       <hintPath>$(StarcounterBin)\Public Assemblies\Starcounter.dll</hintPath>
@@ -73,15 +77,19 @@
     <Compile Include="Core\Misc.cs" />
     <Compile Include="Core\PersonClaim.cs" />
     <Compile Include="Core\SystemUserClaim.cs" />
+    <Compile Include="Database\PermissionToken.cs" />
+    <Compile Include="Database\PermissionTokenSerializer.cs" />
     <Compile Include="Examples\OrganizationKiller.cs" />
     <Compile Include="Core\RolePersonGroup.cs" />
     <Compile Include="Examples\SetupExample.cs" />
     <Compile Include="PageLoader\PageLoader.cs" />
     <Compile Include="PageSecurity\PageSecurity.cs" />
+    <Compile Include="Database\PermissionSomebodyGroup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Attributes\RequirePermissionDataAttribute.cs" />
     <Compile Include="Attributes\RequirePermissionAttribute.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
