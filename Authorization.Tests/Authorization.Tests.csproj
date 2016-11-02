@@ -50,6 +50,19 @@
       <HintPath>..\packages\NUnit.3.5.0\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Starcounter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
+      <Private>True</Private>
+      <hintPath>$(StarcounterBin)\Public Assemblies\Starcounter.dll</hintPath>
+    </Reference>
+    <Reference Include="Starcounter.Internal, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
+      <Private>True</Private>
+      <hintPath>$(StarcounterBin)\Public Assemblies\Starcounter.Internal.dll</hintPath>
+    </Reference>
+    <!-- This is dependency of Starcounter.Internal that would prevent the tests from loading if missing -->
+    <Reference Include="FasterThanJson, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
+      <Private>True</Private>
+      <hintPath>$(StarcounterBin)\FasterThanJson.dll</hintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -63,6 +76,7 @@
     <Compile Include="Core\AuthorizationEnforcementTests.cs" />
     <Compile Include="Core\Rules\AuthorizationConfiguratorExtensionsTests.cs" />
     <Compile Include="Core\Rules\AuthorizationRulesTests.cs" />
+    <Compile Include="Database\PermissionTokenSerializerTests.cs" />
     <Compile Include="FakeClaim.cs" />
     <Compile Include="FakePermission.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
