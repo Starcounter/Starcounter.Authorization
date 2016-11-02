@@ -18,6 +18,24 @@ namespace Starcounter.Authorization.PageSecurity
             AddHandlers(pageType, allHandlersTasks);
         }
 
+        public static bool CheckClass(Type pageType, IAuthorizationEnforcement authorization)
+        {
+            var requirePermissionAttribute = pageType.GetCustomAttribute<RequirePermissionAttribute>();
+            if (requirePermissionAttribute == null)
+            {
+                return true;
+            }
+
+            var permissionType = requirePermissionAttribute.RequiredPermission;
+
+            return (bool) InvokePrivateGenericMethod(nameof(CheckPermission), new[] {permissionType}, authorization);
+        }
+
+        private static bool CheckPermission<T>(IAuthorizationEnforcement authorizationEnforcement) where T : Permission, new()
+        {
+            return authorizationEnforcement.CheckPermission(new T());
+        }
+
         private static void AddHandlers(Type pageType, IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks)
         {
             foreach (var tuple in allHandlersTasks)
@@ -307,12 +325,11 @@ namespace Starcounter.Authorization.PageSecurity
             var appParameter = Expression.Parameter(typeof(TApp), "app");
             var createPermission = Expression.New(permissionCtor, Expression.MakeMemberAccess(appParameter, typeof(TApp).GetProperty("Data")));
             var authEnforcement = Expression.MakeMemberAccess(null, typeof(AuthorizationStatic).GetProperty(nameof(AuthorizationStatic.Enforcement), BindingFlags.Static));
-            var tryPermissionOrThrow = typeof(AuthorizationEnforcement).GetMethod(nameof(AuthorizationEnforcement.TryPermissionOrThrow));
-
+            var tryPermissionOrThrow = typeof(AuthorizationEnforcementExtensions).GetMethod(nameof(AuthorizationEnforcementExtensions.TryPermissionOrThrow));
 
             return
                 Expression.Lambda<Action<TApp>>(
-                    Expression.Call(authEnforcement, tryPermissionOrThrow, createPermission),
+                    Expression.Call(null, tryPermissionOrThrow, authEnforcement, createPermission),
                     appParameter).Compile();
             // generated code should look like this:
             // return app => {

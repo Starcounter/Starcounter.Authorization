@@ -33,7 +33,7 @@ namespace Starcounter.Authorization.Tests.Core
         [Test]
         public void ShouldRejectWhenThereAreNoRulesForPermission()
         {
-            _authorizationEnforcement.TryPermission(new FakePermission()).Should().BeFalse();
+            _authorizationEnforcement.CheckPermission(new FakePermission()).Should().BeFalse();
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace Starcounter.Authorization.Tests.Core
             _rules.Add(mock.Object);
             var checkedPermission = new FakePermission();
 
-            _authorizationEnforcement.TryPermission(checkedPermission).Should().BeTrue();
+            _authorizationEnforcement.CheckPermission(checkedPermission).Should().BeTrue();
             mock.Verify(func => func(_claims, checkedPermission));
         }
     }

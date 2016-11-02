@@ -3,7 +3,7 @@ using Starcounter.Authorization.Authentication;
 
 namespace Starcounter.Authorization.Core
 {
-    public class AuthorizationEnforcement
+    public class AuthorizationEnforcement : IAuthorizationEnforcement
     {
         private readonly IAuthorizationRulesSource _rules;
         private readonly IAuthenticationBackend _authentication;
@@ -14,20 +14,12 @@ namespace Starcounter.Authorization.Core
             _authentication = authentication;
         }
 
-        public bool TryPermission<TPermission>(TPermission permission) where TPermission : Permission
+        public bool CheckPermission<TPermission>(TPermission permission) where TPermission : Permission
         {
             var claims = _authentication.GetCurrentClaims().ToList();
 
             return _rules.Get<TPermission>()
                 .Any(func => func(claims, permission));
-        }
-
-        public void TryPermissionOrThrow<TPermission>(TPermission permission) where TPermission : Permission
-        {
-            if (!TryPermission(permission))
-            {
-                throw new UnauthorizedException();
-            }
         }
     }
 }

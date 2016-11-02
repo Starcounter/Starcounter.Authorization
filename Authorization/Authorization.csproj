@@ -67,6 +67,8 @@
   <ItemGroup>
     <Compile Include="Authentication\Authentication.cs" />
     <Compile Include="Authentication\SystemUserAuthentication.cs" />
+    <Compile Include="Core\AuthorizationEnforcementExtensions.cs" />
+    <Compile Include="Core\IAuthorizationEnforcement.cs" />
     <Compile Include="Core\Rules\AuthorizationConfiguratorExtensions.cs" />
     <Compile Include="Core\AuthorizationEnforcement.cs" />
     <Compile Include="Core\Rules\AuthorizationRules.cs" />
@@ -82,7 +84,9 @@
     <Compile Include="Examples\OrganizationKiller.cs" />
     <Compile Include="Core\RolePersonGroup.cs" />
     <Compile Include="Examples\SetupExample.cs" />
-    <Compile Include="PageLoader\PageLoader.cs" />
+    <Compile Include="Routing\IPageMiddleware.cs" />
+    <Compile Include="Routing\Middleware\LambdaMiddleware.cs" />
+    <Compile Include="Routing\Middleware\DbScopeMiddleware.cs" />
     <Compile Include="PageSecurity\PageSecurity.cs" />
     <Compile Include="Database\PermissionSomebodyGroup.cs" />
     <Compile Include="Partial\PermissionSelectionPartial.json.cs">
@@ -91,6 +95,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Attributes\RequirePermissionDataAttribute.cs" />
     <Compile Include="Attributes\RequirePermissionAttribute.cs" />
+    <Compile Include="Routing\Router.cs" />
+    <Compile Include="Routing\RoutingInfo.cs" />
+    <Compile Include="Routing\Middleware\SecurityMiddleware.cs" />
+    <Compile Include="Routing\Middleware\UseDbScopeAttribute.cs" />
+    <Compile Include="Routing\UrlAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <TypedJSON Include="Partial\PermissionSelectionPartial.json">
@@ -100,6 +109,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Partial\PermissionSelectionPartial.html" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(StarcounterBin)\Starcounter.MsBuild.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
