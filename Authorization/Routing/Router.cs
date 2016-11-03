@@ -33,14 +33,14 @@ namespace Starcounter.Authorization.Routing
             switch (argumentsNo)
             {
                 case 0:
-                    Handle.GET(url, (Request request) => Run<T>(new RoutingInfo {Request = request, SelectedPageType = typeof(T)}));
+                    Handle.GET(url, (Request request) => RunResponse<T>(request));
                     break;
                 case 1:
-                    Handle.GET<string, Request>(url, (arg, request) => Run<T>(new RoutingInfo { Request = request, SelectedPageType = typeof(T) }, arg));
+                    Handle.GET<string, Request>(url, (arg, request) => RunResponse<T>(request, arg));
                     break;
                 case 2:
                     Handle.GET<string, string, Request>(url,
-                        (arg1, arg2, request) => Run<T>(new RoutingInfo { Request = request, SelectedPageType = typeof(T) }, arg1, arg2));
+                        (arg1, arg2, request) => RunResponse<T>(request, arg1, arg2));
                     break;
                 default:
                     throw new NotSupportedException("Not supported: more than 2 parameters in URL");
@@ -52,9 +52,10 @@ namespace Starcounter.Authorization.Routing
             _middleware.Insert(0, middleware);
         }
 
-        private Response Run<T>(RoutingInfo routingInfo, params string[] arguments)
+        private Response RunResponse<T>(Request request, params string[] arguments)
         {
-            return RunWithMiddleware(routingInfo,
+            return RunWithMiddleware(
+                new RoutingInfo { Request = request, SelectedPageType = typeof(T), Arguments = arguments },
                 _middleware.Concat(new [] { new TerminalMiddleware(() => _pageCreator(typeof(T), arguments)) }));
         }
 

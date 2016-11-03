@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Starcounter.Authorization.Authentication;
+using Starcounter.Authorization.Core.Rules;
 
 namespace Starcounter.Authorization.Core
 {
@@ -18,8 +20,10 @@ namespace Starcounter.Authorization.Core
         {
             var claims = _authentication.GetCurrentClaims().ToList();
 
-            return _rules.Get<TPermission>()
-                .Any(func => func(claims, permission));
+            var enablingRule = _rules.Get<TPermission>()
+                .FirstOrDefault(rule => rule.Evaluate(claims, this, permission));
+            Console.WriteLine($"Permission '{permission}' granted by rule '{enablingRule}'");
+            return enablingRule != null;
         }
     }
 }

@@ -6,5 +6,6 @@ namespace Starcounter.Authorization.Routing
     {
         public Type SelectedPageType { get; set; }
         public Request Request { get; set; }
+        public string[] Arguments { get; set; }
     }
 }

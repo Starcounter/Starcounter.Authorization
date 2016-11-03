@@ -6,6 +6,7 @@ using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Core;
+using Starcounter.Authorization.Core.Rules;
 
 namespace Starcounter.Authorization.Tests.Core
 {
@@ -14,7 +15,7 @@ namespace Starcounter.Authorization.Tests.Core
         private AuthorizationEnforcement _authorizationEnforcement;
         private Mock<IAuthorizationRulesSource> _rulesMock;
         private Mock<IAuthenticationBackend> _authenticationMock;
-        private List<Func<IEnumerable<Claim>, FakePermission, bool>> _rules;
+        private List<IAuthorizationRule<FakePermission>> _rules;
         private List<Claim> _claims;
 
         [SetUp]
@@ -26,7 +27,7 @@ namespace Starcounter.Authorization.Tests.Core
 
             _rulesMock.Setup(source => source.Get<FakePermission>()).Returns(() => _rules);
             _authenticationMock.Setup(backend => backend.GetCurrentClaims()).Returns(() => _claims);
-            _rules = new List<Func<IEnumerable<Claim>, FakePermission, bool>>();
+            _rules = new List<IAuthorizationRule<FakePermission>>();
             _claims = new List<Claim>();
         }
 
@@ -39,14 +40,14 @@ namespace Starcounter.Authorization.Tests.Core
         [Test]
         public void ShouldGrantWhenThereIsARuleAndClaimsPassTheTest()
         {
-            var mock = new Mock<Func<IEnumerable<Claim>, FakePermission, bool>>();
-            mock.Setup(func => func(It.IsAny<IEnumerable<Claim>>(), It.IsAny<FakePermission>()))
+            var ruleMock = new Mock<IAuthorizationRule<FakePermission>>();
+            ruleMock.Setup(rule => rule.Evaluate(It.IsAny<IEnumerable<Claim>>(), It.IsAny<IAuthorizationEnforcement>(), It.IsAny<FakePermission>()))
                 .Returns(true);
-            _rules.Add(mock.Object);
+            _rules.Add(ruleMock.Object);
             var checkedPermission = new FakePermission();
 
             _authorizationEnforcement.CheckPermission(checkedPermission).Should().BeTrue();
-            mock.Verify(func => func(_claims, checkedPermission));
+            ruleMock.Verify(rule => rule.Evaluate(_claims, _authorizationEnforcement, checkedPermission));
         }
     }
 }
