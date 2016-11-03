@@ -14,7 +14,8 @@ namespace Starcounter.Authorization.Partial
 
         public static void RegisterResources()
         {
-            Starcounter.Handle.GET("/Authorization/viewmodels/PermissionSelectionPartial.html", () => {
+            Starcounter.Handle.GET("/Authorization/viewmodels/PermissionSelectionPartial.html", () =>
+            {
                 var assembly = typeof(PermissionSelectionPartial).Assembly;
                 return new Response
                 {
@@ -25,7 +26,8 @@ namespace Starcounter.Authorization.Partial
             });
         }
 
-        public static PermissionSelectionPartial Create<TPermission>(TPermission permission) where TPermission : Permission
+        public static PermissionSelectionPartial Create<TPermission>(TPermission permission)
+            where TPermission : Permission
         {
             var permissionSelectionPartial = new PermissionSelectionPartial();
             permissionSelectionPartial.Init(permission);
@@ -59,14 +61,15 @@ namespace Starcounter.Authorization.Partial
 
         private void AssociateMemberWithPermission(GroupResultItem item)
         {
-            new PermissionSomebodyGroup()
+            new PermissionSomebodyGroup
             {
                 Permission = _getOrCreateToken(),
                 Group = item.Data
             };
             Transaction.Commit();
-            RefreshSearchResultList(Query);
             ReloadMembers();
+            Query = string.Empty;
+            RefreshSearchResultList(Query);
         }
 
         private void RemoveAssociation(PermissionSomebodyGroup psg)
@@ -112,10 +115,11 @@ namespace Starcounter.Authorization.Partial
         private IEnumerable<GroupResultItem> SearchForSomebodyGroups(string nameToLookFor)
         {
             var currentGroups = CurrentMembers.Select(memberItem => memberItem.Data.Group).ToList();
-            return Db.SQL<SomebodyGroup>($"SELECT s FROM {typeof(SomebodyGroup).FullName} s WHERE s.{nameof(SomebodyGroup.Name)} LIKE ?",
-                    $"%{nameToLookFor.ToLowerInvariant()}%")
+            return Db.SQL<SomebodyGroup>(
+                $"SELECT s FROM {typeof(SomebodyGroup).FullName} s WHERE s.{nameof(SomebodyGroup.Name)} LIKE ?",
+                $"%{nameToLookFor.ToLowerInvariant()}%")
                 .Except(currentGroups)
-                .Select(item => new GroupResultItem { Key = item.Key, Data = item });
+                .Select(item => new GroupResultItem {Key = item.Key, Data = item});
         }
 
         [PermissionSelectionPartial_json.CurrentMembers]

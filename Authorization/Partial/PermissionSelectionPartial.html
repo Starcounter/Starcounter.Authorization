@@ -2,56 +2,107 @@
 
 <style>
     .people-group-member-autocomplete {
-        display: block;
         background-color: white;
         box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.37);
+        display: block;
+        line-height: 32px;
         list-style-type: none;
+        min-width: 250px;
         padding: 0;
         position: absolute;
-        min-width: 250px;
-        line-height: 32px;
         z-index: 10;
     }
 
     .people-group-member-autocomplete__item {
-        padding: 0;
         cursor: pointer;
+        padding: 0;
     }
 
-        .people-group-member-autocomplete__item:hover {
-            background-color: #00a7d0;
-            color: #ffffff;
-        }
+    .people-group-member-autocomplete__item:hover {
+        background-color: #2196F3;
+        color: #ffffff;
+    }
 
     .people-group-member-autocomplete__item-text {
-        padding: 0 20px;
+        font-size: 12px;
+        line-height: 26px;
+        padding: 0 8px;
+    }
+
+    .people-group-member-autocomplete-list {
+        display: inline-block;
+        list-style-type: none;
+        margin-bottom: 0;
+        padding-left: 0;
+    }
+
+    .people-group-member-autocomplete-list__item {
+        display: inline-block;
+        padding: 2px 0;
+        position: relative;
+    }
+
+    .people-group-member-autocomplete-list__item-input {
+        padding-bottom: 3px;
+        top: 2px;
+    }
+
+    .people-group-member-autocomplete-list__item-btn * { pointer-events: none; }
+
+    .people-group-member-autocomplete-list__item-remove-icon { font-size: 10px; }
+
+    .people-group-member-autocomplete-input {
+        border: none;
+        font-size: 14px;
+        padding: 0px;
+        padding-bottom: 3px;
+    }
+
+    .people-group-member-autocomplete-input:focus { outline: none; }
+
+    .people-group-member-autocomplete-container {
+        background: white;
+        cursor: text;
+        padding: 5px;
+        width: 100%;
+        display: inline-block;
     }
 </style>
 <template>
     <template is="dom-bind">
-        <ul>
-            <template is="dom-repeat" items="{{model.CurrentMembers}}">
-                <li><span>{{item.Name}}</span><button value="{{item.Remove$::click}}" onclick="++this.value">X</button></li>
-            </template>
-        </ul>
-        <input type="text" class="form-control" value="{{model.Query$::input}}" placeholder="Search to add..."/>
-        <ul class="people-group-member-autocomplete">
-            <template is="dom-repeat" items="{{model.Results}}">
-                <li class="people-group-member-autocomplete__item" on-mousedown="selectResult" item="{{item}}">
-                    <div class="people-group-member-autocomplete__item-text">
-                        <span class="glyphicon glyphicon-user"></span>
-                        <span>{{item.Name}}</span>
-                    </div>
+        <div class="people-group-member-autocomplete-container" on-click="selectSearchInput">
+            <ul class="people-group-member-autocomplete-list">
+                <template is="dom-repeat" items="{{model.CurrentMembers}}">
+                    <li class="people-group-member-autocomplete-list__item">
+                        <button type="button" class="btn btn-default btn-xs people-group-member-autocomplete-list__item-btn" value="{{item.Remove$::click}}" onclick="++this.value">
+                            <span>{{item.Name}} </span>
+                            <span class="glyphicon glyphicon-remove people-group-member-autocomplete-list__item-remove-icon" aria-hidden="true"></span>
+                        </button>
+                    </li>
+                </template>
+                <li class="people-group-member-autocomplete-list__item people-group-member-autocomplete-list__item-input">
+                    <input type="text" class="people-group-member-autocomplete-input" value="{{model.Query$::input}}" placeholder="Search to add..."/>
+                    <ul class="people-group-member-autocomplete">
+                        <template is="dom-repeat" items="{{model.Results}}">
+                            <li class="people-group-member-autocomplete__item" on-click="selectResult" item="{{item}}">
+                                <div class="people-group-member-autocomplete__item-text">
+                                    <span class="glyphicon glyphicon-user"></span>
+                                    <span>{{item.Name}}</span>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
                 </li>
-            </template>
-        </ul>
+            </ul>
+
+        </div>
     </template>
     <script>
-        (function () {
+        (function() {
             var script = document._currentScript || document.currentScript;
             var template = script.previousElementSibling;
 
-            template.selectResult = function (ev) {
+            template.selectResult = function(ev) {
                 var key = ev.currentTarget.item.Key;
                 for (var item in template.model.Results) {
                     var selectedResult = template.model.Results[item];
@@ -60,6 +111,12 @@
                         break;
                     }
                 }
+
+                template.selectSearchInput();
+            };
+
+            template.selectSearchInput = function() {
+                document.querySelector('.people-group-member-autocomplete-input').focus();
             };
         })();
     </script>
