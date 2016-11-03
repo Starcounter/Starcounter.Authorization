@@ -1,5 +1,4 @@
 ﻿using System;
-using Simplified.Ring1;
 
 namespace Starcounter.Authorization.Core
 {
@@ -13,11 +12,5 @@ namespace Starcounter.Authorization.Core
 
     public class UnauthorizedException : Exception
     {
-    }
-
-    [Database]
-    public class Role : Something
-    {
-
     }
 }

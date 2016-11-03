@@ -11,14 +11,81 @@ namespace Starcounter.Authorization.PageSecurity
 {
     public class PageSecurity
     {
-        public static void EnhanceClass(Type pageType)
+        private readonly IAuthorizationEnforcement _authorizationEnforcement;
+        private readonly List<Type> _enhancedTypes = new List<Type>();
+
+        public PageSecurity(IAuthorizationEnforcement authorizationEnforcement)
         {
+            _authorizationEnforcement = authorizationEnforcement;
+        }
+
+        public void EnhanceClass(Type pageType)
+        {
+            if (_enhancedTypes.Contains(pageType))
+            {
+                return;
+            }
+            _enhancedTypes.Add(pageType);
+
             var allHandlersTasks = CreateTaskList(pageType);
 
             AddHandlers(pageType, allHandlersTasks);
         }
 
-        private static void AddHandlers(Type pageType, IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks)
+        public bool CheckClass(Type pageType, object data)
+        {
+            return CheckNonData(pageType) && CheckData(pageType, data);
+        }
+
+        private bool CheckNonData(Type pageType)
+        {
+            var requirePermissionAttribute = pageType.GetCustomAttribute<RequirePermissionAttribute>();
+            if (requirePermissionAttribute == null)
+            {
+                return true;
+            }
+
+            var permissionType = requirePermissionAttribute.RequiredPermission;
+            object permission;
+            try
+            {
+                permission = permissionType.GetConstructor(new Type[0]).Invoke(new object[0]);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Could not find suitable ctor for permission {permissionType}. Make sure it has a default ctor", ex);
+            }
+
+            return (bool) InvokePrivateGenericMethod(nameof(CheckPermission), new[] {permissionType}, permission);
+        }
+
+        private bool CheckData(Type pageType, object data)
+        {
+            var requirePermissionAttribute = pageType.GetCustomAttribute<RequirePermissionDataAttribute>();
+            if (requirePermissionAttribute == null)
+            {
+                return true;
+            }
+
+            var permissionType = requirePermissionAttribute.RequiredPermission;
+            object permission;
+            try
+            {
+                permission = permissionType.GetConstructor(new []{data.GetType()}).Invoke(new[] {data});
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Could not find suitable ctor for permission {permissionType}. Make sure it has a ctor accepting {data.GetType()}", ex);
+            }
+            return (bool) InvokePrivateGenericMethod(nameof(CheckPermission), new[] {permissionType}, permission);
+        }
+
+        private bool CheckPermission<T>(T permission) where T : Permission
+        {
+            return _authorizationEnforcement.CheckPermission(permission);
+        }
+
+        private void AddHandlers(Type pageType, IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks)
         {
             foreach (var tuple in allHandlersTasks)
             {
@@ -59,7 +126,7 @@ namespace Starcounter.Authorization.PageSecurity
         /// </summary>
         /// <param name="pageType"></param>
         /// <returns></returns>
-        private static IEnumerable<Tuple<MethodInfo, Template, object>> CreateTaskList(Type pageType)
+        private IEnumerable<Tuple<MethodInfo, Template, object>> CreateTaskList(Type pageType)
         {
             // the name "DefaultTemplate" is defined inside each Page class, so couldn't be obtained with nameof
             TObject pageDefaultTemplate;
@@ -79,7 +146,7 @@ namespace Starcounter.Authorization.PageSecurity
 
             var pageProperties = pageDefaultTemplate.Properties;
             var existingHandlers = pageType
-                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Where(method => method.Name == "Handle")
                 .Select(method => Tuple.Create(method, FindPropertyByHandlerMethod(method, pageProperties)))
                 .Where(tuple => tuple.Item2 != null)
@@ -136,7 +203,7 @@ namespace Starcounter.Authorization.PageSecurity
         /// </summary>
         /// <param name="pageType"></param>
         /// <returns></returns>
-        private static object CreatePageCheck(Type pageType)
+        private object CreatePageCheck(Type pageType)
         {
             var pageRequireDataAttribute = pageType.GetCustomAttribute<RequirePermissionDataAttribute>();
             var pageRequireAttribute = pageType.GetCustomAttribute<RequirePermissionAttribute>();
@@ -157,7 +224,7 @@ namespace Starcounter.Authorization.PageSecurity
             return null;
         }
 
-        private static object CreateDataCheck(Type pageType, Type permissionType)
+        private object CreateDataCheck(Type pageType, Type permissionType)
         {
             Type dataType;
             try
@@ -178,7 +245,7 @@ namespace Starcounter.Authorization.PageSecurity
             }
         }
 
-        private static object CreateNonDataCheck(Type pageType, Type permissionType)
+        private object CreateNonDataCheck(Type pageType, Type permissionType)
         {
             try
             {
@@ -190,15 +257,15 @@ namespace Starcounter.Authorization.PageSecurity
             }
         }
 
-        private static object InvokePrivateGenericMethod(string name, Type[] typeParameter, params object[] arguments)
+        private object InvokePrivateGenericMethod(string name, Type[] typeParameter, params object[] arguments)
         {
             return typeof(PageSecurity)
-                .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static)
+                .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)
                 .MakeGenericMethod(typeParameter)
-                .Invoke(null, arguments);
+                .Invoke(this, arguments);
         }
 
-        private static Template FindPropertyByHandlerMethod(MethodInfo handler, PropertyList candidates)
+        private Template FindPropertyByHandlerMethod(MethodInfo handler, PropertyList candidates)
         {
             try
             {
@@ -211,7 +278,7 @@ namespace Starcounter.Authorization.PageSecurity
             }
         }
 
-        private static Func<Json, Property<T>, T, Input<T>> CreateMethodA<T>()
+        private Func<Json, Property<T>, T, Input<T>> CreateMethodA<T>()
         {
             return (Json pup, Property<T> prop, T value) => new Input<T>()
             {
@@ -227,13 +294,13 @@ namespace Starcounter.Authorization.PageSecurity
         /// <param name="pageType"></param>
         /// <param name="checkAction">This should be of type Action&lt;pageType&gt;</param>
         /// <returns></returns>
-        private static object CreateHandler(MethodInfo originalHandler, Type propertyType, Type pageType, object checkAction)
+        private object CreateHandler(MethodInfo originalHandler, Type propertyType, Type pageType, object checkAction)
         {
             return InvokePrivateGenericMethod(nameof(HandlerTemplate), new[] { propertyType, pageType }, originalHandler,
                 checkAction);
         }
 
-        private static object RecreateCreateInputEvent(MethodInfo originalHandler, Type propertyType)
+        private object RecreateCreateInputEvent(MethodInfo originalHandler, Type propertyType)
         {
             // Input.<PropertyName>
             var tInput = originalHandler.GetParameters().First().ParameterType;
@@ -256,7 +323,7 @@ namespace Starcounter.Authorization.PageSecurity
         /// <summary>
         /// This is a template used to generate CreateInputEvent method to pass to AddHandler
         /// </summary>
-        private static Func<Json, Property<T>, T, Input<T>> CreateInputEventTemplate<T, TInput, TApp, TTemplate>() where TInput : Input<TApp, TTemplate, T>, new() where TApp : Json where TTemplate : Property<T>
+        private Func<Json, Property<T>, T, Input<T>> CreateInputEventTemplate<T, TInput, TApp, TTemplate>() where TInput : Input<TApp, TTemplate, T>, new() where TApp : Json where TTemplate : Property<T>
         {
             return (json, property, value) => new TInput
             {
@@ -274,7 +341,7 @@ namespace Starcounter.Authorization.PageSecurity
         /// <param name="originalHandler">original Handler(Input.) method. Ignored if null</param>
         /// <param name="checkAction"></param>
         /// <returns></returns>
-        private static Action<Json, Input<T>> HandlerTemplate<T, TApp>(MethodInfo originalHandler, Action<TApp> checkAction) where TApp : Json
+        private Action<Json, Input<T>> HandlerTemplate<T, TApp>(MethodInfo originalHandler, Action<TApp> checkAction) where TApp : Json
         {
             var jsonParameter = Expression.Parameter(typeof(Json), "json");
             var inputParameter = Expression.Parameter(typeof(Input<T>), "input");
@@ -297,33 +364,35 @@ namespace Starcounter.Authorization.PageSecurity
             //            };
         }
 
-        private static Action<TApp> DataCheckTemplate<TApp, TPermission, TData>() where TPermission : Permission, new() where TApp : Json
+        private Action<TApp> DataCheckTemplate<TApp, TPermission, TData>()
+            where TPermission : Permission 
+            where TApp : Json
         {
-            var permissionCtor = typeof(TPermission).GetConstructor(new[] {typeof(TData)});
+            var dataType = typeof(TData);
+            var permissionCtor = typeof(TPermission).GetConstructor(new[] {dataType});
             if (permissionCtor == null)
             {
-                throw new Exception($"Could not find suitable ctor for type {typeof(TPermission)}. Make sure it has ctor that accepts {typeof(TData)} as argument");
+                throw new Exception($"Could not find suitable ctor for type {typeof(TPermission)}. Make sure it has ctor that accepts {dataType} as argument");
             }
             var appParameter = Expression.Parameter(typeof(TApp), "app");
-            var createPermission = Expression.New(permissionCtor, Expression.MakeMemberAccess(appParameter, typeof(TApp).GetProperty("Data")));
-            var authEnforcement = Expression.MakeMemberAccess(null, typeof(AuthorizationStatic).GetProperty(nameof(AuthorizationStatic.Enforcement), BindingFlags.Static));
-            var tryPermissionOrThrow = typeof(AuthorizationEnforcement).GetMethod(nameof(AuthorizationEnforcement.TryPermissionOrThrow));
-
-
-            return
-                Expression.Lambda<Action<TApp>>(
-                    Expression.Call(authEnforcement, tryPermissionOrThrow, createPermission),
+            var createPermission = Expression.New(permissionCtor, Expression.MakeMemberAccess(appParameter, typeof(TApp).GetProperty("Data", dataType)));
+            var authEnforcement = Expression.Constant(_authorizationEnforcement);
+            var tryPermissionOrThrowMethod = typeof(AuthorizationEnforcementExtensions)
+                .GetMethod(nameof(AuthorizationEnforcementExtensions.TryPermissionOrThrow))
+                .MakeGenericMethod(typeof(TPermission));
+            return Expression.Lambda<Action<TApp>>(
+                    Expression.Call(null, tryPermissionOrThrowMethod, authEnforcement, createPermission),
                     appParameter).Compile();
             // generated code should look like this:
             // return app => {
-            //    AuthorizationStatic.Enforcement.TryPermissionOrThrow(new TPermission((TData)app.Data));
+            //    _authorizationEnforcement.TryPermissionOrThrow(new TPermission((TData)app.Data));
             // };
         }
 
-        private static Action<TApp> NonDataCheckTemplate<TApp, TPermission>() where TPermission : Permission, new() where TApp : Json
+        private Action<TApp> NonDataCheckTemplate<TApp, TPermission>() where TPermission : Permission, new() where TApp : Json
         {
             return app => {
-                AuthorizationStatic.Enforcement.TryPermissionOrThrow(new TPermission());
+                _authorizationEnforcement.TryPermissionOrThrow(new TPermission());
             };
         }
     }

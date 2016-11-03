@@ -8,16 +8,16 @@ namespace Starcounter.Authorization.Core.Rules
     {
         private readonly Dictionary<Type, List<object>> _predicates = new Dictionary<Type, List<object>>();
 
-        public void AddRule<TPermission>(Func<IEnumerable<Claim>, TPermission, bool> predicate) where TPermission : Permission
+        public void AddRule<TPermission>(IAuthorizationRule<TPermission> rule) where TPermission : Permission
         {
             GetPredicatesForPermission<TPermission>()
-                .Add(predicate);
+                .Add(rule);
         }
 
-        public IEnumerable<Func<IEnumerable<Claim>, TPermission, bool>> Get<TPermission>() where TPermission:Permission
+        public IEnumerable<IAuthorizationRule<TPermission>> Get<TPermission>() where TPermission:Permission
         {
             return GetPredicatesForPermission<TPermission>()
-                .Cast<Func<IEnumerable<Claim>, TPermission, bool>>();
+                .Cast<IAuthorizationRule<TPermission>>();
         }
 
         private List<object> GetPredicatesForPermission<TPermission>()

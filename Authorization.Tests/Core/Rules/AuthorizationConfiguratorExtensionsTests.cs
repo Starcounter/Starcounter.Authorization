@@ -10,42 +10,20 @@ namespace Starcounter.Authorization.Tests.Core.Rules
 {
     public class AuthorizationConfiguratorExtensionsTests
     {
-        private AuthorizationRules _authorizationRules;
+        private Mock<IAuthorizationEnforcement> _authorizationEnforcementMock;
 
         [SetUp]
         public void Setup()
         {
-            _authorizationRules = new AuthorizationRules();
-        }
-
-        [Test]
-        public void RequireClaimShouldAddARuleThatWillAlwaysPassWhenClaimIsPresent()
-        {
-            _authorizationRules.RequireClaim<FakePermission, FakeClaim>();
-
-            _authorizationRules.Get<FakePermission>()
-                .Should()
-                .ContainSingle(rule => rule(new []{new FakeClaim()}, new FakePermission()));
-        }
-
-        [Test]
-        public void RequireClaimShouldAddARuleThatWillAlwaysFailWhenClaimIsMissing()
-        {
-            _authorizationRules.RequireClaim<FakePermission, FakeClaim>();
-
-            _authorizationRules.Get<FakePermission>()
-                .Should()
-                .ContainSingle(rule => !rule(Enumerable.Empty<Claim>(), new FakePermission()));
+            _authorizationEnforcementMock = new Mock<IAuthorizationEnforcement>();
         }
 
         [Test]
         public void AddClaimRuleWillAddARuleThatWillAlwaysFailWhenClaimIsMissing()
         {
-            _authorizationRules.AddClaimRule<FakePermission, FakeClaim>((claim, permission) => true);
-
-            _authorizationRules.Get<FakePermission>()
-                .Should()
-                .ContainSingle(rule => !rule(Enumerable.Empty<Claim>(), new FakePermission()));
+            new ClaimRule<FakePermission, FakeClaim>((claim, permission) => true)
+                .Evaluate(Enumerable.Empty<Claim>(), _authorizationEnforcementMock.Object, new FakePermission())
+                .Should().BeFalse();
         }
 
         [Test]
@@ -53,24 +31,21 @@ namespace Starcounter.Authorization.Tests.Core.Rules
         [TestCase(false)]
         public void AddClaimRuleWillAddARuleThatWillPassIfClaimPassesTheTest(bool expectedOutcome)
         {
-            _authorizationRules.AddClaimRule<FakePermission, FakeClaim>((claim, permission) => expectedOutcome);
-
-            _authorizationRules.Get<FakePermission>()
-                .Should()
-                .ContainSingle(rule => rule(new [] {new FakeClaim() }, new FakePermission()) == expectedOutcome);
+            new ClaimRule<FakePermission, FakeClaim>((claim, permission) => expectedOutcome)
+                .Evaluate(new[] { new FakeClaim() },_authorizationEnforcementMock.Object, new FakePermission())
+                .Should().Be(expectedOutcome);
         }
 
         [Test]
         public void AddClaimRuleWillEvaluateTheRuleForAllClaims()
         {
             var mock = new Mock<Func<FakeClaim, FakePermission, bool>>();
-            _authorizationRules.AddClaimRule<FakePermission, FakeClaim>(mock.Object);
             var claim1 = new FakeClaim();
             var claim2 = new FakeClaim();
             var fakePermission = new FakePermission();
 
-            _authorizationRules.Get<FakePermission>()
-                .First().Invoke(new[] {claim1, claim2}, fakePermission);
+            new ClaimRule<FakePermission, FakeClaim>(mock.Object)
+                .Evaluate(new[] { claim1, claim2 }, _authorizationEnforcementMock.Object, fakePermission);
 
             // verify that both claims have been passed to the predicate
             mock.Verify(func => func(claim1, fakePermission));

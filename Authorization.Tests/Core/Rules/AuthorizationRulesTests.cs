@@ -27,8 +27,8 @@ namespace Starcounter.Authorization.Tests.Core.Rules
         [Test]
         public void GetReturnsAllRulesForGivenPermission()
         {
-            Func<IEnumerable<Claim>, FakePermission, bool> rule1 = (claims, permission) => true;
-            Func<IEnumerable<Claim>, FakePermission, bool> rule2 = (claims, permission) => false;
+            IAuthorizationRule<FakePermission> rule1 = new PredicateRule<FakePermission>((claims, enforcement, perm) => true);
+            IAuthorizationRule<FakePermission> rule2 = new PredicateRule<FakePermission>((claims, enforcement, perm) => false);
             _authorizationRules.AddRule(rule1);
             _authorizationRules.AddRule(rule2);
 
