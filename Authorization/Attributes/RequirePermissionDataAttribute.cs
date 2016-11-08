@@ -12,11 +12,12 @@ namespace Starcounter.Authorization.Attributes
     /// </summary>
     public sealed class RequirePermissionDataAttribute : Attribute
     {
-        public Type RequiredPermission { get; private set; }
+        private readonly Type _requiredPermission;
+        public Type RequiredPermission => _requiredPermission;
 
         public RequirePermissionDataAttribute(Type requiredPermission)
         {
-            RequiredPermission = requiredPermission;
+            _requiredPermission = requiredPermission;
         }
     }
 }

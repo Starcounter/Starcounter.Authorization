@@ -66,6 +66,10 @@ namespace Starcounter.Authorization.PageSecurity
             {
                 return true;
             }
+            if (data == null)
+            {
+                return false;
+            }
 
             var permissionType = requirePermissionAttribute.RequiredPermission;
             object permission;
@@ -119,6 +123,17 @@ namespace Starcounter.Authorization.PageSecurity
             }
         }
 
+        private Tuple<MethodInfo, Template, RequirePermissionAttribute> VerifyRequirePermissionAttribute(Tuple<MethodInfo, Template, RequirePermissionAttribute> tpl)
+        {
+            if (tpl.Item3.RequiredPermission.GetConstructor(new Type[0]) == null)
+            {
+                throw new ArgumentException($"Invalid usage of RequirePermission on method {tpl.Item1}: Required permission {tpl.Item3.RequiredPermission} has no default ctor");
+            }
+
+            return tpl;
+        }
+
+
         /// <summary>
         /// Creates an IEnumerable of tasks to perform. Each entry represents a property (Template) that has
         /// to have a handler added, with permission check (object, underlying Action&lt;pageType&gt;)
@@ -163,6 +178,7 @@ namespace Starcounter.Authorization.PageSecurity
             var handlersWithRequiredAttribute = existingHandlersList
                 .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, tpl.Item1.GetCustomAttribute<RequirePermissionAttribute>()))
                 .Where(tuple => tuple.Item3 != null)
+                .Select(VerifyRequirePermissionAttribute)
                 .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, CreateNonDataCheck(pageType, tpl.Item3.RequiredPermission)))
                 .ToList();
 
@@ -253,7 +269,7 @@ namespace Starcounter.Authorization.PageSecurity
             }
             catch (Exception ex)
             {
-                throw new Exception($"Could not generate authorization check for page class {pageType}", ex);
+                throw new Exception($"Could not generate authorization check for page class {pageType}, make sure that permission {permissionType} extends Permission and has a default ctor", ex);
             }
         }
 

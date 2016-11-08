@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Starcounter.Authorization.Core.Rules;
-
-namespace Starcounter.Authorization.Core
+﻿namespace Starcounter.Authorization.Core.Rules
 {
     /// <summary>
     /// Implementers allow for configuration of authorization rules.
