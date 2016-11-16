@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,12 +12,13 @@ namespace Starcounter.Authorization.PageSecurity
 {
     public class PageSecurity
     {
-        private readonly IAuthorizationEnforcement _authorizationEnforcement;
         private readonly List<Type> _enhancedTypes = new List<Type>();
+        private readonly CheckersCreator _checkersCreator;
+        private readonly HandlersCreator _handlersCreator = new HandlersCreator();
 
         public PageSecurity(IAuthorizationEnforcement authorizationEnforcement)
         {
-            _authorizationEnforcement = authorizationEnforcement;
+            _checkersCreator = new CheckersCreator(authorizationEnforcement, (type, type1, arg3) => Expression.Throw(Expression.New(typeof(UnauthorizedException))));
         }
 
         public void EnhanceClass(Type pageType)
@@ -28,65 +30,13 @@ namespace Starcounter.Authorization.PageSecurity
             _enhancedTypes.Add(pageType);
 
             var allHandlersTasks = CreateTaskList(pageType);
-
             AddHandlers(pageType, allHandlersTasks);
         }
 
         public bool CheckClass(Type pageType, object data)
         {
-            return CheckNonData(pageType) && CheckData(pageType, data);
-        }
-
-        private bool CheckNonData(Type pageType)
-        {
-            var requirePermissionAttribute = pageType.GetCustomAttribute<RequirePermissionAttribute>();
-            if (requirePermissionAttribute == null)
-            {
-                return true;
-            }
-
-            var permissionType = requirePermissionAttribute.RequiredPermission;
-            object permission;
-            try
-            {
-                permission = permissionType.GetConstructor(new Type[0]).Invoke(new object[0]);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Could not find suitable ctor for permission {permissionType}. Make sure it has a default ctor", ex);
-            }
-
-            return (bool) InvokePrivateGenericMethod(nameof(CheckPermission), new[] {permissionType}, permission);
-        }
-
-        private bool CheckData(Type pageType, object data)
-        {
-            var requirePermissionAttribute = pageType.GetCustomAttribute<RequirePermissionDataAttribute>();
-            if (requirePermissionAttribute == null)
-            {
-                return true;
-            }
-            if (data == null)
-            {
-                return false;
-            }
-
-            var permissionType = requirePermissionAttribute.RequiredPermission;
-            object permission;
-            try
-            {
-                permission = permissionType.GetConstructor(new []{data.GetType()}).Invoke(new[] {data});
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Could not find suitable ctor for permission {permissionType}. Make sure it has a ctor accepting {data.GetType()}", ex);
-            }
-            return (bool) InvokePrivateGenericMethod(nameof(CheckPermission), new[] {permissionType}, permission);
-        }
-
-        private bool CheckPermission<T>(T permission) where T : Permission
-        {
-            return _authorizationEnforcement.CheckPermission(permission);
+            // todo cache
+            return _checkersCreator.CreateBoolCheck(pageType, pageType, () => data)();
         }
 
         private void AddHandlers(Type pageType, IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks)
@@ -106,14 +56,14 @@ namespace Starcounter.Authorization.PageSecurity
                     var propertyType = tuple.Item2.GetType().GetProperty(nameof(Property<int>.DefaultValue)).PropertyType;
 
                     var createInputEvent = originalHandlerMethod != null
-                        ? RecreateCreateInputEvent(originalHandlerMethod, propertyType)
-                        : InvokePrivateGenericMethod(nameof(CreateMethodA), new[] { propertyType });
+                        ? _handlersCreator.RecreateCreateInputEvent(originalHandlerMethod, propertyType)
+                        : _handlersCreator.CreateEmptyInputEvent(propertyType);
                     property.GetType().GetMethod(nameof(Property<int>.AddHandler)).Invoke(
                         property,
                         new[]
                         {
                             createInputEvent,
-                            CreateHandler(originalHandlerMethod, propertyType, pageType, checkAction)
+                            _handlersCreator.CreateHandler(originalHandlerMethod, propertyType, pageType, checkAction)
                         });
                 }
                 catch (Exception ex)
@@ -122,17 +72,6 @@ namespace Starcounter.Authorization.PageSecurity
                 }
             }
         }
-
-        private Tuple<MethodInfo, Template, RequirePermissionAttribute> VerifyRequirePermissionAttribute(Tuple<MethodInfo, Template, RequirePermissionAttribute> tpl)
-        {
-            if (tpl.Item3.RequiredPermission.GetConstructor(new Type[0]) == null)
-            {
-                throw new ArgumentException($"Invalid usage of RequirePermission on method {tpl.Item1}: Required permission {tpl.Item3.RequiredPermission} has no default ctor");
-            }
-
-            return tpl;
-        }
-
 
         /// <summary>
         /// Creates an IEnumerable of tasks to perform. Each entry represents a property (Template) that has
@@ -157,7 +96,7 @@ namespace Starcounter.Authorization.PageSecurity
             }
 
             // underlying type is Action<pageType>
-            object pageCheck = CreatePageCheck(pageType);
+            object pageCheck = _checkersCreator.CreateThrowingCheck(pageType, pageType);
 
             var pageProperties = pageDefaultTemplate.Properties;
             var existingHandlers = pageType
@@ -168,37 +107,16 @@ namespace Starcounter.Authorization.PageSecurity
                 .ToList();
 
             var existingHandlersList = existingHandlers.ToList();
-            var handlersWithRequiredDataAttribute = existingHandlersList
-                .Select(
-                    tpl => Tuple.Create(tpl.Item1, tpl.Item2, tpl.Item1.GetCustomAttribute<RequirePermissionDataAttribute>()))
+            var handlersWithChecks = existingHandlersList
+                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, _checkersCreator.CreateThrowingCheck(pageType, tpl.Item1)))
                 .Where(tuple => tuple.Item3 != null)
-                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, CreateDataCheck(pageType, tpl.Item3.RequiredPermission)))
                 .ToList();
 
-            var handlersWithRequiredAttribute = existingHandlersList
-                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, tpl.Item1.GetCustomAttribute<RequirePermissionAttribute>()))
-                .Where(tuple => tuple.Item3 != null)
-                .Select(VerifyRequirePermissionAttribute)
-                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, CreateNonDataCheck(pageType, tpl.Item3.RequiredPermission)))
-                .ToList();
-
-            var handlersWithBothAttributes = handlersWithRequiredAttribute.Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2))
-                .Intersect(handlersWithRequiredDataAttribute.Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2)))
-                .ToList();
-            if (handlersWithBothAttributes.Any())
-            {
-                var handlersNames = string.Join(",", handlersWithBothAttributes.Select(tuple => tuple.Item1.ToString()));
-                throw new Exception(
-                    $"Each handler can have only one of attributes: {nameof(RequirePermissionDataAttribute)} or {nameof(RequirePermissionAttribute)}. Violating handlers: {handlersNames}");
-            }
-
-            var allHandlersTasks = handlersWithRequiredDataAttribute
-                .Concat(handlersWithRequiredAttribute);
+            IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks = handlersWithChecks;
             if (pageCheck != null)
             {
-                var handlersWithoutAttributes = existingHandlersList
-                    .Except(handlersWithRequiredAttribute.Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2)))
-                    .Except(handlersWithRequiredDataAttribute.Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2)))
+                var handlersWithoutOwnChecks = existingHandlersList
+                    .Except(handlersWithChecks.Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2)))
                     .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, pageCheck))
                     .ToList();
 
@@ -207,78 +125,10 @@ namespace Starcounter.Authorization.PageSecurity
                     .Select(template => Tuple.Create<MethodInfo, Template, object>(null, template, pageCheck));
 
                 allHandlersTasks = allHandlersTasks
-                    .Concat(handlersWithoutAttributes)
+                    .Concat(handlersWithoutOwnChecks)
 /*                    .Concat(propertiesWithoutHandlers)*/;
             }
             return allHandlersTasks;
-        }
-
-        /// <summary>
-        /// Creates the actual Action&lt;pageType&gt; that checks permissions for default actions in page
-        /// as well as loading the page
-        /// </summary>
-        /// <param name="pageType"></param>
-        /// <returns></returns>
-        private object CreatePageCheck(Type pageType)
-        {
-            var pageRequireDataAttribute = pageType.GetCustomAttribute<RequirePermissionDataAttribute>();
-            var pageRequireAttribute = pageType.GetCustomAttribute<RequirePermissionAttribute>();
-            if (pageRequireAttribute != null && pageRequireDataAttribute != null)
-            {
-                throw new Exception(
-                    $"There should be only one of attributes: {nameof(RequirePermissionDataAttribute)} or {nameof(RequirePermissionAttribute)} in page class {pageType}");
-            }
-            if (pageRequireDataAttribute != null)
-            {
-                return CreateDataCheck(pageType, pageRequireDataAttribute.RequiredPermission);
-            }
-            if (pageRequireAttribute != null)
-            {
-                return CreateNonDataCheck(pageType, pageRequireAttribute.RequiredPermission);
-            }
-            // TODO parent page
-            return null;
-        }
-
-        private object CreateDataCheck(Type pageType, Type permissionType)
-        {
-            Type dataType;
-            try
-            {
-                dataType = pageType.GetInterface($"{nameof(IBound<int>)}`1").GetGenericArguments().First();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Could not determine Data type for page class {pageType}. Please make sure you marked it with IBound interface", ex);
-            }
-            try
-            {
-                return InvokePrivateGenericMethod(nameof(DataCheckTemplate), new[] { pageType, permissionType, dataType });
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Could not generate Data-based authorization check for page class {pageType}", ex);
-            }
-        }
-
-        private object CreateNonDataCheck(Type pageType, Type permissionType)
-        {
-            try
-            {
-                return InvokePrivateGenericMethod(nameof(NonDataCheckTemplate), new[] { pageType, permissionType });
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Could not generate authorization check for page class {pageType}, make sure that permission {permissionType} extends Permission and has a default ctor", ex);
-            }
-        }
-
-        private object InvokePrivateGenericMethod(string name, Type[] typeParameter, params object[] arguments)
-        {
-            return typeof(PageSecurity)
-                .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)
-                .MakeGenericMethod(typeParameter)
-                .Invoke(this, arguments);
         }
 
         private Template FindPropertyByHandlerMethod(MethodInfo handler, PropertyList candidates)
@@ -294,122 +144,307 @@ namespace Starcounter.Authorization.PageSecurity
             }
         }
 
-        private Func<Json, Property<T>, T, Input<T>> CreateMethodA<T>()
+        private static object InvokePrivateGenericMethod(object @this, string name, Type[] typeParameter, params object[] arguments)
         {
-            return (Json pup, Property<T> prop, T value) => new Input<T>()
-            {
-                Value = value
-            };
+            return @this.GetType()
+                .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)
+                .MakeGenericMethod(typeParameter)
+                .Invoke(@this, arguments);
         }
 
         /// <summary>
-        /// 
+        /// Governs creation of Action&lt;&gt; objects that perform the actual checks
         /// </summary>
-        /// <param name="originalHandler"></param>
-        /// <param name="propertyType"></param>
-        /// <param name="pageType"></param>
-        /// <param name="checkAction">This should be of type Action&lt;pageType&gt;</param>
-        /// <returns></returns>
-        private object CreateHandler(MethodInfo originalHandler, Type propertyType, Type pageType, object checkAction)
+        private class CheckersCreator
         {
-            return InvokePrivateGenericMethod(nameof(HandlerTemplate), new[] { propertyType, pageType }, originalHandler,
-                checkAction);
-        }
+            private readonly IAuthorizationEnforcement _authorizationEnforcement;
+            private readonly Func<Type, Expression, Expression, Expression> _checkDeniedHandler;
 
-        private object RecreateCreateInputEvent(MethodInfo originalHandler, Type propertyType)
-        {
-            // Input.<PropertyName>
-            var tInput = originalHandler.GetParameters().First().ParameterType;
-            // TString / TBool / etc.
-            var tTemplate = tInput.GetProperty(nameof(Input<Json, TString, string>.Template))?.PropertyType;
-            if (tTemplate == null)
+            public CheckersCreator(IAuthorizationEnforcement authorizationEnforcement, Func<Type, Expression, Expression, Expression> checkDeniedHandler)
             {
-                throw new Exception("tTemplate is null");
+                _authorizationEnforcement = authorizationEnforcement;
+                _checkDeniedHandler = checkDeniedHandler;
             }
-            // page class
-            var tApp = tInput.GetProperty(nameof(Input<Json, TString, string>.App))?.PropertyType;
-            if (tApp == null)
+
+            /// <summary>
+            /// Creates an Action&lt;pageType&gt; that checks permissions and throws <see cref="UnauthorizedException"/> in case it's denied
+            /// as well as loading the page
+            /// </summary>
+            /// <param name="pageType">Type of page which determines the context of check</param>
+            /// <param name="attributeProvider">A page class or its method (a input handler) that could have authorization attributes on it</param>
+            /// <returns>an object of type Action&lt;pageType&gt; that throws <see cref="UnauthorizedException"/> if access is denied. Null if no check needs to be performed</returns>
+            public object CreateThrowingCheck(Type pageType, ICustomAttributeProvider attributeProvider)
             {
-                throw new Exception("tApp is null");
+                var appParameterExpression = Expression.Parameter(pageType, "app");
+
+                var permissionExpression = CreatePermissionExpression(pageType, attributeProvider, Expression.MakeMemberAccess(
+                    appParameterExpression,
+                    pageType.GetProperty("Data", GetDataTypeForPage(pageType))));
+
+                if (permissionExpression == null)
+                {
+                    return null;
+                }
+
+                return CreateCheckLambdaFromExistingPage(
+                    pageType,
+                    permissionExpression,
+                    appParameterExpression);
             }
-            return InvokePrivateGenericMethod(nameof(CreateInputEventTemplate),
-                new[] { propertyType, tInput, tApp, tTemplate });
+
+            public Func<bool> CreateBoolCheck(Type pageType, ICustomAttributeProvider attributeProvider, Func<object> argumentGetter)
+            {
+                var permissionExpression = CreatePermissionExpression(pageType, attributeProvider, Expression.Invoke(Expression.Constant(argumentGetter)));
+
+                if (permissionExpression == null)
+                {
+                    return null;
+                }
+
+                return Expression.Lambda<Func<bool>>(CreateCheckPermissionCall(permissionExpression)).Compile();
+            }
+
+            /// <summary>
+            /// Creates an Expression that represents permission required by attributes in <see cref="attributesSource"/> that are defined either
+            /// on page of type <see cref="pageType"/> or its handlers
+            /// </summary>
+            /// <param name="pageType"></param>
+            /// <param name="attributesSource"></param>
+            /// <param name="permissionArgumentExpression"></param>
+            /// <returns></returns>
+            private Expression CreatePermissionExpression(Type pageType, ICustomAttributeProvider attributesSource, Expression permissionArgumentExpression)
+            {
+                var requirePermissionDataAttribute =
+                    attributesSource.GetCustomAttributes(typeof(RequirePermissionDataAttribute), true)
+                    .Cast<RequirePermissionDataAttribute>()
+                    .FirstOrDefault();
+                var requirePermissionAttribute = attributesSource.GetCustomAttributes(typeof(RequirePermissionAttribute), true)
+                    .Cast<RequirePermissionAttribute>()
+                    .FirstOrDefault();
+
+                if (requirePermissionAttribute != null && requirePermissionDataAttribute != null)
+                {
+                    // todo test
+                    throw new Exception(
+                        $"There should be only one of attributes: {nameof(RequirePermissionDataAttribute)} or {nameof(RequirePermissionAttribute)} in {attributesSource}");
+                }
+                if (requirePermissionDataAttribute != null)
+                {
+                    var requiredPermission = requirePermissionDataAttribute.RequiredPermission;
+                    var dataTypeOfPage = GetDataTypeForPage(pageType);
+                    if (dataTypeOfPage == null)
+                    {
+                        // todo test
+                        throw new ArgumentException($"Invalid usage of {nameof(RequirePermissionDataAttribute)} on {attributesSource}: Page {pageType} is not IBound");
+                    }
+                    if (requiredPermission.GetConstructor(new[] {dataTypeOfPage}) == null)
+                    {
+                        // todo test (2)
+                        throw new ArgumentException($"Invalid usage of {nameof(RequirePermissionDataAttribute)} on {attributesSource}: Required permission {requiredPermission} has no ctor that accepts {dataTypeOfPage} as argument");
+                    }
+                    return CreatePermissionWithParameter(pageType, requiredPermission, permissionArgumentExpression);
+                }
+                if (requirePermissionAttribute != null)
+                {
+                    var requiredPermission = requirePermissionAttribute.RequiredPermission;
+                    if (requiredPermission.GetConstructor(new Type[0]) == null)
+                    {
+                        // todo test
+                        throw new ArgumentException($"Invalid usage of {nameof(RequirePermissionAttribute)} on {attributesSource}: Required permission {requiredPermission} has no default ctor");
+                    }
+                    return CreateParameterlessPermission(requiredPermission);
+                }
+
+                return null;
+            }
+
+            /// <summary>
+            /// Creates an Action&lt;pageType&gt; that would accept an existing page and act accordingly to <see cref="_checkDeniedHandler"/>
+            /// </summary>
+            /// <param name="pageType"></param>
+            /// <param name="permissionExpression"></param>
+            /// <param name="appParameterExpression"></param>
+            /// <returns></returns>
+            private object CreateCheckLambdaFromExistingPage(Type pageType, Expression permissionExpression, ParameterExpression appParameterExpression)
+            {
+                var checkPermissionCall = CreateCheckPermissionCall(permissionExpression);
+
+                var body = Expression.IfThen(
+                    Expression.IsFalse(checkPermissionCall),
+                    _checkDeniedHandler(pageType, permissionExpression, appParameterExpression));
+                try
+                {
+                    return Expression.Lambda(body, appParameterExpression).Compile();
+                }
+                catch (Exception ex)
+                {
+                    // todo test
+                    throw new Exception($"Could not create check for page {pageType} and permission {permissionExpression.Type}. Make sure your provided checkDeniedHandler returns Expression<Action<TApp>>", ex);
+                }
+            }
+
+            private MethodCallExpression CreateCheckPermissionCall(Expression permissionExpression)
+            {
+                var checkPermissionMethod = typeof(IAuthorizationEnforcement)
+                    .GetMethod(nameof(IAuthorizationEnforcement.CheckPermission))
+                    .MakeGenericMethod(permissionExpression.Type);
+                var checkPermissionCall = Expression.Call(
+                    Expression.Constant(_authorizationEnforcement),
+                    checkPermissionMethod,
+                    permissionExpression);
+                return checkPermissionCall;
+            }
+
+            private Expression CreatePermissionWithParameter(Type pageType, Type permissionType, Expression permissionArgumentExpression)
+            {
+                var dataType = GetDataTypeForPage(pageType);
+                try
+                {
+                    var permissionCtor = permissionType.GetConstructor(new[] { dataType });
+                    if (permissionCtor == null)
+                    {
+                        // CreateThrowingCheck already checks if suitable ctor exists, but double-check shouldn't hurt
+                        throw new Exception($"Could not find suitable ctor for type {permissionType}. Make sure it has ctor that accepts {dataType} as argument");
+                    }
+
+                    return Expression.New(
+                        permissionCtor, 
+                        permissionArgumentExpression);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Could not generate Data-based authorization check for page class {pageType}", ex);
+                }
+            }
+
+            private Expression CreateParameterlessPermission(Type permissionType)
+            {
+                // CreateThrowingCheck already checks if suitable ctor exists
+                return Expression.New(permissionType);
+            }
+
+            private static Type GetDataTypeForPage(Type pageType)
+            {
+                try
+                {
+                    return pageType.GetInterface($"{nameof(IBound<int>)}`1")?.GetGenericArguments().First();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(
+                        $"Could not determine Data type for page class {pageType}. Please make sure you marked it with IBound interface",
+                        ex);
+                }
+            }
         }
 
         /// <summary>
-        /// This is a template used to generate CreateInputEvent method to pass to AddHandler
+        /// Governs creation of arguments to <see cref="Property{T}.AddHandler"/> method, namely 'createInputEvent' and 'handler'
         /// </summary>
-        private Func<Json, Property<T>, T, Input<T>> CreateInputEventTemplate<T, TInput, TApp, TTemplate>() where TInput : Input<TApp, TTemplate, T>, new() where TApp : Json where TTemplate : Property<T>
+        private class HandlersCreator
         {
-            return (json, property, value) => new TInput
+            /// <summary>
+            /// Generate empty createInputEvent
+            /// </summary>
+            /// <param name="propertyType"></param>
+            /// <returns></returns>
+            public object CreateEmptyInputEvent(Type propertyType)
             {
-                Value = value,
-                App = (TApp)json,
-                Template = (TTemplate)property
-            };
-        }
-
-        /// <summary>
-        /// Template for 'handler' function. Performs checkAction and then calls originalHandler (if not null)
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="TApp"></typeparam>
-        /// <param name="originalHandler">original Handler(Input.) method. Ignored if null</param>
-        /// <param name="checkAction"></param>
-        /// <returns></returns>
-        private Action<Json, Input<T>> HandlerTemplate<T, TApp>(MethodInfo originalHandler, Action<TApp> checkAction) where TApp : Json
-        {
-            var jsonParameter = Expression.Parameter(typeof(Json), "json");
-            var inputParameter = Expression.Parameter(typeof(Input<T>), "input");
-            var jsonAsTApp = Expression.Convert(jsonParameter, typeof(TApp));
-            var checkInvocation = Expression.Invoke(Expression.Constant(checkAction), jsonAsTApp);
-            var inputType = originalHandler.GetParameters().First().ParameterType; // Input.<propertyName>
-            var originalHandlerCall = Expression.Call(jsonAsTApp, originalHandler, Expression.Convert(inputParameter, inputType));
-
-            Expression body = originalHandler == null ? (Expression)checkInvocation : Expression.Block(checkInvocation, originalHandlerCall);
-            return Expression.Lambda<Action<Json, Input<T>>>(body, jsonParameter, inputParameter).Compile();
-            // reflection based body, for reference:
-            //            return (Json pup, Input<T> input) => {
-            //                var page = (TApp)pup;
-            //                checkAction(page);
-            //
-            //                if (originalHandler != null)
-            //                {
-            //                    originalHandler.Invoke(page, new object[] { input });
-            //                }
-            //            };
-        }
-
-        private Action<TApp> DataCheckTemplate<TApp, TPermission, TData>()
-            where TPermission : Permission 
-            where TApp : Json
-        {
-            var dataType = typeof(TData);
-            var permissionCtor = typeof(TPermission).GetConstructor(new[] {dataType});
-            if (permissionCtor == null)
-            {
-                throw new Exception($"Could not find suitable ctor for type {typeof(TPermission)}. Make sure it has ctor that accepts {dataType} as argument");
+                return InvokePrivateGenericMethod(this, nameof(CreateEmptyInputEventTemplate), new[] { propertyType });
             }
-            var appParameter = Expression.Parameter(typeof(TApp), "app");
-            var createPermission = Expression.New(permissionCtor, Expression.MakeMemberAccess(appParameter, typeof(TApp).GetProperty("Data", dataType)));
-            var authEnforcement = Expression.Constant(_authorizationEnforcement);
-            var tryPermissionOrThrowMethod = typeof(AuthorizationEnforcementExtensions)
-                .GetMethod(nameof(AuthorizationEnforcementExtensions.TryPermissionOrThrow))
-                .MakeGenericMethod(typeof(TPermission));
-            return Expression.Lambda<Action<TApp>>(
-                    Expression.Call(null, tryPermissionOrThrowMethod, authEnforcement, createPermission),
-                    appParameter).Compile();
-            // generated code should look like this:
-            // return app => {
-            //    _authorizationEnforcement.TryPermissionOrThrow(new TPermission((TData)app.Data));
-            // };
-        }
 
-        private Action<TApp> NonDataCheckTemplate<TApp, TPermission>() where TPermission : Permission, new() where TApp : Json
-        {
-            return app => {
-                _authorizationEnforcement.TryPermissionOrThrow(new TPermission());
-            };
+            private Func<Json, Property<T>, T, Input<T>> CreateEmptyInputEventTemplate<T>()
+            {
+                return (Json pup, Property<T> prop, T value) => new Input<T>()
+                {
+                    Value = value
+                };
+            }
+
+            /// <summary>
+            /// Creates handler that performs checkAction and then delegates to originalHandler
+            /// </summary>
+            /// <param name="originalHandler"></param>
+            /// <param name="propertyType"></param>
+            /// <param name="pageType"></param>
+            /// <param name="checkAction">This should be of type Action&lt;pageType&gt;</param>
+            /// <returns></returns>
+            public object CreateHandler(MethodInfo originalHandler, Type propertyType, Type pageType, object checkAction)
+            {
+                return InvokePrivateGenericMethod(this, nameof(HandlerTemplate), new[] { propertyType, pageType }, originalHandler,
+                    checkAction);
+            }
+
+            /// <summary>
+            /// Template for 'handler' function. Performs checkAction and then calls originalHandler (if not null)
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <typeparam name="TApp"></typeparam>
+            /// <param name="originalHandler">original Handler(Input.) method. Ignored if null</param>
+            /// <param name="checkAction"></param>
+            /// <returns></returns>
+            private Action<Json, Input<T>> HandlerTemplate<T, TApp>(MethodInfo originalHandler, Action<TApp> checkAction) where TApp : Json
+            {
+                var jsonParameter = Expression.Parameter(typeof(Json), "json");
+                var inputParameter = Expression.Parameter(typeof(Input<T>), "input");
+                var jsonAsTApp = Expression.Convert(jsonParameter, typeof(TApp));
+                var checkInvocation = Expression.Invoke(Expression.Constant(checkAction), jsonAsTApp);
+                var inputType = originalHandler.GetParameters().First().ParameterType; // Input.<propertyName>
+                var originalHandlerCall = Expression.Call(jsonAsTApp, originalHandler, Expression.Convert(inputParameter, inputType));
+
+                Expression body = originalHandler == null ? (Expression)checkInvocation : Expression.Block(checkInvocation, originalHandlerCall);
+                return Expression.Lambda<Action<Json, Input<T>>>(body, jsonParameter, inputParameter).Compile();
+                // reflection based body, for reference:
+                //            return (Json pup, Input<T> input) => {
+                //                var page = (TApp)pup;
+                //                checkAction(page);
+                //
+                //                if (originalHandler != null)
+                //                {
+                //                    originalHandler.Invoke(page, new object[] { input });
+                //                }
+                //            };
+            }
+
+            /// <summary>
+            /// Creates createInputEvent that is equivalent to one generated originally by Starcounter VS plugin.
+            /// This method exists, because it's easier to recreate it then access the one already created.
+            /// </summary>
+            /// <param name="originalHandler"></param>
+            /// <param name="propertyType"></param>
+            /// <returns></returns>
+            public object RecreateCreateInputEvent(MethodInfo originalHandler, Type propertyType)
+            {
+                // Input.<PropertyName>
+                var tInput = originalHandler.GetParameters().First().ParameterType;
+                // TString / TBool / etc.
+                var tTemplate = tInput.GetProperty(nameof(Input<Json, TString, string>.Template))?.PropertyType;
+                if (tTemplate == null)
+                {
+                    throw new Exception("tTemplate is null");
+                }
+                // page class
+                var tApp = tInput.GetProperty(nameof(Input<Json, TString, string>.App))?.PropertyType;
+                if (tApp == null)
+                {
+                    throw new Exception("tApp is null");
+                }
+                return InvokePrivateGenericMethod(this, nameof(CreateInputEventTemplate),
+                    new[] { propertyType, tInput, tApp, tTemplate });
+            }
+
+            /// <summary>
+            /// This is a template used to generate CreateInputEvent method to pass to AddHandler
+            /// </summary>
+            private Func<Json, Property<T>, T, Input<T>> CreateInputEventTemplate<T, TInput, TApp, TTemplate>() where TInput : Input<TApp, TTemplate, T>, new() where TApp : Json where TTemplate : Property<T>
+            {
+                return (json, property, value) => new TInput
+                {
+                    Value = value,
+                    App = (TApp)json,
+                    Template = (TTemplate)property
+                };
+            }
         }
     }
 }

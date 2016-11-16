@@ -8,10 +8,10 @@ namespace Starcounter.Authorization.Routing
 {
     public class Router
     {
-        private readonly Func<Type, string[], Response> _pageCreator;
+        private readonly Func<RoutingInfo, Response> _pageCreator;
         private readonly List<IPageMiddleware> _middleware = new List<IPageMiddleware>();
 
-        public Router(Func<Type, string[], Response> pageCreator)
+        public Router(Func<RoutingInfo, Response> pageCreator)
         {
             _pageCreator = pageCreator;
         }
@@ -54,9 +54,10 @@ namespace Starcounter.Authorization.Routing
 
         private Response RunResponse<T>(Request request, params string[] arguments)
         {
+            var routingInfo = new RoutingInfo { Request = request, SelectedPageType = typeof(T), Arguments = arguments };
             return RunWithMiddleware(
-                new RoutingInfo { Request = request, SelectedPageType = typeof(T), Arguments = arguments },
-                _middleware.Concat(new [] { new TerminalMiddleware(() => _pageCreator(typeof(T), arguments)) }));
+                routingInfo,
+                _middleware.Concat(new [] { new TerminalMiddleware(() => _pageCreator(routingInfo)) }));
         }
 
         private Response RunWithMiddleware(RoutingInfo routingInfo, IEnumerable<IPageMiddleware> middlewares)

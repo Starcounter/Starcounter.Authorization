@@ -3,8 +3,7 @@ using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Core;
-using Starcounter.Internal;
-using Starcounter.XSON;
+using Starcounter.Templates;
 
 namespace Starcounter.Authorization.Tests.PageSecurity
 {
@@ -81,57 +80,69 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public void HandlerMarkedWithAttributeShouldAskForProperPermission_RequirePermission()
+        public void HandlerMarkedWithAttribute_RequirePermission_ShouldAskForProperPermission()
         {
-            var jsonPatch = new JsonPatch();
             var page = CreatePage<ExamplePage>();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ChangeThing>()))
-                .Returns(true)
-                .Verifiable();
+            SetupPermissionToReturn<ChangeThing>(true);
             
-//            page.Session = new Session();
-//            jsonPatch.Apply(page, "{{\"op\":\"replace\",\"path\":\"/ChangeThing$\",\"value\":1}");
-            page.Template.ChangeThing.ProcessInput(page, 1);
-//            page.Template.ChangeThing.Setter(page, 1);
+            ChangePropertyInPage(page, p => p.Template.ChangeThing);
 
             _authEnforcementMock.Verify();
         }
 
         [Test]
-        public void HandlerMarkedWithAttributeShouldThrowWhenPermissionIsRejected_RequirePermission()
+        public void HandlerMarkedWithAttribute_RequirePermission_ShouldThrowWhenPermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ChangeThing>()))
-                .Returns(false);
+            SetupPermissionToReturn<ChangeThing>(false);
 
-            new Action(() => page.ChangeThing = 1).ShouldThrow<UnauthorizedException>();
+            new Action(() => ChangePropertyInPage(page, p => p.Template.ChangeThing)).ShouldThrow<UnauthorizedException>();
         }
 
         [Test]
-        public void HandlerWithNoAttributeShouldAskForProperPagePermission_RequirePermission()
+        public void HandlerMarkedWithAttribute_RequirePermission_ShouldWorkWhenPermissionIsGranted()
         {
             var page = CreatePage<ExamplePage>();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
-                .Returns(true)
-                .Verifiable();
+            SetupPermissionToReturn<ChangeThing>(true);
 
-            page.ActionNotMarked = 1;
+            ChangePropertyInPage(page, p => p.Template.ChangeThing);
+
+            page.Changed.ShouldBeEquivalentTo(nameof(ExamplePage.ChangeThing));
+        }
+
+        [Test]
+        public void HandlerWithNoAttribute_RequirePermissionOnPage_ShouldAskForProperPagePermission()
+        {
+            var page = CreatePage<ExamplePage>();
+            SetupPermissionToReturn<ViewThing>(true);
+
+            ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
 
             _authEnforcementMock.Verify();
         }
 
         [Test]
-        public void HandlerWithNoAttributeShouldThrowWhenPagePermissionIsRejected_RequirePermission()
+        public void HandlerWithNoAttribute_RequirePermissionOnPage_ShouldThrowWhenPagePermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ChangeThing>()))
-                .Returns(false);
+            SetupPermissionToReturn<ViewThing>(false);
 
-            new Action(() => page.ChangeThing = 1).ShouldThrow<UnauthorizedException>();
+            new Action(() => ChangePropertyInPage(page, p => p.Template.ActionNotMarked)).ShouldThrow<UnauthorizedException>();
         }
 
         [Test]
-        public void HandlerMarkedWithAttributeShouldAskForProperPermission_RequirePermissionData()
+        public void HandlerWithNoAttribute_RequirePermissionOnPage_ShouldWorkWhenPermissionIsGranted()
+        {
+            var page = CreatePage<ExamplePage>();
+            SetupPermissionToReturn<ViewThing>(true);
+
+            ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
+
+            page.Changed.ShouldBeEquivalentTo(nameof(ExamplePage.ActionNotMarked));
+        }
+
+        [Test]
+        public void HandlerMarkedWithAttribute_RequirePermissionData_ShouldAskForProperPermission()
         {
             var thing = new Thing();
             var page = CreatePage<ExamplePage>();
@@ -140,27 +151,75 @@ namespace Starcounter.Authorization.Tests.PageSecurity
                 .Returns(true)
                 .Verifiable();
 
-            page.ViewSpecificThing = 1;
+            ChangePropertyInPage(page, p => p.Template.ViewSpecificThing);
 
             _authEnforcementMock.Verify();
         }
 
         [Test]
-        public void HandlerMarkedWithAttributeShouldThrowWhenPermissionIsRejected_RequirePermissionData()
+        public void HandlerMarkedWithAttribute_RequirePermissionData_ShouldThrowWhenPermissionIsDenied()
         {
             var thing = new Thing();
             var page = CreatePage<ExamplePage>();
             page.Data = thing;
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(perm => perm.Thing == thing)))
-                .Returns(true);
+            SetupPermissionToReturn<ViewSpecificThing>(false);
 
-            new Action(() => page.ViewSpecificThing = 1).ShouldThrow<UnauthorizedException>();
+            new Action(() => ChangePropertyInPage(page, p => p.Template.ViewSpecificThing)).ShouldThrow<UnauthorizedException>();
+        }
+
+        [Test]
+        public void HandlerMarkedWithAttribute_RequirePermissionData_ShouldWorkWhenPermissionIsGranted()
+        {
+            var thing = new Thing();
+            var page = CreatePage<ExamplePage>();
+            page.Data = thing;
+            SetupPermissionToReturn<ViewSpecificThing>(true);
+
+            ChangePropertyInPage(page, p => p.Template.ViewSpecificThing);
+
+            page.Changed.ShouldBeEquivalentTo(nameof(ExamplePage.ViewSpecificThing));
+        }
+
+//        [Test]
+//        public void SubpageHandlerWithNoAttributeShouldAskForProperPagePermission_RequirePermission()
+//        {
+//            var page = CreatePage<ExamplePage>().Elements.Add();
+//            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
+//                .Returns(true)
+//                .Verifiable();
+//
+//            ChangePropertyInPage(page, p => p.Template.ChangeSubThing);
+//
+//            _authEnforcementMock.Verify();
+//        }
+//
+//        [Test]
+//        public void SubpageHandlerWithNoAttributeShouldThrowWhenPagePermissionIsRejected_RequirePermission()
+//        {
+//            var page = CreatePage<ExamplePage>().Elements.Add();
+//            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
+//                .Returns(false);
+//
+//            new Action(() => ChangePropertyInPage(page, p => p.Template.ChangeSubThing)).ShouldThrow<UnauthorizedException>();
+//        }
+
+
+        private void ChangePropertyInPage<T>(T page, Func<T, Property<long>> propertySelector) where T:Json
+        {
+            propertySelector(page).ProcessInput(page, 1);
         }
 
         private T CreatePage<T>() where T : new()
         {
             _pageSecurity.EnhanceClass(typeof(T));
             return new T();
+        }
+
+        private void SetupPermissionToReturn<T>(bool valueToReturn) where T : Permission
+        {
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<T>()))
+                .Returns(valueToReturn)
+                .Verifiable();
         }
     }
 }
