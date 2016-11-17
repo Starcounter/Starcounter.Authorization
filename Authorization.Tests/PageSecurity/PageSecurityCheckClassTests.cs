@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
@@ -16,13 +17,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void Setup()
         {
             _authEnforcementMock = new Mock<IAuthorizationEnforcement>();
-            _pageSecurity = new Authorization.PageSecurity.PageSecurity(_authEnforcementMock.Object);
+            _pageSecurity = new Authorization.PageSecurity.PageSecurity(_authEnforcementMock.Object, Authorization.PageSecurity.PageSecurity.CreateThrowingDeniedHandler<UnauthorizedException>());
         }
 
         [Test]
         public void CheckClassAsksForProperPermission_RequirePermission()
         {
-            _pageSecurity.CheckClass(typeof(ExamplePage), null);
+            _pageSecurity.CheckClass(typeof(ExamplePage), new object[0]);
 
             _authEnforcementMock.Verify(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()));
         }
@@ -32,7 +33,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         {
             var thing = new Thing();
 
-            _pageSecurity.CheckClass(typeof(ExampleDataPage), thing);
+            _pageSecurity.CheckClass(typeof(ExampleDataPage), new[] {thing});
 
             _authEnforcementMock.Verify(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)));
         }
@@ -40,7 +41,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         [Test]
         public void CheckClassReturnsFalseWhenPassedNull_RequirePermissionData()
         {
-            _pageSecurity.CheckClass(typeof(ExampleDataPage), null)
+            _pageSecurity.CheckClass(typeof(ExampleDataPage), new object[0])
                 .Should().BeFalse();
         }
 
@@ -51,7 +52,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewSpecificThing>()))
                 .Returns(expectedOutcome);
 
-            _pageSecurity.CheckClass(typeof(ExampleDataPage), new Thing())
+            _pageSecurity.CheckClass(typeof(ExampleDataPage), new[] {new Thing()})
                 .Should().Be(expectedOutcome);
         }
 
@@ -62,7 +63,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
                 .Returns(expectedOutcome);
 
-            _pageSecurity.CheckClass(typeof(ExamplePage), null)
+            _pageSecurity.CheckClass(typeof(ExamplePage), new object[0])
                 .Should().Be(expectedOutcome);
         }
     }
@@ -76,7 +77,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void Setup()
         {
             _authEnforcementMock = new Mock<IAuthorizationEnforcement>();
-            _pageSecurity = new Authorization.PageSecurity.PageSecurity(_authEnforcementMock.Object);
+            _pageSecurity = new Authorization.PageSecurity.PageSecurity(_authEnforcementMock.Object, Authorization.PageSecurity.PageSecurity.CreateThrowingDeniedHandler<UnauthorizedException>());
         }
 
         [Test]

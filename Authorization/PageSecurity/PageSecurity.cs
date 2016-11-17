@@ -16,11 +16,37 @@ namespace Starcounter.Authorization.PageSecurity
         private readonly CheckersCreator _checkersCreator;
         private readonly HandlersCreator _handlersCreator = new HandlersCreator();
 
-        public PageSecurity(IAuthorizationEnforcement authorizationEnforcement)
+        /// <summary>
+        /// </summary>
+        /// <param name="authorizationEnforcement"></param>
+        /// <param name="checkDeniedHandler">This determines what happens when access is denied inside input handler.
+        /// It accepts type of page in which the handler is defined,
+        /// Expression representing the permission that has been denied,
+        /// Expression representing the page itself
+        /// and should return an Expression representing action to be undertaken
+        /// <see cref="CreateThrowingDeniedHandler{T}"/></param>
+        public PageSecurity(IAuthorizationEnforcement authorizationEnforcement, Func<Type, Expression, Expression, Expression> checkDeniedHandler)
         {
-            _checkersCreator = new CheckersCreator(authorizationEnforcement, (type, type1, arg3) => Expression.Throw(Expression.New(typeof(UnauthorizedException))));
+            _checkersCreator = new CheckersCreator(authorizationEnforcement, checkDeniedHandler);
         }
 
+        /// <summary>
+        /// Create a checkDeniedHandler (to be used in ctor) that will throw a new Exception of type T
+        /// whenever access denied inside input handler.
+        /// </summary>
+        /// <typeparam name="T">The type of the exception to be thrown</typeparam>
+        /// <returns>A ready-to-use handler to be supplied to the <see cref="PageSecurity"/> constructor</returns>
+        public static Func<Type, Expression, Expression, Expression> CreateThrowingDeniedHandler<T>()
+            where T : Exception, new()
+        {
+            return (pageType, permissionExpression, pageExpression) => Expression.Throw(Expression.New(typeof(T)));
+        }
+
+        /// <summary>
+        /// Enhances the specified page class, adding security checks to all of its input handlers.
+        /// Will do nothing if this class has already been enhanced by this instance of PageSecurity
+        /// </summary>
+        /// <param name="pageType">The page class to be enhanced, must derive from <see cref="Json"/></param>
         public void EnhanceClass(Type pageType)
         {
             if (_enhancedTypes.Contains(pageType))
@@ -33,10 +59,17 @@ namespace Starcounter.Authorization.PageSecurity
             AddHandlers(pageType, allHandlersTasks);
         }
 
-        public bool CheckClass(Type pageType, object data)
+        /// <summary>
+        /// Checks if the current user has access to a page of specified type.
+        /// </summary>
+        /// <param name="pageType">The type of page that will be inspected</param>
+        /// <param name="objects">Database objects that would be required to construct the page object. Usually will be either empty or contain one object of the type that this page is IBound to</param>
+        /// <returns>true if the current user has access to this page or no check was necessary, false otherwise</returns>
+        public bool CheckClass(Type pageType, object[] objects)
         {
             // todo cache
-            return _checkersCreator.CreateBoolCheck(pageType, pageType, () => data)();
+            var check = _checkersCreator.CreateBoolCheck(pageType, pageType);
+            return check == null || check(objects);
         }
 
         private void AddHandlers(Type pageType, IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks)
@@ -96,7 +129,7 @@ namespace Starcounter.Authorization.PageSecurity
             }
 
             // underlying type is Action<pageType>
-            object pageCheck = _checkersCreator.CreateThrowingCheck(pageType, pageType);
+            object pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, pageType);
 
             var pageProperties = pageDefaultTemplate.Properties;
             var existingHandlers = pageType
@@ -108,7 +141,7 @@ namespace Starcounter.Authorization.PageSecurity
 
             var existingHandlersList = existingHandlers.ToList();
             var handlersWithChecks = existingHandlersList
-                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, _checkersCreator.CreateThrowingCheck(pageType, tpl.Item1)))
+                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, tpl.Item1)))
                 .Where(tuple => tuple.Item3 != null)
                 .ToList();
 
@@ -167,106 +200,43 @@ namespace Starcounter.Authorization.PageSecurity
             }
 
             /// <summary>
-            /// Creates an Action&lt;pageType&gt; that checks permissions and throws <see cref="UnauthorizedException"/> in case it's denied
-            /// as well as loading the page
+            /// Creates an Action&lt;pageType&gt; that checks permissions and uses <see cref="_checkDeniedHandler"/> in case it's denied
             /// </summary>
             /// <param name="pageType">Type of page which determines the context of check</param>
             /// <param name="attributeProvider">A page class or its method (a input handler) that could have authorization attributes on it</param>
             /// <returns>an object of type Action&lt;pageType&gt; that throws <see cref="UnauthorizedException"/> if access is denied. Null if no check needs to be performed</returns>
-            public object CreateThrowingCheck(Type pageType, ICustomAttributeProvider attributeProvider)
+            public object CreateThrowingCheckFromExistingPage(Type pageType, ICustomAttributeProvider attributeProvider)
             {
+                var permissionsConstructor = GetRequiredPermissionsConstructor(pageType, attributeProvider);
+                if (permissionsConstructor == null)
+                {
+                    return null;
+                }
+
+                Expression permissionExpression;
                 var appParameterExpression = Expression.Parameter(pageType, "app");
-
-                var permissionExpression = CreatePermissionExpression(pageType, attributeProvider, Expression.MakeMemberAccess(
-                    appParameterExpression,
-                    pageType.GetProperty("Data", GetDataTypeForPage(pageType))));
-
-                if (permissionExpression == null)
+                var parameterTypes = permissionsConstructor.GetParameters().Select(param => param.ParameterType).ToList();
+                switch (parameterTypes.Count)
                 {
-                    return null;
+                    case 0:
+                        permissionExpression = Expression.New(permissionsConstructor);
+                        break;
+                    case 1:
+                        var paramType = parameterTypes.First();
+                        if (GetDataTypeForPage(pageType) != paramType)
+                        {
+                            throw new Exception(
+                                $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Make sure the page is of type IBound<{paramType}>");
+                        }
+                        permissionExpression = Expression.New(permissionsConstructor, Expression.MakeMemberAccess(
+                            appParameterExpression,
+                            pageType.GetProperty("Data", paramType)));
+                        break;
+                    default:
+                        throw new Exception(
+                            $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Permissions with more than one constructor parameters are not supported");
                 }
 
-                return CreateCheckLambdaFromExistingPage(
-                    pageType,
-                    permissionExpression,
-                    appParameterExpression);
-            }
-
-            public Func<bool> CreateBoolCheck(Type pageType, ICustomAttributeProvider attributeProvider, Func<object> argumentGetter)
-            {
-                var permissionExpression = CreatePermissionExpression(pageType, attributeProvider, Expression.Invoke(Expression.Constant(argumentGetter)));
-
-                if (permissionExpression == null)
-                {
-                    return null;
-                }
-
-                return Expression.Lambda<Func<bool>>(CreateCheckPermissionCall(permissionExpression)).Compile();
-            }
-
-            /// <summary>
-            /// Creates an Expression that represents permission required by attributes in <see cref="attributesSource"/> that are defined either
-            /// on page of type <see cref="pageType"/> or its handlers
-            /// </summary>
-            /// <param name="pageType"></param>
-            /// <param name="attributesSource"></param>
-            /// <param name="permissionArgumentExpression"></param>
-            /// <returns></returns>
-            private Expression CreatePermissionExpression(Type pageType, ICustomAttributeProvider attributesSource, Expression permissionArgumentExpression)
-            {
-                var requirePermissionDataAttribute =
-                    attributesSource.GetCustomAttributes(typeof(RequirePermissionDataAttribute), true)
-                    .Cast<RequirePermissionDataAttribute>()
-                    .FirstOrDefault();
-                var requirePermissionAttribute = attributesSource.GetCustomAttributes(typeof(RequirePermissionAttribute), true)
-                    .Cast<RequirePermissionAttribute>()
-                    .FirstOrDefault();
-
-                if (requirePermissionAttribute != null && requirePermissionDataAttribute != null)
-                {
-                    // todo test
-                    throw new Exception(
-                        $"There should be only one of attributes: {nameof(RequirePermissionDataAttribute)} or {nameof(RequirePermissionAttribute)} in {attributesSource}");
-                }
-                if (requirePermissionDataAttribute != null)
-                {
-                    var requiredPermission = requirePermissionDataAttribute.RequiredPermission;
-                    var dataTypeOfPage = GetDataTypeForPage(pageType);
-                    if (dataTypeOfPage == null)
-                    {
-                        // todo test
-                        throw new ArgumentException($"Invalid usage of {nameof(RequirePermissionDataAttribute)} on {attributesSource}: Page {pageType} is not IBound");
-                    }
-                    if (requiredPermission.GetConstructor(new[] {dataTypeOfPage}) == null)
-                    {
-                        // todo test (2)
-                        throw new ArgumentException($"Invalid usage of {nameof(RequirePermissionDataAttribute)} on {attributesSource}: Required permission {requiredPermission} has no ctor that accepts {dataTypeOfPage} as argument");
-                    }
-                    return CreatePermissionWithParameter(pageType, requiredPermission, permissionArgumentExpression);
-                }
-                if (requirePermissionAttribute != null)
-                {
-                    var requiredPermission = requirePermissionAttribute.RequiredPermission;
-                    if (requiredPermission.GetConstructor(new Type[0]) == null)
-                    {
-                        // todo test
-                        throw new ArgumentException($"Invalid usage of {nameof(RequirePermissionAttribute)} on {attributesSource}: Required permission {requiredPermission} has no default ctor");
-                    }
-                    return CreateParameterlessPermission(requiredPermission);
-                }
-
-                return null;
-            }
-
-            /// <summary>
-            /// Creates an Action&lt;pageType&gt; that would accept an existing page and act accordingly to <see cref="_checkDeniedHandler"/>
-            /// </summary>
-            /// <param name="pageType"></param>
-            /// <param name="permissionExpression"></param>
-            /// <param name="appParameterExpression"></param>
-            /// <returns></returns>
-            private object CreateCheckLambdaFromExistingPage(Type pageType, Expression permissionExpression, ParameterExpression appParameterExpression)
-            {
                 var checkPermissionCall = CreateCheckPermissionCall(permissionExpression);
 
                 var body = Expression.IfThen(
@@ -279,8 +249,91 @@ namespace Starcounter.Authorization.PageSecurity
                 catch (Exception ex)
                 {
                     // todo test
-                    throw new Exception($"Could not create check for page {pageType} and permission {permissionExpression.Type}. Make sure your provided checkDeniedHandler returns Expression<Action<TApp>>", ex);
+                    throw new Exception($"Could not create check for page {pageType} and permission {permissionExpression.Type}. Make sure your provided checkDeniedHandler returns correct Expression", ex);
                 }
+            }
+
+            /// <summary>
+            /// Creates a Func that accepts an array of objects from DB and returns true if permission is granted
+            /// </summary>
+            /// <param name="pageType"></param>
+            /// <param name="attributeProvider"></param>
+            /// <returns></returns>
+            public Func<object[], bool> CreateBoolCheck(Type pageType, ICustomAttributeProvider attributeProvider)
+            {
+                var permissionsConstructor = GetRequiredPermissionsConstructor(pageType, attributeProvider);
+                if (permissionsConstructor == null)
+                {
+                    return null;
+                }
+
+                Expression permissionExpression;
+                var objectsParameterExpression = Expression.Parameter(typeof(object[]), "objects");
+                var parameterTypes = permissionsConstructor.GetParameters().Select(param => param.ParameterType).ToList();
+                switch (parameterTypes.Count)
+                {
+                    case 0:
+                        permissionExpression = Expression.New(permissionsConstructor);
+                        break;
+                    case 1:
+                        var paramType = parameterTypes.First();
+                        if (GetDataTypeForPage(pageType) != paramType)
+                        {
+                            throw new Exception(
+                                $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Make sure the page is of type IBound<{paramType}>");
+                        }
+                        permissionExpression =
+                            Expression.Condition(
+                                Expression.Equal(
+                                    Expression.Constant(1),
+                                    Expression.ArrayLength(objectsParameterExpression)),
+                                Expression.New(
+                                    permissionsConstructor,
+                                    Expression.TypeAs(
+                                        Expression.ArrayIndex(objectsParameterExpression, Expression.Constant(0)),
+                                        paramType)),
+                                // ReSharper disable once AssignNullToNotNullAttribute constructors always have declaring type, silly R#
+                                Expression.TypeAs(Expression.Constant(null), permissionsConstructor.DeclaringType));
+                        // generates:
+                        //  objects.Length == 1 ? new TPermission(objects[0]) : (TPermission)null
+                        break;
+                    default:
+                        throw new Exception(
+                            $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Permissions with more than one constructor parameters are not supported");
+                }
+
+                return Expression.Lambda<Func<object[], bool>>(
+                    CreateCheckPermissionCall(permissionExpression),
+                    objectsParameterExpression)
+                    .Compile();
+            }
+
+            /// <summary>
+            /// Creates an Expression that represents permission required by attributes in <see cref="attributesSource"/> that are defined either
+            /// on page of type <see cref="pageType"/> or its handlers
+            /// </summary>
+            /// <param name="pageType"></param>
+            /// <param name="attributesSource"></param>
+            /// <returns></returns>
+            // ReSharper disable once UnusedParameter.Local pageType will be used to support subpage checking
+            private ConstructorInfo GetRequiredPermissionsConstructor(Type pageType, ICustomAttributeProvider attributesSource)
+            {
+                var requirePermissionAttribute = attributesSource.GetCustomAttributes(typeof(RequirePermissionAttribute), true)
+                    .Cast<RequirePermissionAttribute>()
+                    .FirstOrDefault();
+
+                if (requirePermissionAttribute != null)
+                {
+                    var permissionType = requirePermissionAttribute.RequiredPermission;
+                    var permissionConstructors = permissionType.GetConstructors();
+                    if (permissionConstructors.Length != 1)
+                    {
+                        throw new ArgumentException($"Invalid usage of {nameof(RequirePermissionAttribute)} on {attributesSource}: Required permission {permissionType} should have exactly one constructor");
+                    }
+                    return permissionConstructors[0];
+                }
+
+                return null;
             }
 
             private MethodCallExpression CreateCheckPermissionCall(Expression permissionExpression)
@@ -293,34 +346,6 @@ namespace Starcounter.Authorization.PageSecurity
                     checkPermissionMethod,
                     permissionExpression);
                 return checkPermissionCall;
-            }
-
-            private Expression CreatePermissionWithParameter(Type pageType, Type permissionType, Expression permissionArgumentExpression)
-            {
-                var dataType = GetDataTypeForPage(pageType);
-                try
-                {
-                    var permissionCtor = permissionType.GetConstructor(new[] { dataType });
-                    if (permissionCtor == null)
-                    {
-                        // CreateThrowingCheck already checks if suitable ctor exists, but double-check shouldn't hurt
-                        throw new Exception($"Could not find suitable ctor for type {permissionType}. Make sure it has ctor that accepts {dataType} as argument");
-                    }
-
-                    return Expression.New(
-                        permissionCtor, 
-                        permissionArgumentExpression);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"Could not generate Data-based authorization check for page class {pageType}", ex);
-                }
-            }
-
-            private Expression CreateParameterlessPermission(Type permissionType)
-            {
-                // CreateThrowingCheck already checks if suitable ctor exists
-                return Expression.New(permissionType);
             }
 
             private static Type GetDataTypeForPage(Type pageType)

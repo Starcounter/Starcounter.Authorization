@@ -30,7 +30,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             Changed = nameof(ChangeThing);
         }
 
-        [RequirePermissionData(typeof(ViewSpecificThing))]
+        [RequirePermission(typeof(ViewSpecificThing))]
         private void Handle(Input.ViewSpecificThing action)
         {
             Changed = nameof(ViewSpecificThing);
