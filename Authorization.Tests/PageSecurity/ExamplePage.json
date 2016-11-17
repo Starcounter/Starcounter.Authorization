@@ -1,0 +1,13 @@
+{
+  "Html": "",
+  "PropertyOne": 0,
+  "EditableProperty$": 0,
+  "ActionNotMarked$" : 0,
+  "ChangeThing$" : 0,
+  "ViewSpecificThing$": 0,
+  "Elements": [
+    {
+      "ChangeSubThing$": 0 
+    }
+  ] 
+}

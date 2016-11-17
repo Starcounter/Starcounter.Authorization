@@ -1,4 +1,6 @@
-﻿namespace Starcounter.Authorization.Core
+﻿using Starcounter.Authorization.Core.Rules;
+
+namespace Starcounter.Authorization.Core
 {
     public static class AuthorizationStatic
     {
