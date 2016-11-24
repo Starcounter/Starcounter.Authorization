@@ -18,29 +18,39 @@ namespace Starcounter.Authorization.Routing
 
         public void HandleGet<T>()
         {
-            var urlAttribute = typeof(T).GetCustomAttribute<UrlAttribute>();
+            HandleGet(typeof(T));
+        }
+
+        public void HandleGet(Type pageType)
+        {
+            var urlAttribute = pageType.GetCustomAttribute<UrlAttribute>();
             if (urlAttribute == null)
             {
-                throw new Exception($"Type {typeof(T)} has no Url attribute on it");
+                throw new Exception($"Type {pageType} has no Url attribute on it");
             }
 
-            HandleGet<T>(urlAttribute.Value);
+            HandleGet(urlAttribute.Value, pageType);
         }
 
         public void HandleGet<T>(string url)
+        {
+            HandleGet(url, typeof(T));
+        }
+
+        public void HandleGet(string url, Type pageType)
         {
             var argumentsNo = Regex.Matches(url, @"\{\?\}").Count;
             switch (argumentsNo)
             {
                 case 0:
-                    Handle.GET(url, (Request request) => RunResponse<T>(request));
+                    Handle.GET(url, (Request request) => RunResponse(pageType, request));
                     break;
                 case 1:
-                    Handle.GET<string, Request>(url, (arg, request) => RunResponse<T>(request, arg));
+                    Handle.GET<string, Request>(url, (arg, request) => RunResponse(pageType, request, arg));
                     break;
                 case 2:
                     Handle.GET<string, string, Request>(url,
-                        (arg1, arg2, request) => RunResponse<T>(request, arg1, arg2));
+                        (arg1, arg2, request) => RunResponse(pageType, request, arg1, arg2));
                     break;
                 default:
                     throw new NotSupportedException("Not supported: more than 2 parameters in URL");
@@ -52,9 +62,9 @@ namespace Starcounter.Authorization.Routing
             _middleware.Insert(0, middleware);
         }
 
-        private Response RunResponse<T>(Request request, params string[] arguments)
+        private Response RunResponse(Type pageType, Request request, params string[] arguments)
         {
-            var routingInfo = new RoutingInfo { Request = request, SelectedPageType = typeof(T), Arguments = arguments };
+            var routingInfo = new RoutingInfo { Request = request, SelectedPageType = pageType, Arguments = arguments };
             return RunWithMiddleware(
                 routingInfo,
                 _middleware.Concat(new [] { new TerminalMiddleware(() => _pageCreator(routingInfo)) }));
