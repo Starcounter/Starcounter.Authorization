@@ -87,7 +87,7 @@ namespace Starcounter.Authorization.PageSecurity
 
                     // "T" in Property<T>
                     var propertyType = tuple.Item2.GetType().GetProperty(nameof(Property<int>.DefaultValue)).PropertyType;
-
+                    
                     var createInputEvent = originalHandlerMethod != null
                         ? _handlersCreator.RecreateCreateInputEvent(originalHandlerMethod, propertyType)
                         : _handlersCreator.CreateEmptyInputEvent(propertyType);
@@ -155,13 +155,29 @@ namespace Starcounter.Authorization.PageSecurity
 
                 var propertiesWithoutHandlers = pageProperties
                     .Except(existingHandlers.Select(tuple => tuple.Item2))
+                    .Where(IsProperty)
                     .Select(template => Tuple.Create<MethodInfo, Template, object>(null, template, pageCheck));
 
                 allHandlersTasks = allHandlersTasks
                     .Concat(handlersWithoutOwnChecks)
-/*                    .Concat(propertiesWithoutHandlers)*/;
+                    .Concat(propertiesWithoutHandlers);
             }
             return allHandlersTasks;
+        }
+
+        private static bool IsProperty(object instance)
+        {
+            var type = instance.GetType();
+            while (type != null)
+            {
+                if (type.IsGenericType &&
+                    type.GetGenericTypeDefinition() == typeof(Property<>))
+                {
+                    return true;
+                }
+                type = type.BaseType;
+            }
+            return false;
         }
 
         private Template FindPropertyByHandlerMethod(MethodInfo handler, PropertyList candidates)
@@ -414,10 +430,18 @@ namespace Starcounter.Authorization.PageSecurity
                 var inputParameter = Expression.Parameter(typeof(Input<T>), "input");
                 var jsonAsTApp = Expression.Convert(jsonParameter, typeof(TApp));
                 var checkInvocation = Expression.Invoke(Expression.Constant(checkAction), jsonAsTApp);
-                var inputType = originalHandler.GetParameters().First().ParameterType; // Input.<propertyName>
-                var originalHandlerCall = Expression.Call(jsonAsTApp, originalHandler, Expression.Convert(inputParameter, inputType));
+                Expression body;
+                if (originalHandler != null)
+                {
+                    var inputType = originalHandler.GetParameters().First().ParameterType;
+                    var originalHandlerCall = Expression.Call(jsonAsTApp, originalHandler, Expression.Convert(inputParameter, inputType));
+                    body = Expression.Block(checkInvocation, originalHandlerCall);
+                }
+                else
+                {
+                    body = checkInvocation;
+                }
 
-                Expression body = originalHandler == null ? (Expression)checkInvocation : Expression.Block(checkInvocation, originalHandlerCall);
                 return Expression.Lambda<Action<Json, Input<T>>>(body, jsonParameter, inputParameter).Compile();
                 // reflection based body, for reference:
                 //            return (Json pup, Input<T> input) => {
