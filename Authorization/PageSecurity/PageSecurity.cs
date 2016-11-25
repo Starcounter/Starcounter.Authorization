@@ -56,7 +56,7 @@ namespace Starcounter.Authorization.PageSecurity
             _enhancedTypes.Add(pageType);
 
             var allHandlersTasks = CreateTaskList(pageType);
-            AddHandlers(pageType, allHandlersTasks);
+            AddHandlers(allHandlersTasks);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Starcounter.Authorization.PageSecurity
             return check == null || check(objects);
         }
 
-        private void AddHandlers(Type pageType, IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks)
+        private void AddHandlers(IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks)
         {
             foreach (var tuple in allHandlersTasks)
             {
@@ -84,6 +84,7 @@ namespace Starcounter.Authorization.PageSecurity
                     var property = tuple.Item2;
                     // tuple.Item3 is the Action<pageType> that performs the actual permission check
                     var checkAction = tuple.Item3;
+                    var pageType = checkAction.GetType().GenericTypeArguments[0];
 
                     // "T" in Property<T>
                     var propertyType = tuple.Item2.GetType().GetProperty(nameof(Property<int>.DefaultValue)).PropertyType;
@@ -112,8 +113,9 @@ namespace Starcounter.Authorization.PageSecurity
         /// and an optional originalHandler method (MethodInfo) to invoke after the check
         /// </summary>
         /// <param name="pageType"></param>
+        /// <param name="parentPageType"></param>
         /// <returns></returns>
-        private IEnumerable<Tuple<MethodInfo, Template, object>> CreateTaskList(Type pageType)
+        private IEnumerable<Tuple<MethodInfo, Template, object>> CreateTaskList(Type pageType, Type parentPageType = null)
         {
             // the name "DefaultTemplate" is defined inside each Page class, so couldn't be obtained with nameof
             TObject pageDefaultTemplate;
@@ -130,6 +132,10 @@ namespace Starcounter.Authorization.PageSecurity
 
             // underlying type is Action<pageType>
             object pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, pageType);
+            if (pageCheck == null && parentPageType != null)
+            {
+                pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, parentPageType);
+            }
 
             var pageProperties = pageDefaultTemplate.Properties;
             var existingHandlers = pageType
@@ -145,7 +151,14 @@ namespace Starcounter.Authorization.PageSecurity
                 .Where(tuple => tuple.Item3 != null)
                 .ToList();
 
-            IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks = handlersWithChecks;
+            var arrayProperties = pageProperties
+                .Select(template => Tuple.Create(template, GetGenericTypeParameter(template, typeof(TArray<>))))
+                .Where(tuple => tuple.Item2 != null)
+                .SelectMany(tuple => CreateTaskList(tuple.Item2, pageType));
+
+            IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks = handlersWithChecks
+                .Concat(arrayProperties);
+
             if (pageCheck != null)
             {
                 var handlersWithoutOwnChecks = existingHandlersList
@@ -167,20 +180,31 @@ namespace Starcounter.Authorization.PageSecurity
 
         private static bool IsProperty(object instance)
         {
+            return GetGenericTypeParameter(instance, typeof(Property<>)) != null;
+        }
+
+        /// <summary>
+        /// If the <see cref="instance"/> is of type <see cref="genericType"/> returns its first type parameter. Otherwise null
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <param name="genericType"></param>
+        /// <returns></returns>
+        private static Type GetGenericTypeParameter(object instance, Type genericType)
+        {
             var type = instance.GetType();
             while (type != null)
             {
                 if (type.IsGenericType &&
-                    type.GetGenericTypeDefinition() == typeof(Property<>))
+                    type.GetGenericTypeDefinition() == genericType)
                 {
-                    return true;
+                    return type.GetGenericArguments()[0];
                 }
                 type = type.BaseType;
             }
-            return false;
+            return null;
         }
 
-        private Template FindPropertyByHandlerMethod(MethodInfo handler, PropertyList candidates)
+        private static Template FindPropertyByHandlerMethod(MethodInfo handler, PropertyList candidates)
         {
             try
             {

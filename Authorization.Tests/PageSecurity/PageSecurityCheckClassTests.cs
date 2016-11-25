@@ -253,6 +253,42 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             page.PropertyOne.Should().Be(1);
         }
 
+
+        [Test]
+        public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldAskForProperPagePermission()
+        {
+            var page = CreatePage<ExamplePage>().Elements.Add();
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
+                .Returns(true)
+                .Verifiable();
+
+            ChangePropertyInPage(page, p => p.Template.ChangeSubThing);
+
+            _authEnforcementMock.Verify();
+        }
+
+        [Test]
+        public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldThrowWhenPagePermissionIsRejected()
+        {
+            var page = CreatePage<ExamplePage>().Elements.Add();
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
+                .Returns(false);
+
+            new Action(() => ChangePropertyInPage(page, p => p.Template.ChangeSubThing)).ShouldThrow<UnauthorizedException>();
+        }
+
+        [Test]
+        public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldWorkWhenPagePermissionIsGranted()
+        {
+            var page = CreatePage<ExamplePage>().Elements.Add();
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
+                .Returns(true);
+
+            ChangePropertyInPage(page, p => p.Template.ChangeSubThing);
+
+            page.ChangeSubThing.Should().Be(1);
+        }
+
         private void ChangePropertyInPage<T>(T page, Func<T, Property<long>> propertySelector) where T:Json
         {
             propertySelector(page).ProcessInput(page, 1);
