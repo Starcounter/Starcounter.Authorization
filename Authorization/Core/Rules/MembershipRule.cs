@@ -22,7 +22,7 @@ namespace Starcounter.Authorization.Core.Rules
                 return false;
             }
             return Db.SQL<SomebodyGroup>($"select a.\"{nameof(PermissionSomebodyGroup.Group)}\" from {typeof(PermissionSomebodyGroup).FullName} a where a.\"{nameof(PermissionSomebodyGroup.Permission)}\" = ?", permissionToken)
-                .Any(group => @group.GetAllMembers().Contains(claim.Person));
+                .Any(group => @group.GetAllDescendantsMembers().Contains(claim.Person));
         }
     }
 }

@@ -263,14 +263,17 @@ namespace Starcounter.Authorization.PageSecurity
                         break;
                     case 1:
                         var paramType = parameterTypes.First();
-                        if (GetDataTypeForPage(pageType) != paramType)
+                        Func<Json, object> getData = json =>
                         {
-                            throw new Exception(
-                                $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Make sure the page is of type IBound<{paramType}>");
-                        }
-                        permissionExpression = Expression.New(permissionsConstructor, Expression.MakeMemberAccess(
-                            appParameterExpression,
-                            pageType.GetProperty("Data", paramType)));
+                            while (!paramType.IsInstanceOfType(json.Data) && json.Parent != null)
+                            {
+                                json = json.Parent;
+                            }
+
+                            return json.Data;
+                        };
+                        permissionExpression = Expression.New(permissionsConstructor,
+                            Expression.Convert(Expression.Invoke(Expression.Constant(getData), appParameterExpression), paramType));
                         break;
                     default:
                         throw new Exception(
