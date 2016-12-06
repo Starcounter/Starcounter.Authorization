@@ -320,7 +320,8 @@ namespace Starcounter.Authorization.PageSecurity
                         break;
                     case 1:
                         var paramType = parameterTypes.First();
-                        if (GetDataTypeForPage(pageType) != paramType)
+                        var pageDataType = GetDataTypeForPage(pageType);
+                        if (!pageDataType.IsSubclassOf(paramType) && pageDataType != paramType)
                         {
                             throw new Exception(
                                 $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Make sure the page is of type IBound<{paramType}>");
