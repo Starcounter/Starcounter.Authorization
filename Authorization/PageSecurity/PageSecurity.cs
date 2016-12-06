@@ -7,6 +7,7 @@ using System.Reflection;
 using Starcounter.Authorization.Attributes;
 using Starcounter.Authorization.Core;
 using Starcounter.Templates;
+using Check = System.Object;
 
 namespace Starcounter.Authorization.PageSecurity
 {
@@ -72,7 +73,7 @@ namespace Starcounter.Authorization.PageSecurity
             return check == null || check(objects);
         }
 
-        private void AddHandlers(IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks)
+        private void AddHandlers(IEnumerable<Tuple<MethodInfo, Template, Check, Type>> allHandlersTasks)
         {
             foreach (var tuple in allHandlersTasks)
             {
@@ -82,9 +83,10 @@ namespace Starcounter.Authorization.PageSecurity
                     var originalHandlerMethod = tuple.Item1;
                     // tuple.Item2 is the Property that is being handled
                     var property = tuple.Item2;
-                    // tuple.Item3 is the Action<pageType> that performs the actual permission check
+                    // tuple.Item3 is the factory for expression that will do the check. It accepts a LabelTarget pointing at return label and Expression representing app (aka page) param
                     var checkAction = tuple.Item3;
-                    var pageType = checkAction.GetType().GenericTypeArguments[0];
+                    // tuple.Item4 is the pageType
+                    var pageType = tuple.Item4;
 
                     // "T" in Property<T>
                     var propertyType = tuple.Item2.GetType().GetProperty(nameof(Property<int>.DefaultValue)).PropertyType;
@@ -115,7 +117,7 @@ namespace Starcounter.Authorization.PageSecurity
         /// <param name="pageType"></param>
         /// <param name="parentPageType"></param>
         /// <returns></returns>
-        private IEnumerable<Tuple<MethodInfo, Template, object>> CreateTaskList(Type pageType, Type parentPageType = null)
+        private IEnumerable<Tuple<MethodInfo, Template, Check, Type>> CreateTaskList(Type pageType, Type parentPageType = null)
         {
             // the name "DefaultTemplate" is defined inside each Page class, so couldn't be obtained with nameof
             TObject pageDefaultTemplate;
@@ -130,8 +132,7 @@ namespace Starcounter.Authorization.PageSecurity
                     ex);
             }
 
-            // underlying type is Action<pageType>
-            object pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, pageType);
+            Check pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, pageType);
             if (pageCheck == null && parentPageType != null)
             {
                 pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, parentPageType);
@@ -147,7 +148,7 @@ namespace Starcounter.Authorization.PageSecurity
 
             var existingHandlersList = existingHandlers.ToList();
             var handlersWithChecks = existingHandlersList
-                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, tpl.Item1)))
+                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, tpl.Item1), pageType))
                 .Where(tuple => tuple.Item3 != null)
                 .ToList();
 
@@ -156,20 +157,20 @@ namespace Starcounter.Authorization.PageSecurity
                 .Where(tuple => tuple.Item2 != null)
                 .SelectMany(tuple => CreateTaskList(tuple.Item2, pageType));
 
-            IEnumerable<Tuple<MethodInfo, Template, object>> allHandlersTasks = handlersWithChecks
+            IEnumerable<Tuple<MethodInfo, Template, Check, Type>> allHandlersTasks = handlersWithChecks
                 .Concat(arrayProperties);
 
             if (pageCheck != null)
             {
                 var handlersWithoutOwnChecks = existingHandlersList
                     .Except(handlersWithChecks.Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2)))
-                    .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, pageCheck))
+                    .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, pageCheck, pageType))
                     .ToList();
 
                 var propertiesWithoutHandlers = pageProperties
                     .Except(existingHandlers.Select(tuple => tuple.Item2))
                     .Where(IsProperty)
-                    .Select(template => Tuple.Create<MethodInfo, Template, object>(null, template, pageCheck));
+                    .Select(template => Tuple.Create<MethodInfo, Template, Check, Type>(null, template, pageCheck, pageType));
 
                 allHandlersTasks = allHandlersTasks
                     .Concat(handlersWithoutOwnChecks)
@@ -240,12 +241,12 @@ namespace Starcounter.Authorization.PageSecurity
             }
 
             /// <summary>
-            /// Creates an Action&lt;pageType&gt; that checks permissions and uses <see cref="_checkDeniedHandler"/> in case it's denied
+            /// Creates an Func&lt;pageType, bool&gt; that checks permissions and uses <see cref="_checkDeniedHandler"/> and returns false in case it's denied. Returns true if granted
             /// </summary>
             /// <param name="pageType">Type of page which determines the context of check</param>
             /// <param name="attributeProvider">A page class or its method (a input handler) that could have authorization attributes on it</param>
-            /// <returns>an object of type Action&lt;pageType&gt; that throws <see cref="UnauthorizedException"/> if access is denied. Null if no check needs to be performed</returns>
-            public object CreateThrowingCheckFromExistingPage(Type pageType, ICustomAttributeProvider attributeProvider)
+            /// <returns>an object of type Func&lt;pageType, bool&gt; that either returns true if access is granted or performs <see cref="_checkDeniedHandler"/> and returns false. Null if no check needs to be performed</returns>
+            public Check CreateThrowingCheckFromExistingPage(Type pageType, ICustomAttributeProvider attributeProvider)
             {
                 var permissionsConstructor = GetRequiredPermissionsConstructor(pageType, attributeProvider);
                 if (permissionsConstructor == null)
@@ -254,8 +255,9 @@ namespace Starcounter.Authorization.PageSecurity
                 }
 
                 Expression permissionExpression;
-                var appParameterExpression = Expression.Parameter(pageType, "app");
-                var parameterTypes = permissionsConstructor.GetParameters().Select(param => param.ParameterType).ToList();
+                var appParameterExpression = Expression.Parameter(pageType, "page");
+                var parameterTypes =
+                    permissionsConstructor.GetParameters().Select(param => param.ParameterType).ToList();
                 switch (parameterTypes.Count)
                 {
                     case 0:
@@ -269,28 +271,34 @@ namespace Starcounter.Authorization.PageSecurity
                                 $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Make sure the page is of type IBound<{paramType}>");
                         }
                         permissionExpression = Expression.New(permissionsConstructor, Expression.MakeMemberAccess(
-                            appParameterExpression,
-                            pageType.GetProperty("Data", paramType)));
+                                    appParameterExpression,
+                                    pageType.GetProperty("Data", paramType)));
                         break;
                     default:
                         throw new Exception(
                             $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Permissions with more than one constructor parameters are not supported");
                 }
 
-                var checkPermissionCall = CreateCheckPermissionCall(permissionExpression);
-
-                var body = Expression.IfThen(
-                    Expression.IsFalse(checkPermissionCall),
-                    _checkDeniedHandler(pageType, permissionExpression, appParameterExpression));
                 try
                 {
-                    return Expression.Lambda(body, appParameterExpression).Compile();
+                    var checkResult = Expression.Parameter(typeof(bool));
+                    return Expression.Lambda(Expression.Block(
+                        new[] {checkResult},
+                        Expression.Assign(checkResult, CreateCheckPermissionCall(permissionExpression)),
+                        Expression.IfThen(
+                            Expression.IsFalse(checkResult),
+                            _checkDeniedHandler(pageType, permissionExpression, appParameterExpression)),
+                        checkResult),
+                        appParameterExpression).Compile();
                 }
                 catch (Exception ex)
                 {
                     // todo test
-                    throw new Exception($"Could not create check for page {pageType} and permission {permissionExpression.Type}. Make sure your provided checkDeniedHandler returns correct Expression", ex);
+                    throw new Exception(
+                        $"Could not create check for page {pageType} and permission {permissionExpression.Type}. Make sure your provided checkDeniedHandler returns correct Expression",
+                        ex);
                 }
+                ;
             }
 
             /// <summary>
@@ -434,47 +442,57 @@ namespace Starcounter.Authorization.PageSecurity
             /// <param name="pageType"></param>
             /// <param name="checkAction">This should be of type Action&lt;pageType&gt;</param>
             /// <returns></returns>
-            public object CreateHandler(MethodInfo originalHandler, Type propertyType, Type pageType, object checkAction)
+            public object CreateHandler(MethodInfo originalHandler, Type propertyType, Type pageType, Check checkAction)
             {
-                return InvokePrivateGenericMethod(this, nameof(HandlerTemplate), new[] { propertyType, pageType }, originalHandler,
-                    checkAction);
+                return HandlerTemplate(originalHandler, checkAction, pageType, propertyType);
             }
 
             /// <summary>
             /// Template for 'handler' function. Performs checkAction and then calls originalHandler (if not null)
             /// </summary>
-            /// <typeparam name="T"></typeparam>
-            /// <typeparam name="TApp"></typeparam>
             /// <param name="originalHandler">original Handler(Input.) method. Ignored if null</param>
-            /// <param name="checkAction"></param>
+            /// <param name="checkAction">underlying type is Func&lt;pageType, bool&gt;</param>
+            /// <param name="pageType"></param>
+            /// <param name="tType">The type of property that this handler is for</param>
             /// <returns></returns>
-            private Action<Json, Input<T>> HandlerTemplate<T, TApp>(MethodInfo originalHandler, Action<TApp> checkAction) where TApp : Json
+            private object HandlerTemplate(MethodInfo originalHandler, Check checkAction, Type pageType, Type tType)
             {
                 var jsonParameter = Expression.Parameter(typeof(Json), "json");
-                var inputParameter = Expression.Parameter(typeof(Input<T>), "input");
-                var jsonAsTApp = Expression.Convert(jsonParameter, typeof(TApp));
-                var checkInvocation = Expression.Invoke(Expression.Constant(checkAction), jsonAsTApp);
+                var inputParameter = Expression.Parameter(typeof(Input<>).MakeGenericType(tType), "input");
+                var jsonAsTApp = Expression.Convert(jsonParameter, pageType);
                 Expression body;
+                var checkInvocation = Expression.Invoke(Expression.Constant(checkAction), jsonAsTApp);
+                var cancelEvent = Expression.Call(inputParameter, typeof(Input).GetProperty(nameof(Input.Cancelled)).GetSetMethod(), Expression.Constant(true));
                 if (originalHandler != null)
                 {
                     var inputType = originalHandler.GetParameters().First().ParameterType;
                     var originalHandlerCall = Expression.Call(jsonAsTApp, originalHandler, Expression.Convert(inputParameter, inputType));
-                    body = Expression.Block(checkInvocation, originalHandlerCall);
+                    body = Expression.IfThenElse(checkInvocation, originalHandlerCall, cancelEvent);
                 }
                 else
                 {
-                    body = checkInvocation;
+                    body = Expression.IfThen(Expression.IsFalse(checkInvocation), cancelEvent);
                 }
 
-                return Expression.Lambda<Action<Json, Input<T>>>(body, jsonParameter, inputParameter).Compile();
+                return Expression.Lambda(body, jsonParameter, inputParameter).Compile();
                 // reflection based body, for reference:
                 //            return (Json pup, Input<T> input) => {
                 //                var page = (TApp)pup;
-                //                checkAction(page);
-                //
-                //                if (originalHandler != null)
+                //                if(checkAction(page))
                 //                {
                 //                    originalHandler.Invoke(page, new object[] { input });
+                //                }
+                //                else
+                //                {
+                //                    input.Cancelled = true;
+                //                }
+                //            };
+                // Or, in case original Handler is null:
+                //            return (Json pup, Input<T> input) => {
+                //                var page = (TApp)pup;
+                //                if(!checkAction(page))
+                //                {
+                //                    input.Cancelled = true;
                 //                }
                 //            };
             }

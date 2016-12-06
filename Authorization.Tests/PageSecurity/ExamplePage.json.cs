@@ -8,7 +8,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
     public class ViewThing : Permission { }
 
     [RequirePermission(typeof(ViewThing))]
-    public partial class ExamplePage : Json, IBound<Thing>
+    public partial class ExamplePage : Json, IBound<Thing>, IExamplePage
     {
         public string Changed { get; set; }
 
@@ -35,7 +35,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [ExamplePage_json.Elements]
-        public partial class Element
+        public partial class Element: Json, IExamplePage
         {
             public string Changed { get; set; }
             private void Handle(Input.ChangeSubThing action)
