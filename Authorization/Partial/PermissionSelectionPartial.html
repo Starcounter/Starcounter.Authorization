@@ -115,8 +115,9 @@
                 template.selectSearchInput();
             };
 
-            template.selectSearchInput = function() {
-                document.querySelector('.people-group-member-autocomplete-input').focus();
+            template.selectSearchInput = function () {
+                //temporary fix - see: https://github.com/Starcounter/authorization/issues/19
+                //document.querySelector('.people-group-member-autocomplete-input').focus();
             };
         })();
     </script>

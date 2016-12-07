@@ -251,6 +251,23 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             VerifyChangedAndCheckDeniedHandlerNotCalled(subpage.ChangeSubThing);
             VerifyHandlerWorked(subpage, nameof(subpage.ChangeSubThing));
         }
+		
+		[Test]
+        public void SubpageHandlerWithNoAttribute_RequirePersmission_ShouldAskForParentClassPermissionWithParentArgument()
+        {
+            var thing = new Thing();
+            var page = CreatePage<ExampleDataPage>();
+            var subPage = page.Elements.Add();
+            page.Data = thing;
+            subPage.Data = new ThingItem();
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)))
+                .Returns(true)
+                .Verifiable();
+
+            ChangePropertyInPage(subPage, p => p.Template.SomeProperty);
+
+            _authEnforcementMock.Verify();
+        }
 
         [Test]
         public void ShouldCallCheckDeniedHandlerWhenPermissionIsDenied()

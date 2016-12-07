@@ -3,7 +3,7 @@ using Starcounter.Authorization.Attributes;
 namespace Starcounter.Authorization.Tests.PageSecurity
 {
     [RequirePermission(typeof(ViewSpecificThing))]
-    partial class ExampleDataPage : Json, IBound<Thing>, IExamplePage
+    public partial class ExampleDataPage : Json, IBound<Thing>, IExamplePage
     {
         public string Changed { get; set; }
 
@@ -16,6 +16,16 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         private void Handle(Input.Action2 action)
         {
             Changed = nameof(Action2);
+        }
+
+        [ExampleDataPage_json.Elements]
+        public partial class ElementItem : IBound<ThingItem>
+        {
+            public string Changed { get; set; }
+            private void Handle(Input.SomeProperty action)
+            {
+                Changed = nameof(SomeProperty);
+            }
         }
     }
 }
