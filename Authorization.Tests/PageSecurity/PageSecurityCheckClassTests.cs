@@ -289,6 +289,23 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             page.ChangeSubThing.Should().Be(1);
         }
 
+        [Test]
+        public void SubpageHandlerWithNoAttribute_RequirePersmission_ShouldAskForParentClassPermissionWithParentArgument()
+        {
+            var thing = new Thing();
+            var page = CreatePage<ExampleDataPage>();
+            var subPage = page.Elements.Add();
+            page.Data = thing;
+            subPage.Data = new ThingItem();
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)))
+                .Returns(true)
+                .Verifiable();
+
+            ChangePropertyInPage(subPage, p => p.Template.SomeProperty);
+
+            _authEnforcementMock.Verify();
+        }
+
         private void ChangePropertyInPage<T>(T page, Func<T, Property<long>> propertySelector) where T:Json
         {
             propertySelector(page).ProcessInput(page, 1);

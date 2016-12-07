@@ -3,5 +3,10 @@
   "PropertyOne": 0,
   "EditableProperty$": 0,
   "Action1$" : 0,
-  "Action2$" : 0
+  "Action2$": 0,
+  "Elements": [
+    {
+      "SomeProperty$": 0 
+    }
+  ] 
 }

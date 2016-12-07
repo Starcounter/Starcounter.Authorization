@@ -96,6 +96,7 @@
       <DependentUpon>ExamplePage.json</DependentUpon>
     </Compile>
     <Compile Include="PageSecurity\PageSecurityCheckClassTests.cs" />
+    <Compile Include="PageSecurity\ThingItem.cs" />
     <Compile Include="PageSecurity\Thing.cs" />
     <Compile Include="PageSecurity\ViewSpecificThing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
