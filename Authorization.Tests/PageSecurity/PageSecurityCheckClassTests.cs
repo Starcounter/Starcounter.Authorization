@@ -293,11 +293,10 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void SubpageHandlerWithNoAttribute_RequirePersmission_ShouldAskForParentClassPermissionWithParentArgument()
         {
             var thing = new Thing();
-            var thingItem = new ThingItem();
             var page = CreatePage<ExampleDataPage>();
             var subPage = page.Elements.Add();
             page.Data = thing;
-            subPage.Data = thingItem;
+            subPage.Data = new ThingItem();
             _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)))
                 .Returns(true)
                 .Verifiable();
