@@ -17,7 +17,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [ExampleDataPage_json.Elements]
-        public partial class ElementItem
+        public partial class ElementItem : IBound<ThingItem>
         {
             public string Changed { get; set; }
             private void Handle(Input.SomeProperty action)
