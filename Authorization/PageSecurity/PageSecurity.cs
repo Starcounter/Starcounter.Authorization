@@ -110,11 +110,11 @@ namespace Starcounter.Authorization.PageSecurity
         }
 
         /// <summary>
-        /// Toggles property tree recursively
+        /// Expands property tree recursively
         /// </summary>
         /// <param name="property"></param>
         /// <returns></returns>
-        private static IEnumerable<Template> TogglePageProperties(Template property) => (property as TObject)?.Children.SelectMany(TogglePageProperties) ?? new[] { property };
+        private static IEnumerable<Template> ExpandPageProperties(Template property) => (property as TObject)?.Children.SelectMany(ExpandPageProperties) ?? new[] { property };
 
         /// <summary>
         /// Creates an IEnumerable of tasks to perform. Each entry represents a property (Template) that has
@@ -145,7 +145,7 @@ namespace Starcounter.Authorization.PageSecurity
                 pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, parentPageType);
             }
 
-            var pageProperties = TogglePageProperties(pageDefaultTemplate);
+            var pageProperties = ExpandPageProperties(pageDefaultTemplate);
 
             var existingHandlers = pageType
                 .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)

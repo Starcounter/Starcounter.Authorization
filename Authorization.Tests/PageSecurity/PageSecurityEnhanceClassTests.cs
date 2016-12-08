@@ -73,7 +73,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public void HandlerWithNoAttribute_RequirePermissionOnPage_ShouldThrowWhenPagePermissionIsDenied()
+        public void HandlerWithNoAttribute_RequirePermissionOnPage_ShouldNotWorkWhenPagePermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
             SetupPermissionToReturn<ViewThing>(false);
@@ -111,7 +111,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public void HandlerMarkedWithAttribute_RequirePermissionData_ShouldThrowWhenPermissionIsDenied()
+        public void HandlerMarkedWithAttribute_RequirePermissionData_ShouldNotWorkWhenPermissionIsDenied()
         {
             var thing = new Thing();
             var page = CreatePage<ExamplePage>();
@@ -151,7 +151,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public void PropertyWithoutHandler_RequirePermission_ShouldThrowWhenPermissionIsDenied()
+        public void PropertyWithoutHandler_RequirePermission_ShouldNotWorkWhenPermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
             SetupPermissionToReturn<ViewThing>(false);
@@ -188,7 +188,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public void PropertyWithoutHandler_RequirePermissionData_ShouldThrowWhenPermissionIsDenied()
+        public void PropertyWithoutHandler_RequirePermissionData_ShouldNotWorkWhenPermissionIsDenied()
         {
             var thing = new Thing();
             var page = CreatePage<ExampleDataPage>();
@@ -228,7 +228,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldThrowWhenPagePermissionIsRejected()
+        public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldNotWorkWhenPagePermissionIsRejected()
         {
             var subpage = CreatePage<ExamplePage>().Elements.Add();
             _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
@@ -276,7 +276,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public void SubpageNestedHandlerMarkedWithAttribute_RequirePermission_ShouldThrowWhenPermissionIsDenied()
+        public void SubpageNestedHandlerMarkedWithAttribute_RequirePermission_ShouldNotWorkWhenPermissionIsDenied()
         {
             var subpage = CreatePage<ExamplePage>().Elements.Add();
 
@@ -306,7 +306,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public void SubpageNestedHandlerMarkedWithAttribute_RequirePermissionData_ShouldThrowWhenPermissionIsDenied()
+        public void SubpageNestedHandlerMarkedWithAttribute_RequirePermissionData_ShouldNotWorkWhenPermissionIsDenied()
         {
             var thing = new Thing();
             var page = CreatePage<ExampleDataPage>();
