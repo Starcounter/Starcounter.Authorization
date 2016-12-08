@@ -9,6 +9,7 @@
     {
       "ChangeSubThing$": 0,
       "ChangeAnotherSubThing$": 0,
+      "ChangeSecuredSubThing$": 0,
       "SubProperty$": 0
     }
   ] 

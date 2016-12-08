@@ -4,4 +4,9 @@ namespace Starcounter.Authorization.Tests.PageSecurity
     {
         public int Id { get; set; }
     }
+
+    public class OtherThingItem
+    {
+        public int Id { get; set; }
+    }
 }
