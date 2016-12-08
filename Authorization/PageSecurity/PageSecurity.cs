@@ -110,6 +110,13 @@ namespace Starcounter.Authorization.PageSecurity
         }
 
         /// <summary>
+        /// Toggles property tree recursively
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        private static IEnumerable<Template> TogglePageProperties(Template property) => (property as TObject)?.Children.SelectMany(TogglePageProperties) ?? new[] { property };
+
+        /// <summary>
         /// Creates an IEnumerable of tasks to perform. Each entry represents a property (Template) that has
         /// to have a handler added, with permission check (object, underlying Action&lt;pageType&gt;)
         /// and an optional originalHandler method (MethodInfo) to invoke after the check
@@ -138,7 +145,8 @@ namespace Starcounter.Authorization.PageSecurity
                 pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, parentPageType);
             }
 
-            var pageProperties = pageDefaultTemplate.Properties;
+            var pageProperties = TogglePageProperties(pageDefaultTemplate);
+
             var existingHandlers = pageType
                 .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Where(method => method.Name == "Handle")
@@ -205,12 +213,12 @@ namespace Starcounter.Authorization.PageSecurity
             return null;
         }
 
-        private static Template FindPropertyByHandlerMethod(MethodInfo handler, PropertyList candidates)
+        private static Template FindPropertyByHandlerMethod(MethodInfo handler, IEnumerable<Template> candidates)
         {
             try
             {
                 var propertyName = handler.GetParameters().FirstOrDefault()?.ParameterType.Name;
-                return propertyName == null ? null : candidates[propertyName];
+                return propertyName == null ? null : candidates.First(template => template.PropertyName == propertyName);
             }
             catch (Exception ex)
             {

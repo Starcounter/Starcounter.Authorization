@@ -252,23 +252,6 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             VerifyHandlerWorked(subpage, nameof(subpage.ChangeSubThing));
         }
 		
-		[Test]
-        public void SubpageHandlerWithNoAttribute_RequirePersmission_ShouldAskForParentClassPermissionWithParentArgument()
-        {
-            var thing = new Thing();
-            var page = CreatePage<ExampleDataPage>();
-            var subPage = page.Elements.Add();
-            page.Data = thing;
-            subPage.Data = new ThingItem();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)))
-                .Returns(true)
-                .Verifiable();
-
-            ChangePropertyInPage(subPage, p => p.Template.SomeProperty);
-
-            _authEnforcementMock.Verify();
-        }
-
         [Test]
         public void ShouldCallCheckDeniedHandlerWhenPermissionIsDenied()
         {
@@ -279,6 +262,63 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
 
             _checkDeniedMock.Verify(action => action(It.IsAny<ViewThing>(), page), Times.Once());
+        }
+
+        [Test]
+        public void SubpageNestedHandlerMarkedWithAttribute_RequirePermission_ShouldAskForProperPermission()
+        {
+            var subpage = CreatePage<ExamplePage>().Elements.Add();
+            SetupPermissionToReturn<ChangeThing>(true);
+
+            ChangePropertyInPage(subpage, p => p.Template.ChangeSecuredSubThing);
+
+            _authEnforcementMock.Verify();
+        }
+
+        [Test]
+        public void SubpageNestedHandlerMarkedWithAttribute_RequirePermission_ShouldThrowWhenPermissionIsDenied()
+        {
+            var subpage = CreatePage<ExamplePage>().Elements.Add();
+
+            SetupPermissionToReturn<EditSpecificThing>(false);
+
+            ChangePropertyInPage(subpage, p => p.Template.ChangeSecuredSubThing);
+
+            VerifyUnchanged(subpage, subpage.ChangeSecuredSubThing);
+        }
+
+
+        [Test]
+        public void SubpageNestedHandlerMarkedWithAttribute_RequirePermissionData_ShouldAskForProperPermission()
+        {
+            var thing = new Thing();
+            var page = CreatePage<ExampleDataPage>();
+            var nestedPage = page.PropertyTwo.NestedElements.Add();
+            page.Data = thing;
+            nestedPage.Data = new OtherThingItem();
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<EditSpecificThing>(permission => permission.Thing == thing)))
+                .Returns(true)
+                .Verifiable();
+
+            ChangePropertyInPage(nestedPage, p => p.Template.SomeSecuredNestedProperty);
+
+            _authEnforcementMock.Verify();
+        }
+
+        [Test]
+        public void SubpageNestedHandlerMarkedWithAttribute_RequirePermissionData_ShouldThrowWhenPermissionIsDenied()
+        {
+            var thing = new Thing();
+            var page = CreatePage<ExampleDataPage>();
+            var nestedPage = page.PropertyTwo.NestedElements.Add();
+            page.Data = thing;
+            nestedPage.Data = new OtherThingItem();
+
+            SetupPermissionToReturn<EditSpecificThing>(false);
+
+            ChangePropertyInPage(nestedPage, p => p.Template.SomeSecuredNestedProperty);
+
+            VerifyUnchanged(nestedPage, nestedPage.SomeSecuredNestedProperty);
         }
 
         private void VerifyChangedAndCheckDeniedHandlerNotCalled(long property)

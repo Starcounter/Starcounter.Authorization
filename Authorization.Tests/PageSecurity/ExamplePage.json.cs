@@ -42,6 +42,12 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             {
                 Changed = nameof(ChangeSubThing);
             }
+
+            [RequirePermission(typeof(ChangeThing))]
+            private void Handle(Input.ChangeSecuredSubThing action)
+            {
+                Changed = nameof(ChangeSecuredSubThing);
+            }
         }
     }
 }

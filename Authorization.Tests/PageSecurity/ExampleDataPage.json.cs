@@ -18,13 +18,31 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             Changed = nameof(Action2);
         }
 
-        [ExampleDataPage_json.Elements]
-        public partial class ElementItem : IBound<ThingItem>
+        [ExampleDataPage_json.PropertyTwo]
+        public partial class ElementItem : IBound<ThingItem>, IExamplePage
         {
             public string Changed { get; set; }
             private void Handle(Input.SomeProperty action)
             {
                 Changed = nameof(SomeProperty);
+            }
+
+            [RequirePermission(typeof(EditSpecificThing))]
+            private void Handle(Input.SomeSecuredProperty action)
+            {
+                Changed = nameof(SomeSecuredProperty);
+            }
+
+            [ExampleDataPage_json.PropertyTwo.NestedElements]
+            public partial class NestedItem : IBound<OtherThingItem>, IExamplePage
+            {
+                public string Changed { get; set; }
+
+                [RequirePermission(typeof(EditSpecificThing))]
+                private void Handle(Input.SomeSecuredNestedProperty action)
+                {
+                    Changed = nameof(SomeSecuredNestedProperty);
+                }
             }
         }
     }
