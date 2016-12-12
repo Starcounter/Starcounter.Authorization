@@ -6,6 +6,6 @@ namespace Starcounter.Authorization.Partial
     public class PermissionSelectionPartialEventArgs : EventArgs
     {
         public PermissionSelectionPartialEventArgs(SomebodyGroup group) { SomebodyGroup = group; }
-        public SomebodyGroup SomebodyGroup;
+        public SomebodyGroup SomebodyGroup { get; private set; }
     }
 }
