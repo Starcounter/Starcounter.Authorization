@@ -44,7 +44,7 @@ namespace Starcounter.Authorization.Partial
             ReloadMembers();
         }
 
-        private void ReloadMembers()
+        public void ReloadMembers()
         {
             if (_permissionToken != null)
             {
