@@ -42,14 +42,13 @@ namespace Starcounter.Authorization.Partial
             _permission = permission;
             _getOrCreateToken =
                 () => _permissionToken ?? (_permissionToken = PermissionToken.GetForPermissionOrCreate(permission));
-            _permissionToken = PermissionToken.GetForPermissionOrNull(permission);            
+            _permissionToken = PermissionToken.GetForPermissionOrNull(permission);
             ReloadMembers();
         }
 
         public void ReloadMembers()
         {
             _permissionToken = PermissionToken.GetForPermissionOrNull(_permission);
-
             if (_permissionToken != null)
             {
                 CurrentMembers.Data =
