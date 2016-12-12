@@ -9,9 +9,12 @@ namespace Starcounter.Authorization.Partial
 {
     public partial class PermissionSelectionPartial : Json
     {
+        public delegate void MemberAddedHandler(object sender, PermissionSelectionPartialEventArgs e);
+        public delegate void MemberRemovedHandler(object sender, PermissionSelectionPartialEventArgs e);
+        public event MemberAddedHandler MemberAdded;
+        public event MemberRemovedHandler MemberRemoved;
         private Func<PermissionToken> _getOrCreateToken;
         private PermissionToken _permissionToken;
-        private bool _commitOnChange;
 
         public static void RegisterResources()
         {
@@ -27,20 +30,19 @@ namespace Starcounter.Authorization.Partial
             });
         }
 
-        public static PermissionSelectionPartial Create<TPermission>(TPermission permission, bool commitOnChange = true)
+        public static PermissionSelectionPartial Create<TPermission>(TPermission permission)
             where TPermission : Permission
         {
             var permissionSelectionPartial = new PermissionSelectionPartial();
-            permissionSelectionPartial.Init(permission, commitOnChange);
+            permissionSelectionPartial.Init(permission);
             return permissionSelectionPartial;
         }
 
-        public void Init<TPermission>(TPermission permission, bool commitOnChange) where TPermission : Permission
+        public void Init<TPermission>(TPermission permission) where TPermission : Permission
         {
             _getOrCreateToken =
                 () => _permissionToken ?? (_permissionToken = PermissionToken.GetForPermissionOrCreate(permission));
             _permissionToken = PermissionToken.GetForPermissionOrNull(permission);
-            _commitOnChange = commitOnChange;
             ReloadMembers();
         }
 
@@ -68,28 +70,23 @@ namespace Starcounter.Authorization.Partial
                 Permission = _getOrCreateToken(),
                 Group = item.Data
             };
-            if (_commitOnChange)
-            {
-                Transaction.Commit();
-            }
             ReloadMembers();
             Query = string.Empty;
             RefreshSearchResultList(Query);
+            MemberAdded?.Invoke(this, new PermissionSelectionPartialEventArgs(item.Data));
         }
 
         private void RemoveAssociation(PermissionSomebodyGroup psg)
         {
+            var group = psg.Group;
             psg.Delete();
             if (!GetAllPsgForPermission().Any())
             {
                 _permissionToken.Delete();
                 _permissionToken = null;
             }
-            if (_commitOnChange)
-            {
-                Transaction.Commit();
-            }
             ReloadMembers();
+            MemberRemoved?.Invoke(this, new PermissionSelectionPartialEventArgs(group));
         }
 
         private QueryResultRows<PermissionSomebodyGroup> GetAllPsgForPermission()
@@ -127,7 +124,7 @@ namespace Starcounter.Authorization.Partial
                 $"SELECT s FROM {typeof(SomebodyGroup).FullName} s WHERE s.{nameof(SomebodyGroup.Name)} LIKE ?",
                 $"%{nameToLookFor.ToLowerInvariant()}%")
                 .Except(currentGroups)
-                .Select(item => new GroupResultItem { Key = item.Key, Data = item });
+                .Select(item => new GroupResultItem {Key = item.Key, Data = item});
         }
 
         [PermissionSelectionPartial_json.CurrentMembers]
