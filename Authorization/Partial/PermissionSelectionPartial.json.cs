@@ -9,10 +9,8 @@ namespace Starcounter.Authorization.Partial
 {
     public partial class PermissionSelectionPartial : Json
     {
-        public delegate void MemberAddedHandler(object sender, PermissionSelectionPartialEventArgs e);
-        public delegate void MemberRemovedHandler(object sender, PermissionSelectionPartialEventArgs e);
-        public event MemberAddedHandler MemberAdded;
-        public event MemberRemovedHandler MemberRemoved;
+        public EventHandler<PermissionSelectionPartialEventArgs> MemberAdded;
+        public EventHandler<PermissionSelectionPartialEventArgs> MemberRemoved;
         private Func<PermissionToken> _getOrCreateToken;
         private PermissionToken _permissionToken;
 
