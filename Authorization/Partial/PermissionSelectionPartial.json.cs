@@ -13,6 +13,7 @@ namespace Starcounter.Authorization.Partial
         public EventHandler<PermissionSelectionPartialEventArgs> MemberRemoved;
         private Func<PermissionToken> _getOrCreateToken;
         private PermissionToken _permissionToken;
+        private Permission _permission;
 
         public static void RegisterResources()
         {
@@ -38,14 +39,16 @@ namespace Starcounter.Authorization.Partial
 
         public void Init<TPermission>(TPermission permission) where TPermission : Permission
         {
+            _permission = permission;
             _getOrCreateToken =
                 () => _permissionToken ?? (_permissionToken = PermissionToken.GetForPermissionOrCreate(permission));
             _permissionToken = PermissionToken.GetForPermissionOrNull(permission);
             ReloadMembers();
         }
 
-        private void ReloadMembers()
+        public void ReloadMembers()
         {
+            _permissionToken = PermissionToken.GetForPermissionOrNull(_permission);
             if (_permissionToken != null)
             {
                 CurrentMembers.Data =

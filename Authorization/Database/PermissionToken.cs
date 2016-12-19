@@ -31,29 +31,27 @@ namespace Starcounter.Authorization.Database
         /// <summary>
         /// Retrieve an instance representing given permission. Returns null if nothing is found.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="permission"></param>
         /// <returns></returns>
-        public static PermissionToken GetForPermissionOrNull<T>(T permission) where T:Permission
+        public static PermissionToken GetForPermissionOrNull(Permission permission)
         {
             return Db.SQL<PermissionToken>(
                     $"select a from {typeof(PermissionToken).FullName} a where a.{nameof(SerializedPermission)} = ? and a.{nameof(SerializedType)} = ?",
                     Serialize(permission),
-                    typeof(T).FullName)
+                    permission.GetType().ToString())
                 .FirstOrDefault();
         }
 
         /// <summary>
         /// Retrieve an instance representing given permission. Creates one if it doesn't already exist.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="permission"></param>
         /// <returns></returns>
-        public static PermissionToken GetForPermissionOrCreate<T>(T permission) where T : Permission
+        public static PermissionToken GetForPermissionOrCreate(Permission permission)
         {
             return GetForPermissionOrNull(permission) ?? new PermissionToken
                    {
-                       SerializedType = typeof(T).FullName,
+                       SerializedType = permission.GetType().ToString(),
                        SerializedPermission = Serialize(permission)
                    };
         }
