@@ -51,6 +51,10 @@
 
     .people-group-member-autocomplete-list__item-remove-icon { font-size: 10px; }
 
+    .people-group-member-autocomplete-list__item-remove-icon[data-is-disabled] {
+        display: none;
+    }
+
     .people-group-member-autocomplete-input {
         border: none;
         font-size: 14px;
@@ -72,17 +76,17 @@
     <template is="dom-bind">
         <div class="people-group-member-autocomplete-container" on-click="selectSearchInput">
             <ul class="people-group-member-autocomplete-list">
+                <template is="dom-repeat" items="{{model.CurrentMembers}}">
+                    <li class="people-group-member-autocomplete-list__item">
+                        <button type="button" disabled$="{{!model.IsEnabled}}" class="btn btn-default btn-xs people-group-member-autocomplete-list__item-btn" value="{{item.Remove$::click}}" onclick="++this.value">
+                            <span>{{item.Name}} </span>
+                            <span class="glyphicon glyphicon-remove people-group-member-autocomplete-list__item-remove-icon" data-id-disabled$="{{!model.IsEnabled}}"></span>
+                        </button>
+                    </li>
+                </template>
                 <template is="dom-if" if="{{model.IsEnabled}}">
-                    <template is="dom-repeat" items="{{model.CurrentMembers}}">
-                        <li class="people-group-member-autocomplete-list__item">
-                            <button type="button" class="btn btn-default btn-xs people-group-member-autocomplete-list__item-btn" value="{{item.Remove$::click}}" onclick="++this.value">
-                                <span>{{item.Name}} </span>
-                                <span class="glyphicon glyphicon-remove people-group-member-autocomplete-list__item-remove-icon" aria-hidden="true"></span>
-                            </button>
-                        </li>
-                    </template>
                     <li class="people-group-member-autocomplete-list__item people-group-member-autocomplete-list__item-input">
-                        <input type="text" class="people-group-member-autocomplete-input" value="{{model.Query$::input}}" placeholder="Search to add..."/>
+                        <input type="text" class="people-group-member-autocomplete-input" value="{{model.Query$::input}}" placeholder="Search to add..." />
                         <ul class="people-group-member-autocomplete">
                             <template is="dom-repeat" items="{{model.Results}}">
                                 <li class="people-group-member-autocomplete__item" on-click="selectResult" item="{{item}}">
@@ -95,17 +99,7 @@
                         </ul>
                     </li>
                 </template>
-                <template is="dom-if" if="{{!model.IsEnabled}}">
-                    <template is="dom-repeat" items="{{model.CurrentMembers}}">
-                        <li class="people-group-member-autocomplete-list__item">
-                            <button type="button" disabled class="btn btn-default btn-xs people-group-member-autocomplete-list__item-btn">
-                                <span>{{item.Name}} </span>                                
-                            </button>
-                        </li>
-                    </template>
-                </template>
             </ul>
-
         </div>
     </template>
     <script>
