@@ -121,8 +121,7 @@
             };
 
             template.selectSearchInput = function () {
-                //temporary fix - see: https://github.com/Starcounter/authorization/issues/19
-                //document.querySelector('.people-group-member-autocomplete-input').focus();
+                template.parentNode.querySelector('.people-group-member-autocomplete-input').focus();
             };
         })();
     </script>
