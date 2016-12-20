@@ -4,6 +4,7 @@ using System.Linq;
 using Simplified.Ring2;
 using Starcounter.Authorization.Core;
 using Starcounter.Authorization.Database;
+using Starcounter.Authorization.Helper;
 
 namespace Starcounter.Authorization.Partial
 {
@@ -52,7 +53,7 @@ namespace Starcounter.Authorization.Partial
             if (_permissionToken != null)
             {
                 CurrentMembers.Data =
-                    GetAllPsgForPermission();
+                    PermissionHelper.GetAllPsgForPermission(_permissionToken);
                 foreach (var currentMemberItem in CurrentMembers)
                 {
                     currentMemberItem.RemoveAction = RemoveAssociation;
@@ -81,20 +82,13 @@ namespace Starcounter.Authorization.Partial
         {
             var group = psg.Group;
             psg.Delete();
-            if (!GetAllPsgForPermission().Any())
+            if (!PermissionHelper.GetAllPsgForPermission(_permissionToken).Any())
             {
                 _permissionToken.Delete();
                 _permissionToken = null;
             }
             ReloadMembers();
             MemberRemoved?.Invoke(this, new PermissionSelectionPartialEventArgs(group));
-        }
-
-        private QueryResultRows<PermissionSomebodyGroup> GetAllPsgForPermission()
-        {
-            return Db.SQL<PermissionSomebodyGroup>(
-                $"select a from {typeof(PermissionSomebodyGroup).FullName} a where a.{nameof(PermissionSomebodyGroup.Permission)} = ?",
-                _permissionToken);
         }
 
         private void Handle(Input.Query action)
