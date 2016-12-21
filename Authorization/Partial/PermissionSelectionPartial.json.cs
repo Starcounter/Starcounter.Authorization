@@ -12,9 +12,11 @@ namespace Starcounter.Authorization.Partial
     {
         public EventHandler<PermissionSelectionPartialEventArgs> MemberAdded;
         public EventHandler<PermissionSelectionPartialEventArgs> MemberRemoved;
+        public EventHandler<PermissionSelectionPartialEventArgs> MemberRemovalNotAllowed;
         private Func<PermissionToken> _getOrCreateToken;
         private PermissionToken _permissionToken;
         private Permission _permission;
+        private Func<bool> _checkIfRemoveGroupAllowed;
 
         public static void RegisterResources()
         {
@@ -30,17 +32,28 @@ namespace Starcounter.Authorization.Partial
             });
         }
 
-        public static PermissionSelectionPartial Create<TPermission>(TPermission permission)
+        /// <summary>
+        /// It creates PermissionSelectionPartial which allows to assign/remove groups assigned to permission.
+        /// </summary>
+        /// <typeparam name="TPermission"></typeparam>
+        /// <param name="permission">Determines <see cref="Permission"/>created partial is reffered to.</param>
+        /// <param name="checkIfRemoveGroupAllowed">If specified, given function will be executed after every group removal.
+        /// When returning true, changes will be commited. When returning false, changes will be cancelled and MemberRemovalNotAllowed
+        /// evend will be dispatched. Useful to avoid situation when current user is deleting permission for himself.
+        /// </param>
+        /// <returns></returns>
+        public static PermissionSelectionPartial Create<TPermission>(TPermission permission, Func<bool> checkIfRemoveGroupAllowed = null)
             where TPermission : Permission
         {
             var permissionSelectionPartial = new PermissionSelectionPartial();
-            permissionSelectionPartial.Init(permission);
+            permissionSelectionPartial.Init(permission, checkIfRemoveGroupAllowed);
             return permissionSelectionPartial;
         }
 
-        public void Init<TPermission>(TPermission permission) where TPermission : Permission
+        public void Init<TPermission>(TPermission permission, Func<bool> checkIfRemoveGroupAllowed = null) where TPermission : Permission
         {
             _permission = permission;
+            _checkIfRemoveGroupAllowed = checkIfRemoveGroupAllowed;
             _getOrCreateToken =
                 () => _permissionToken ?? (_permissionToken = PermissionToken.GetForPermissionOrCreate(permission));
             _permissionToken = PermissionToken.GetForPermissionOrNull(permission);
@@ -81,7 +94,28 @@ namespace Starcounter.Authorization.Partial
         private void RemoveAssociation(PermissionSomebodyGroup psg)
         {
             var group = psg.Group;
+
+            if (_checkIfRemoveGroupAllowed != null)
+            {
+                var temporaryTransaction = new Transaction();
+                var canBeRemoved = true;
+
+                temporaryTransaction.Scope(() =>
+                {
+                    psg.Delete();
+                    canBeRemoved = _checkIfRemoveGroupAllowed();
+                });
+
+                if (!canBeRemoved)
+                {
+                    temporaryTransaction.Rollback();
+                    MemberRemovalNotAllowed?.Invoke(this, new PermissionSelectionPartialEventArgs(group));
+                    return;
+                }
+            }
+
             psg.Delete();
+
             if (!PermissionHelper.GetAllPsgForPermission(_permissionToken).Any())
             {
                 _permissionToken.Delete();
