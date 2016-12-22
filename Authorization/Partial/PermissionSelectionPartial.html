@@ -116,12 +116,11 @@
                         break;
                     }
                 }
-
-                template.selectSearchInput();
+                ev.currentTarget.parentNode.parentNode.querySelector('.people-group-member-autocomplete-input').focus();               
             };
 
-            template.selectSearchInput = function () {
-                template.parentNode.querySelector('.people-group-member-autocomplete-input').focus();
+            template.selectSearchInput = function (ev) {
+                ev.currentTarget.querySelector('.people-group-member-autocomplete-input').focus();
             };
         })();
     </script>
