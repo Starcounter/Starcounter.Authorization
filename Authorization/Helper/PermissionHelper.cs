@@ -16,5 +16,19 @@ namespace Starcounter.Authorization.Helper
                 $"select a from {typeof(PermissionSomebodyGroup).FullName} a where a.{nameof(PermissionSomebodyGroup.Permission)} = ?",
                 permissionToken);
         }
+
+        public static void CloneSomebodyGroupAssignments(Permission fromPermission, Permission toPermission)
+        {
+            var sourceGroups = GetAllPsgForPermission(fromPermission);
+
+            foreach(var group in sourceGroups)
+            {
+                new PermissionSomebodyGroup
+                {
+                    Permission = PermissionToken.GetForPermissionOrCreate(toPermission),
+                    Group = group.Group
+                };
+            }
+        }
     }
 }
