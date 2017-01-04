@@ -19,9 +19,7 @@ namespace Starcounter.Authorization.Helper
 
         public static void CloneSomebodyGroupAssignments(Permission fromPermission, Permission toPermission)
         {
-            var sourceGroups = GetAllPsgForPermission(fromPermission);
-
-            foreach(var group in sourceGroups)
+            foreach (var group in GetAllPsgForPermission(fromPermission))
             {
                 new PermissionSomebodyGroup
                 {
