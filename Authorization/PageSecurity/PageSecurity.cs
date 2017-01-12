@@ -344,9 +344,10 @@ namespace Starcounter.Authorization.PageSecurity
                         }
                         permissionExpression =
                             Expression.Condition(
-                                Expression.Equal(
-                                    Expression.Constant(1),
-                                    Expression.ArrayLength(objectsParameterExpression)),
+                                Expression.GreaterThanOrEqual(
+                                    Expression.ArrayLength(objectsParameterExpression),
+                                    Expression.Constant(1)
+                                    ),
                                 Expression.New(
                                     permissionsConstructor,
                                     Expression.TypeAs(
