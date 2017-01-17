@@ -287,6 +287,20 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             VerifyUnchanged(subpage, subpage.ChangeSecuredSubThing);
         }
 
+        [Test]
+        public void SubpageHandlerWithNoAttribute_RequirePermissionData_ShouldAskForProperPermission()
+        {
+            var thing = new Thing();
+            var page = CreatePage<ExampleDataPage>();
+            page.Data = thing;
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)))
+                .Returns(true)
+                .Verifiable();
+
+            ChangePropertyInPage(page.PropertyTwo, p => p.Template.SomeProperty);
+
+            _authEnforcementMock.Verify();
+        }
 
         [Test]
         public void SubpageNestedHandlerMarkedWithAttribute_RequirePermissionData_ShouldAskForProperPermission()
