@@ -7,7 +7,7 @@ using System.Reflection;
 using Starcounter.Authorization.Attributes;
 using Starcounter.Authorization.Core;
 using Starcounter.Templates;
-using Check = System.Object;
+using Check = System.Tuple<System.Type, object>;
 
 namespace Starcounter.Authorization.PageSecurity
 {
@@ -110,13 +110,6 @@ namespace Starcounter.Authorization.PageSecurity
         }
 
         /// <summary>
-        /// Expands property tree recursively
-        /// </summary>
-        /// <param name="property"></param>
-        /// <returns></returns>
-        private static IEnumerable<Template> ExpandPageProperties(Template property) => (property as TObject)?.Children.SelectMany(ExpandPageProperties) ?? new[] { property };
-
-        /// <summary>
         /// Creates an IEnumerable of tasks to perform. Each entry represents a property (Template) that has
         /// to have a handler added, with permission check (object, underlying Action&lt;pageType&gt;)
         /// and an optional originalHandler method (MethodInfo) to invoke after the check
@@ -126,10 +119,10 @@ namespace Starcounter.Authorization.PageSecurity
         /// <returns></returns>
         private IEnumerable<Tuple<MethodInfo, Template, Check, Type>> CreateTaskList(Type pageType, Type parentPageType = null)
         {
-            // the name "DefaultTemplate" is defined inside each Page class, so couldn't be obtained with nameof
             TObject pageDefaultTemplate;
             try
             {
+                // the name "DefaultTemplate" is defined inside each Page class, so couldn't be obtained with nameof
                 pageDefaultTemplate = (TObject)pageType.GetField("DefaultTemplate").GetValue(null);
             }
             catch (Exception ex)
@@ -139,13 +132,28 @@ namespace Starcounter.Authorization.PageSecurity
                     ex);
             }
 
-            Check pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, pageType);
-            if (pageCheck == null && parentPageType != null)
-            {
-                pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, parentPageType);
-            }
+            return AllHandlersTasks(pageType, pageDefaultTemplate.Children);
+        }
 
-            var pageProperties = ExpandPageProperties(pageDefaultTemplate);
+        /// <summary>
+        /// Generates tasks for a given page
+        /// </summary>
+        /// <param name="pageType">Class of the page that is inspected (the class that is written by the developer)</param>
+        /// <param name="properties">Properties that belong to this page</param>
+        /// <param name="parentCheck">If present, the Check that was generated for the parent page</param>
+        /// <returns>Each tuple contains: 
+        /// original handler (or null), 
+        /// a property to attach to, 
+        /// a check to perform (see Check definition on top of file),
+        /// the class of the page that this property belongs to</returns>
+        private IEnumerable<Tuple<MethodInfo, Template, Check, Type>> AllHandlersTasks(Type pageType, IEnumerable<Template> properties, Check parentCheck = null)
+        {
+            var pageProperties = properties.ToList();
+            Check pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, pageType);
+            if (pageCheck == null && parentCheck != null)
+            {
+                pageCheck = parentCheck;
+            }
 
             var existingHandlers = pageType
                 .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -156,16 +164,27 @@ namespace Starcounter.Authorization.PageSecurity
 
             var existingHandlersList = existingHandlers.ToList();
             var handlersWithChecks = existingHandlersList
-                .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, tpl.Item1), pageType))
+                .Select(
+                    tpl =>
+                        Tuple.Create(tpl.Item1, tpl.Item2,
+                            _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, tpl.Item1), pageType))
                 .Where(tuple => tuple.Item3 != null)
                 .ToList();
 
+            // todo rewrite to use .ElementType.InstanceType and get info from Schema, not GetGenericTypeParameter
             var arrayProperties = pageProperties
                 .Select(template => Tuple.Create(template, GetGenericTypeParameter(template, typeof(TArray<>))))
                 .Where(tuple => tuple.Item2 != null)
-                .SelectMany(tuple => CreateTaskList(tuple.Item2, pageType));
+                .Select(tuple => Tuple.Create(tuple.Item1, tuple.Item2, tuple.Item2.GetField("DefaultTemplate").GetValue(null) as TObject))
+                .Where(tuple => tuple.Item3 != null)
+                .SelectMany(tuple => AllHandlersTasks(tuple.Item2, tuple.Item3.Children, _checkersCreator.WrapCheck(pageCheck, tuple.Item2, 2)));
+
+            var subPages = pageProperties
+                .OfType<TObject>()
+                .SelectMany(o => AllHandlersTasks(o.InstanceType, o.Children, _checkersCreator.WrapCheck(pageCheck, o.InstanceType, 1)));
 
             IEnumerable<Tuple<MethodInfo, Template, Check, Type>> allHandlersTasks = handlersWithChecks
+                .Concat(subPages)
                 .Concat(arrayProperties);
 
             if (pageCheck != null)
@@ -248,6 +267,24 @@ namespace Starcounter.Authorization.PageSecurity
                 _checkDeniedHandler = checkDeniedHandler;
             }
 
+            public Check WrapCheck(Check existingCheck, Type pageType, int numberOfLayers)
+            {
+                var pageParameterExpression = Expression.Parameter(pageType, "page");
+                Expression pageExpression = pageParameterExpression;
+                var parentMemberInfo = typeof(Json).GetProperty(nameof(Json.Parent));
+                foreach (var i in Enumerable.Range(0, numberOfLayers))
+                {
+                    pageExpression = Expression.MakeMemberAccess(pageExpression, parentMemberInfo);
+                }
+                var existingPageType = existingCheck.Item1;
+                var checkLambda = Expression.Lambda(
+                    Expression.Invoke(
+                        Expression.Constant(existingCheck.Item2),
+                        Expression.Convert(pageExpression, existingPageType)),
+                    pageParameterExpression).Compile();
+                return Tuple.Create<Type, object>(pageType, checkLambda);
+            }
+
             /// <summary>
             /// Creates an Func&lt;pageType, bool&gt; that checks permissions and uses <see cref="_checkDeniedHandler"/> and returns false in case it's denied. Returns true if granted
             /// </summary>
@@ -293,7 +330,7 @@ namespace Starcounter.Authorization.PageSecurity
                 try
                 {
                     var checkResult = Expression.Parameter(typeof(bool));
-                    return Expression.Lambda(Expression.Block(
+                    var checkLambda = Expression.Lambda(Expression.Block(
                         new[] {checkResult},
                         Expression.Assign(checkResult, CreateCheckPermissionCall(permissionExpression)),
                         Expression.IfThen(
@@ -301,6 +338,7 @@ namespace Starcounter.Authorization.PageSecurity
                             _checkDeniedHandler(pageType, permissionExpression, appParameterExpression)),
                         checkResult),
                         appParameterExpression).Compile();
+                    return Tuple.Create<Type, object>(pageType, checkLambda);
                 }
                 catch (Exception ex)
                 {
@@ -309,7 +347,6 @@ namespace Starcounter.Authorization.PageSecurity
                         $"Could not create check for page {pageType} and permission {permissionExpression.Type}. Make sure your provided checkDeniedHandler returns correct Expression",
                         ex);
                 }
-                ;
             }
 
             /// <summary>
@@ -378,8 +415,9 @@ namespace Starcounter.Authorization.PageSecurity
             // ReSharper disable once UnusedParameter.Local pageType will be used to support subpage checking
             private ConstructorInfo GetRequiredPermissionsConstructor(Type pageType, ICustomAttributeProvider attributesSource)
             {
-                var requirePermissionAttribute = attributesSource.GetCustomAttributes(typeof(RequirePermissionAttribute), true)
-                    .Cast<RequirePermissionAttribute>()
+                var requirePermissionAttribute = attributesSource
+                    .GetCustomAttributes(true)
+                    .OfType<RequirePermissionAttribute>()
                     .FirstOrDefault();
 
                 if (requirePermissionAttribute != null)
@@ -473,7 +511,7 @@ namespace Starcounter.Authorization.PageSecurity
                 var inputParameter = Expression.Parameter(typeof(Input<>).MakeGenericType(tType), "input");
                 var jsonAsTApp = Expression.Convert(jsonParameter, pageType);
                 Expression body;
-                var checkInvocation = Expression.Invoke(Expression.Constant(checkAction), jsonAsTApp);
+                var checkInvocation = Expression.Invoke(Expression.Constant(checkAction.Item2), jsonAsTApp);
                 var cancelEvent = Expression.Call(inputParameter, typeof(Input).GetProperty(nameof(Input.Cancelled)).GetSetMethod(), Expression.Constant(true));
                 if (originalHandler != null)
                 {
