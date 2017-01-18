@@ -269,6 +269,10 @@ namespace Starcounter.Authorization.PageSecurity
 
             public Check WrapCheck(Check existingCheck, Type pageType, int numberOfLayers)
             {
+                if (existingCheck == null)
+                {
+                    return null;
+                }
                 var pageParameterExpression = Expression.Parameter(pageType, "page");
                 Expression pageExpression = pageParameterExpression;
                 var parentMemberInfo = typeof(Json).GetProperty(nameof(Json.Parent));

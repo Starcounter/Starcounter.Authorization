@@ -1,0 +1,14 @@
+{
+  "Html": "",
+  "Action1$" : 0,
+  "PropertyTwo":
+    {
+      "SomeProperty$": 0,
+      "SomeSecuredProperty$": 0,
+      "NestedElements": [
+        {
+          "SomeSecuredNestedProperty$": 0
+        }
+      ]
+    }
+}

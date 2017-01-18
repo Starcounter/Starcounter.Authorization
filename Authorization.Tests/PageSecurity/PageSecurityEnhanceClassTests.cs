@@ -335,6 +335,17 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             VerifyUnchanged(nestedPage, nestedPage.SomeSecuredNestedProperty);
         }
 
+        [Test]
+        public void HandlerWithoutAttribute_Unsecured_ShouldAlwaysWork()
+        {
+            var page = CreatePage<ExampleUnsecuredPage>();
+
+            ChangePropertyInPage(page, p => p.Template.Action1);
+
+            VerifyChangedAndCheckDeniedHandlerNotCalled(page.Action1);
+            VerifyHandlerWorked(page, nameof(ExampleUnsecuredPage.Action1));
+        }
+
         private void VerifyChangedAndCheckDeniedHandlerNotCalled(long property)
         {
             property.Should().Be(1);
