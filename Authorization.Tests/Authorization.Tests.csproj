@@ -89,6 +89,9 @@
     <Compile Include="Database\PermissionTokenSerializerTests.cs" />
     <Compile Include="FakeClaim.cs" />
     <Compile Include="FakePermission.cs" />
+    <Compile Include="PageSecurity\ExampleUnsecuredPage.json.cs">
+      <DependentUpon>ExampleUnsecuredPage.json</DependentUpon>
+    </Compile>
     <Compile Include="PageSecurity\ExampleDataPage.json.cs">
       <DependentUpon>ExampleDataPage.json</DependentUpon>
     </Compile>
@@ -106,6 +109,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <TypedJSON Include="PageSecurity\ExampleUnsecuredPage.json">
+      <Generator>MsBuild:Compile</Generator>
+    </TypedJSON>
     <TypedJSON Include="PageSecurity\ExampleDataPage.json">
       <Generator>MsBuild:Compile</Generator>
     </TypedJSON>
