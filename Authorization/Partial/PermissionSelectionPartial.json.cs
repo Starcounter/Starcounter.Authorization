@@ -102,8 +102,11 @@ namespace Starcounter.Authorization.Partial
 
                 temporaryTransaction.Scope(() =>
                 {
-                    psg.Delete();
-                    canBeRemoved = _checkIfRemoveGroupAllowed();
+                    if (DbHelper.FromID(psg.GetObjectNo()) != null)
+                    {
+                        psg.Delete();
+                        canBeRemoved = _checkIfRemoveGroupAllowed();
+                    }
                 });
 
                 if (!canBeRemoved)
