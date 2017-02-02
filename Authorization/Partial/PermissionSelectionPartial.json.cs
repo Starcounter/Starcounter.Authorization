@@ -98,15 +98,16 @@ namespace Starcounter.Authorization.Partial
             if (_checkIfRemoveGroupAllowed != null)
             {
                 var temporaryTransaction = new Transaction();
-                var canBeRemoved = true;
-
-                temporaryTransaction.Scope(() =>
+                var canBeRemoved = temporaryTransaction.Scope(() =>
                 {
+                    //We need to check if object is persistent because this transaction has no state of the previous one
                     if (DbHelper.FromID(psg.GetObjectNo()) != null)
                     {
                         psg.Delete();
-                        canBeRemoved = _checkIfRemoveGroupAllowed();
+                        return _checkIfRemoveGroupAllowed();
                     }
+                    // Object exists only in our current transaction, so we can delete it for sure.
+                    return true;
                 });
 
                 if (!canBeRemoved)
