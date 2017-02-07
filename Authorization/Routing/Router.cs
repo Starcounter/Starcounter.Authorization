@@ -11,6 +11,16 @@ namespace Starcounter.Authorization.Routing
         private readonly Func<RoutingInfo, Response> _pageCreator;
         private readonly List<IPageMiddleware> _middleware = new List<IPageMiddleware>();
 
+        public static Response DefaultPageCreator(RoutingInfo routingInfo)
+        {
+            return (Response) Activator.CreateInstance(routingInfo.SelectedPageType);
+        }
+
+        public static Router CreateDefault()
+        {
+            return new Router(DefaultPageCreator);
+        }
+
         public Router(Func<RoutingInfo, Response> pageCreator)
         {
             _pageCreator = pageCreator;
@@ -52,8 +62,16 @@ namespace Starcounter.Authorization.Routing
                     Handle.GET<string, string, Request>(url,
                         (arg1, arg2, request) => RunResponse(pageType, request, arg1, arg2));
                     break;
+                case 3:
+                    Handle.GET<string, string, string, Request>(url,
+                        (arg1, arg2, arg3, request) => RunResponse(pageType, request, arg1, arg2, arg3));
+                    break;
+                case 4:
+                    Handle.GET<string, string, string, string, Request>(url,
+                        (arg1, arg2, arg3, arg4, request) => RunResponse(pageType, request, arg1, arg2, arg3, arg4));
+                    break;
                 default:
-                    throw new NotSupportedException("Not supported: more than 2 parameters in URL");
+                    throw new NotSupportedException("Not supported: more than 4 parameters in URL");
             }
         }
 

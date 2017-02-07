@@ -89,6 +89,7 @@
     <Compile Include="Database\PermissionTokenSerializerTests.cs" />
     <Compile Include="FakeClaim.cs" />
     <Compile Include="FakePermission.cs" />
+    <Compile Include="PageSecurity\ExampleCustomPage.cs" />
     <Compile Include="PageSecurity\ExampleUnsecuredPage.json.cs">
       <DependentUpon>ExampleUnsecuredPage.json</DependentUpon>
     </Compile>
@@ -106,9 +107,16 @@
     <Compile Include="PageSecurity\EditSpecificThing.cs" />
     <Compile Include="PageSecurity\ViewSpecificThing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Routing\Middleware\ExamplePages\BoundContextPage.cs" />
+    <Compile Include="Routing\Middleware\ExamplePages\BoundContextPageWithDifferentTypes.cs" />
+    <Compile Include="Routing\Middleware\ExamplePages\BoundPage.cs" />
+    <Compile Include="Routing\Middleware\ExamplePages\ContextPage.cs" />
+    <Compile Include="Routing\Middleware\ExamplePages\CustomUriToContextPage.cs" />
+    <Compile Include="Routing\Middleware\PageContextSupportHandleContextTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Compile Include="Routing\Middleware\ContextMiddlewareTests.cs" />
     <TypedJSON Include="PageSecurity\ExampleUnsecuredPage.json">
       <Generator>MsBuild:Compile</Generator>
     </TypedJSON>
