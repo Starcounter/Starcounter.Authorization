@@ -10,6 +10,7 @@ namespace Starcounter.Authorization.Partial
 {
     public partial class PermissionSelectionPartial : Json
     {
+        private const string PartialUrl = "/Authorization/viewmodels/PermissionSelectionPartial.html";
         public EventHandler<PermissionSelectionPartialEventArgs> MemberAdded;
         public EventHandler<PermissionSelectionPartialEventArgs> MemberRemoved;
         public EventHandler<PermissionSelectionPartialEventArgs> MemberRemovalNotAllowed;
@@ -20,7 +21,7 @@ namespace Starcounter.Authorization.Partial
 
         public static void RegisterResources()
         {
-            Starcounter.Handle.GET("/Authorization/viewmodels/PermissionSelectionPartial.html", () =>
+            Starcounter.Handle.GET(PartialUrl, () =>
             {
                 var assembly = typeof(PermissionSelectionPartial).Assembly;
                 return new Response
@@ -29,6 +30,9 @@ namespace Starcounter.Authorization.Partial
                         "Starcounter.Authorization.Partial.PermissionSelectionPartial.html"),
                     ContentType = "text/html"
                 };
+            }, new HandlerOptions()
+            {
+                ReplaceExistingHandler = true
             });
         }
 
