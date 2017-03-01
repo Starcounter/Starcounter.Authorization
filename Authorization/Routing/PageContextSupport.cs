@@ -28,6 +28,11 @@ namespace Starcounter.Authorization.Routing
         /// <param name="context">The context object. Its type should match the context type of the page</param>
         public static void HandleContext(object page, object context)
         {
+            if (context == null)
+            {
+                return;
+            }
+
             // todo cache the reflection
             // `int` parameter is ignored by nameof operator
             if (page.GetType().GetInterface($"{nameof(IPageContext<int>)}`1") != null)
