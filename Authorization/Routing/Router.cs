@@ -11,9 +11,17 @@ namespace Starcounter.Authorization.Routing
         private readonly Func<RoutingInfo, Response> _pageCreator;
         private readonly List<IPageMiddleware> _middleware = new List<IPageMiddleware>();
 
+        /// <summary>
+        /// Creates a router that will create pages using default constructor and call <see cref="PageContextSupport.HandleContext"/>
+        /// Works only with pages that are <see cref="IResource"/> - this category includes <see cref="Json"/>, so covers most cases
+        /// </summary>
+        /// <param name="routingInfo"></param>
+        /// <returns></returns>
         public static Response DefaultPageCreator(RoutingInfo routingInfo)
         {
-            return (Response) Activator.CreateInstance(routingInfo.SelectedPageType);
+            var page = Activator.CreateInstance(routingInfo.SelectedPageType);
+            PageContextSupport.HandleContext(page, routingInfo.Context);
+            return new Response() {Resource = (IResource) page};
         }
 
         public static Router CreateDefault()

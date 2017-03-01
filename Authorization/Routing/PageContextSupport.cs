@@ -37,7 +37,13 @@ namespace Starcounter.Authorization.Routing
             }
             if (page.GetType().GetInterface($"{nameof(IBound<int>)}`1") != null)
             {
-                page.GetType().GetProperty(nameof(Json.Data)).SetValue(page, context);
+                var dataProperty = typeof(Json).GetProperty(nameof(Json.Data));
+                if (dataProperty == null)
+                {
+                    throw new Exception($"Could not handle context '{context}' for page '{page}': " +
+                                        $"page type {page.GetType()} is IBound, but does not derive from Json class. It is not supported");
+                }
+                dataProperty.SetValue(page, context);
                 return;
             }
             
