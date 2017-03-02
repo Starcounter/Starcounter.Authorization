@@ -9,7 +9,7 @@ namespace Starcounter.Authorization.Tests.Database
 {
     public class PermissionTokenSerializerTests
     {
-        [DatabaseAttribute]
+        [Database]
         // GetObjectId uses IBindable to retrieve object's identity
         public class FakeDbObject : IBindable
         {

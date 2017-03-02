@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Starcounter.Authorization.Attributes;
 using Starcounter.Authorization.Core;
+using Starcounter.Authorization.Routing;
 using Starcounter.Templates;
 using Check = System.Tuple<System.Type, object>;
 
@@ -64,13 +65,12 @@ namespace Starcounter.Authorization.PageSecurity
         /// Checks if the current user has access to a page of specified type.
         /// </summary>
         /// <param name="pageType">The type of page that will be inspected</param>
-        /// <param name="objects">Database objects that would be required to construct the page object. Usually will be either empty or contain one object of the type that this page is IBound to</param>
         /// <returns>true if the current user has access to this page or no check was necessary, false otherwise</returns>
-        public bool CheckClass(Type pageType, object[] objects)
+        public bool CheckClass(Type pageType, object context)
         {
             // todo cache
-            var check = _checkersCreator.CreateBoolCheck(pageType, pageType);
-            return check == null || check(objects);
+            Func<object, bool> check = _checkersCreator.CreateBoolCheck(pageType, pageType);
+            return check == null || check(context);
         }
 
         private void AddHandlers(IEnumerable<Tuple<MethodInfo, Template, Check, Type>> allHandlersTasks)
@@ -359,54 +359,57 @@ namespace Starcounter.Authorization.PageSecurity
             /// <param name="pageType"></param>
             /// <param name="attributeProvider"></param>
             /// <returns></returns>
-            public Func<object[], bool> CreateBoolCheck(Type pageType, ICustomAttributeProvider attributeProvider)
+            public Func<object, bool> CreateBoolCheck(Type pageType, ICustomAttributeProvider attributeProvider)
             {
-                var permissionsConstructor = GetRequiredPermissionsConstructor(pageType, attributeProvider);
-                if (permissionsConstructor == null)
-                {
-                    return null;
-                }
-
                 Expression permissionExpression;
-                var objectsParameterExpression = Expression.Parameter(typeof(object[]), "objects");
-                var parameterTypes = permissionsConstructor.GetParameters().Select(param => param.ParameterType).ToList();
-                switch (parameterTypes.Count)
+                ParameterExpression contextParameterExpression = Expression.Parameter(typeof(object), "context");
+                var contextType = new PageContextSupport().GetContextType(pageType);
+                var customPermissionCreator = ReflectionHelper.GetStaticMethodWithAttribute(pageType, typeof(CustomCheckClassAttribute), contextType, typeof(Permission));
+                if (customPermissionCreator != null)
                 {
-                    case 0:
-                        permissionExpression = Expression.New(permissionsConstructor);
-                        break;
-                    case 1:
-                        var paramType = parameterTypes.First();
-                        var pageDataType = GetDataTypeForPage(pageType);
-                        if (!pageDataType.IsSubclassOf(paramType) && pageDataType != paramType)
-                        {
-                            throw new Exception(
-                                $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Make sure the page is of type IBound<{paramType}>");
-                        }
-                        permissionExpression =
-                            Expression.Condition(
-                                Expression.GreaterThanOrEqual(
-                                    Expression.ArrayLength(objectsParameterExpression),
-                                    Expression.Constant(1)
-                                    ),
+                    permissionExpression = Expression.Call(customPermissionCreator, Expression.Convert(contextParameterExpression, contextType));
+                }
+                else
+                {
+                    var permissionsConstructor = GetRequiredPermissionsConstructor(pageType, attributeProvider);
+                    if (permissionsConstructor == null)
+                    {
+                        return null;
+                    }
+
+                    var parameterTypes = permissionsConstructor.GetParameters()
+                    .Select(param => param.ParameterType)
+                    .ToList();
+                    switch (parameterTypes.Count)
+                    {
+                        case 0:
+                            permissionExpression = Expression.New(permissionsConstructor);
+                            break;
+                        case 1:
+                            var paramType = parameterTypes.First();
+                            if (!contextType.IsSubclassOf(paramType) && contextType != paramType)
+                            {
+                                throw new Exception(
+                                    $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Make sure the page is of type IBound<{paramType}> or {nameof(IPageContext<int>)}<{paramType}>");
+                            }
+                            permissionExpression =
                                 Expression.New(
-                                    permissionsConstructor,
-                                    Expression.TypeAs(
-                                        Expression.ArrayIndex(objectsParameterExpression, Expression.Constant(0)),
-                                        paramType)),
-                                // ReSharper disable once AssignNullToNotNullAttribute constructors always have declaring type, silly R#
-                                Expression.TypeAs(Expression.Constant(null), permissionsConstructor.DeclaringType));
-                        // generates:
-                        //  objects.Length == 1 ? new TPermission(objects[0]) : (TPermission)null
-                        break;
-                    default:
-                        throw new Exception(
-                            $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}. Permissions with more than one constructor parameters are not supported");
+                                        permissionsConstructor,
+                                        Expression.Convert(
+                                            contextParameterExpression,
+                                            paramType));
+                            // generates:
+                            // new TPermission((paramType)context)
+                            break;
+                        default:
+                            throw new Exception(
+                                $"Could not create check for page {pageType} and permission {permissionsConstructor.DeclaringType}, because it requires more than one ctor argument. Use {nameof(CustomCheckClassAttribute)}");
+                    }
                 }
 
-                return Expression.Lambda<Func<object[], bool>>(
-                    CreateCheckPermissionCall(permissionExpression),
-                    objectsParameterExpression)
+                return Expression.Lambda<Func<object, bool>>(
+                        CreateCheckPermissionCall(permissionExpression),
+                        contextParameterExpression)
                     .Compile();
             }
 
@@ -449,20 +452,6 @@ namespace Starcounter.Authorization.PageSecurity
                     checkPermissionMethod,
                     permissionExpression);
                 return checkPermissionCall;
-            }
-
-            private static Type GetDataTypeForPage(Type pageType)
-            {
-                try
-                {
-                    return pageType.GetInterface($"{nameof(IBound<int>)}`1")?.GetGenericArguments().First();
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(
-                        $"Could not determine Data type for page class {pageType}. Please make sure you marked it with IBound interface",
-                        ex);
-                }
             }
         }
 

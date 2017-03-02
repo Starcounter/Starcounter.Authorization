@@ -23,25 +23,11 @@ namespace Starcounter.Authorization.Routing.Middleware
         {
             _pageSecurity.EnhanceClass(routingInfo.SelectedPageType);
 
-            if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Arguments.Select(DbObjectFromBase64Id).ToArray()))
+            if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Context))
             {
                 return _unauthorizedHandler(routingInfo);
             }
             return next();
-        }
-
-        private static object DbObjectFromBase64Id(string id)
-        {
-            ulong objectId;
-            try
-            {
-                objectId = DbHelper.Base64DecodeObjectID(id);
-            }
-            catch (ArgumentException)
-            {
-                return null; // in case a "random" string is supplied, it's leniently converted to int and FromID returns null
-            }
-            return DbHelper.FromID(objectId);
         }
     }
 }

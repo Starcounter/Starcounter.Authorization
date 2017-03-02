@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\CustomCheckClassAttribute.cs" />
     <Compile Include="Authentication\Authentication.cs" />
     <Compile Include="Authentication\SystemUserAuthentication.cs" />
     <Compile Include="Core\AuthorizationEnforcementExtensions.cs" />
@@ -93,7 +94,9 @@
     <Compile Include="Database\PermissionTokenSerializer.cs" />
     <Compile Include="Helper\PermissionHelper.cs" />
     <Compile Include="Partial\PermissionSelectionPartialEventArgs.cs" />
+    <Compile Include="Routing\IPageContext.cs" />
     <Compile Include="Routing\IPageMiddleware.cs" />
+    <Compile Include="Routing\Middleware\ContextMiddleware.cs" />
     <Compile Include="Routing\Middleware\LambdaMiddleware.cs" />
     <Compile Include="Routing\Middleware\DbScopeMiddleware.cs" />
     <Compile Include="PageSecurity\PageSecurity.cs" />
@@ -103,11 +106,14 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Attributes\RequirePermissionAttribute.cs" />
+    <Compile Include="Routing\PageContextSupport.cs" />
+    <Compile Include="Routing\ReflectionHelper.cs" />
     <Compile Include="Routing\Router.cs" />
     <Compile Include="Routing\RouterExtensions.cs" />
     <Compile Include="Routing\RoutingInfo.cs" />
     <Compile Include="Routing\Middleware\SecurityMiddleware.cs" />
     <Compile Include="Routing\Middleware\UseDbScopeAttribute.cs" />
+    <Compile Include="Routing\UriToContextAttribute.cs" />
     <Compile Include="Routing\UrlAttribute.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -34,7 +34,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         {
             var thing = new Thing();
 
-            _pageSecurity.CheckClass(typeof(ExampleDataPage), new[] {thing});
+            _pageSecurity.CheckClass(typeof(ExampleDataPage), thing);
 
             _authEnforcementMock.Verify(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)));
         }
@@ -42,7 +42,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         [Test]
         public void CheckClassReturnsFalseWhenPassedNull_RequirePermissionData()
         {
-            _pageSecurity.CheckClass(typeof(ExampleDataPage), new object[0])
+            _pageSecurity.CheckClass(typeof(ExampleDataPage), new Thing())
                 .Should().BeFalse();
         }
 
@@ -53,7 +53,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewSpecificThing>()))
                 .Returns(expectedOutcome);
 
-            _pageSecurity.CheckClass(typeof(ExampleDataPage), new[] {new Thing()})
+            _pageSecurity.CheckClass(typeof(ExampleDataPage), new Thing())
                 .Should().Be(expectedOutcome);
         }
 
@@ -66,6 +66,19 @@ namespace Starcounter.Authorization.Tests.PageSecurity
 
             _pageSecurity.CheckClass(typeof(ExamplePage), new object[0])
                 .Should().Be(expectedOutcome);
+        }
+
+        [Test]
+        public void CheckClassUsesCustomCheck()
+        {
+            var permission = new ViewThing();
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(permission))
+                .Returns(true)
+                .Verifiable();
+
+            _pageSecurity.CheckClass(typeof(ExampleCustomPage), permission);
+
+            _authEnforcementMock.Verify();
         }
     }
 }
