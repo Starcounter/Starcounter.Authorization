@@ -86,7 +86,7 @@
                 </template>
                 <template is="dom-if" if="{{model.IsEnabled}}">
                     <li class="people-group-member-autocomplete-list__item people-group-member-autocomplete-list__item-input">
-                        <input type="text" class="people-group-member-autocomplete-input" value="{{model.Query$::input}}" placeholder="Search to add..." />
+                        <input type="text" class="people-group-member-autocomplete-input" value="{{model.Query$::input}}" placeholder="Search to add..." onkeypress="window.dispatchEvent(new Event('change'))"/>
                         <ul class="people-group-member-autocomplete">
                             <template is="dom-repeat" items="{{model.Results}}">
                                 <li class="people-group-member-autocomplete__item" on-click="selectResult" item="{{item}}">
