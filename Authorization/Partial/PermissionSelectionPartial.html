@@ -86,7 +86,7 @@
                 </template>
                 <template is="dom-if" if="{{model.IsEnabled}}">
                     <li class="people-group-member-autocomplete-list__item people-group-member-autocomplete-list__item-input">
-                        <input type="text" class="people-group-member-autocomplete-input" value="{{model.Query$::input}}" placeholder="Search to add..." />
+                        <input type="text" class="people-group-member-autocomplete-input" value="{{model.Query$::input}}" placeholder="Search to add..." on-keypress="pushChanges"/>
                         <ul class="people-group-member-autocomplete">
                             <template is="dom-repeat" items="{{model.Results}}">
                                 <li class="people-group-member-autocomplete__item" on-click="selectResult" item="{{item}}">
@@ -122,6 +122,18 @@
             template.selectSearchInput = function (ev) {
                 ev.currentTarget.querySelector('.people-group-member-autocomplete-input').focus();
             };
+
+            template.pushChanges = function () {
+                var fireOnThis = document.body;
+                if (document.createEvent) {
+                    var evObj = document.createEvent('MouseEvents');
+                    evObj.initEvent('mouseup', true, false);
+                    fireOnThis.dispatchEvent(evObj);
+                } else if (document.createEventObject) {
+                    var evObj = document.createEventObject();
+                    fireOnThis.fireEvent('onmouseup', evObj);
+                }
+            }
         })();
     </script>
 </template>
