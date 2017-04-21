@@ -2,6 +2,8 @@
 
 This library helps the developer to prevent the user from accessing / acting on data he doesn't have privileges to.
 
+[It's available on nuget as Starcounter.Authorization](https://www.nuget.org/packages/Starcounter.Authorization)
+
 # Routing, Middleware and Context - Concepts
 
 It is useful to understand these concepts before moving on to authorization.
