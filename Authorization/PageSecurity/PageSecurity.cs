@@ -175,7 +175,7 @@ namespace Starcounter.Authorization.PageSecurity
             var arrayProperties = pageProperties
                 .Select(template => Tuple.Create(template, GetGenericTypeParameter(template, typeof(TArray<>))))
                 .Where(tuple => tuple.Item2 != null)
-                .Select(tuple => Tuple.Create(tuple.Item1, tuple.Item2, tuple.Item2.GetField("DefaultTemplate").GetValue(null) as TObject))
+                .Select(tuple => Tuple.Create(tuple.Item1, tuple.Item2, tuple.Item2.GetField("DefaultTemplate")?.GetValue(null) as TObject))
                 .Where(tuple => tuple.Item3 != null)
                 .SelectMany(tuple => AllHandlersTasks(tuple.Item2, tuple.Item3.Children, _checkersCreator.WrapCheck(pageCheck, tuple.Item2, 2)));
 

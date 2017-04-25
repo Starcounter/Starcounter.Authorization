@@ -96,6 +96,9 @@
     <Compile Include="PageSecurity\ExampleDataPage.json.cs">
       <DependentUpon>ExampleDataPage.json</DependentUpon>
     </Compile>
+    <Compile Include="PageSecurity\EmptyArrayPage.json.cs">
+      <DependentUpon>EmptyArrayPage.json</DependentUpon>
+    </Compile>
     <Compile Include="PageSecurity\ExamplePage.json.cs">
       <DependentUpon>ExamplePage.json</DependentUpon>
     </Compile>
@@ -118,6 +121,9 @@
     <None Include="packages.config" />
     <Compile Include="Routing\Middleware\ContextMiddlewareTests.cs" />
     <TypedJSON Include="PageSecurity\ExampleUnsecuredPage.json">
+      <Generator>MsBuild:Compile</Generator>
+    </TypedJSON>
+    <TypedJSON Include="PageSecurity\EmptyArrayPage.json">
       <Generator>MsBuild:Compile</Generator>
     </TypedJSON>
     <TypedJSON Include="PageSecurity\ExampleDataPage.json">

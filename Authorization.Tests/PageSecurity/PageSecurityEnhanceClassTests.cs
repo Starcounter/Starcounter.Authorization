@@ -346,6 +346,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             VerifyHandlerWorked(page, nameof(ExampleUnsecuredPage.Action1));
         }
 
+        [Test]
+        public void EmptyArrayDoesntCauseProblems()
+        {
+            _pageSecurity.EnhanceClass(typeof(EmptyArrayPage));
+            // no exception thrown
+        }
+
         private void VerifyChangedAndCheckDeniedHandlerNotCalled(long property)
         {
             property.Should().Be(1);
