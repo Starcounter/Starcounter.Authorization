@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>1.0.0</version>
+    <version>$version$</version>
     <title>$title$</title>
     <authors>Starcounter, joozek78</authors>
     <owners>Starcounter, joozek78</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/Starcounter/authorization</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Initial release</releaseNotes>
+    <releaseNotes>Bugfix - see https://github.com/Starcounter/authorization/issues/54</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>Starcounter</tags>
   </metadata>
