@@ -34,12 +34,12 @@ namespace Starcounter.Authorization.Routing
             _pageCreator = pageCreator;
         }
 
-        public void HandleGet<T>()
+        public void HandleGet<T>(HandlerOptions handlerOptions = null)
         {
-            HandleGet(typeof(T));
+            HandleGet(typeof(T), handlerOptions);
         }
 
-        public void HandleGet(Type pageType)
+        public void HandleGet(Type pageType, HandlerOptions handlerOptions = null)
         {
             var urlAttribute = pageType.GetCustomAttribute<UrlAttribute>();
             if (urlAttribute == null)
@@ -47,36 +47,43 @@ namespace Starcounter.Authorization.Routing
                 throw new Exception($"Type {pageType} has no Url attribute on it");
             }
 
-            HandleGet(urlAttribute.Value, pageType);
+            HandleGet(urlAttribute.Value, pageType, handlerOptions);
         }
 
-        public void HandleGet<T>(string url)
+        public void HandleGet<T>(string url, HandlerOptions handlerOptions = null)
         {
-            HandleGet(url, typeof(T));
+            HandleGet(url, typeof(T), handlerOptions);
         }
 
-        public void HandleGet(string url, Type pageType)
+        public void HandleGet(string url, Type pageType, HandlerOptions handlerOptions = null)
         {
             var argumentsNo = Regex.Matches(url, @"\{\?\}").Count;
             switch (argumentsNo)
             {
                 case 0:
-                    Handle.GET(url, (Request request) => RunResponse(pageType, request));
+                    Handle.GET(url,
+                        (Request request) => RunResponse(pageType, request),
+                        handlerOptions);
                     break;
                 case 1:
-                    Handle.GET<string, Request>(url, (arg, request) => RunResponse(pageType, request, arg));
+                    Handle.GET<string, Request>(url,
+                        (arg, request) => RunResponse(pageType, request, arg),
+                        handlerOptions);
                     break;
                 case 2:
                     Handle.GET<string, string, Request>(url,
-                        (arg1, arg2, request) => RunResponse(pageType, request, arg1, arg2));
+                        (arg1, arg2, request) => RunResponse(pageType, request, arg1, arg2),
+                        handlerOptions);
                     break;
                 case 3:
                     Handle.GET<string, string, string, Request>(url,
-                        (arg1, arg2, arg3, request) => RunResponse(pageType, request, arg1, arg2, arg3));
+                        (arg1, arg2, arg3, request) => RunResponse(pageType, request, arg1, arg2, arg3),
+                        handlerOptions);
                     break;
                 case 4:
                     Handle.GET<string, string, string, string, Request>(url,
-                        (arg1, arg2, arg3, arg4, request) => RunResponse(pageType, request, arg1, arg2, arg3, arg4));
+                        (arg1, arg2, arg3, arg4, request) => RunResponse(pageType, request, arg1, arg2, arg3, arg4),
+                        handlerOptions);
                     break;
                 default:
                     throw new NotSupportedException("Not supported: more than 4 parameters in URL");

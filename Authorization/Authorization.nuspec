@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/Starcounter/authorization</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Bugfix - see https://github.com/Starcounter/authorization/issues/54</releaseNotes>
+    <releaseNotes>Router: Support for passing HandlerOptions to Handle.GET</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>Starcounter</tags>
   </metadata>
