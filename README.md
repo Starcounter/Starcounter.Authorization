@@ -334,3 +334,13 @@ public partial class InvoicePage : Json, IBound<Invoice>
 ```
 
 Method marked with this attribute should be public and static, return `Permission` and accept context as its argument. Whatever permission it returns is then checked to see if the user can access the page.
+
+# How to start
+Minimum reasonable configuration to start playing around with this library is to use sample [apps provided by Starcounter](https://github.com/StarcounterApps):
+
+1. [Launcher](https://github.com/StarcounterApps/Launcher) - provides a common UI frame (menu)
+2. [UserAdmin](https://github.com/StarcounterApps/UserAdmin) - allows to create system users
+3. [SignIn](https://github.com/StarcounterApps/SignIn) - authenticates a user with a username and a password
+4. [People](https://github.com/StarcounterApps/People) - gives a way to organize people into groups that may be used with this library
+
+App set above is the sample that allows dealing with users and groups in Simplified data model provided with Starcounter. Thanks to that you will be able to apply instructions above and build a working solution.
