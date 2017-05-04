@@ -1,3 +1,32 @@
+Table of contents
+=================
+* [How to start](#how-to-start)
+* [Authorization Library](#authorization-library)
+* [Routing, Middleware and Context - Concepts](#routing-middleware-and-context---concepts)
+  * [Page](#page)
+  * [RoutingInfo](#routinginfo)
+  * [Router](#router)
+  * [Middleware](#middleware)
+  * [Context](#context)
+* [Foundation](#foundation)
+  * [Permissions](#permissions)
+  * [Define authorization rules](#define-authorization-rules)
+  * [Check the rules](#check-the-rules)
+* [Automatic checking of permissions - SecurityMiddleware](#automatic-checking-of-permissions---securitymiddleware)
+  * [Prerequisite: Router](#prerequisite-router)
+  * [Restricting access to a page](#restricting-access-to-a-page)
+  * [Contextual permissions](#contextual-permissions)
+
+# How to start
+Recommended quick start configuration to play around with this library is to use sample [apps provided by Starcounter](https://github.com/StarcounterApps):
+
+1. [Launcher](https://github.com/StarcounterApps/Launcher) - provides a common UI frame (menu)
+2. [UserAdmin](https://github.com/StarcounterApps/UserAdmin) - allows to create system users
+3. [SignIn](https://github.com/StarcounterApps/SignIn) - authenticates a user with a username and a password
+4. [People](https://github.com/StarcounterApps/People) - gives a way to organize people into groups that may be used with this library
+
+App set above is the sample that allows dealing with users and groups in Simplified data model provided with Starcounter. Thanks to that you will be able to apply instructions above and build a working solution.
+
 # Authorization Library
 
 This library helps the developer to prevent the user from accessing / acting on data he doesn't have privileges to.
