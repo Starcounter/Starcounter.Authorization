@@ -25,7 +25,7 @@ Recommended quick start configuration to play around with this library is to use
 3. [SignIn](https://github.com/StarcounterApps/SignIn) - authenticates a user with a username and a password
 4. [People](https://github.com/StarcounterApps/People) - gives a way to organize people into groups that may be used with this library
 
-App set above is the sample that allows dealing with users and groups in Simplified data model provided with Starcounter. Thanks to that you will be able to apply instructions above and build a working solution.
+App set above is the sample that allows dealing with users and groups in Simplified data model provided with Starcounter. Thanks to that you will be able to apply instructions below and build a working solution.
 
 # Authorization Library
 
