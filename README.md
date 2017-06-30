@@ -154,14 +154,14 @@ Let's define some example database classes that will be useful in this guide:
 [Database]
 public class Invoice : Something
 {
-    public bool IsSettled;
+    public bool IsSettled { get; set; }
 }
 
 [Database]
 public class InvoiceRow : Something
 {
-    public string Product;
-    public decimal Price;
+    public string Product { get; set; }
+    public decimal Price { get; set; }
 }
 
 [Database]

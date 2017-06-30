@@ -21,12 +21,12 @@ namespace Starcounter.Authorization.Database
         /// Serialized form of permission that this instance is representing. Actual form may change in the future
         /// but is currently a JSON document with database fields represented as their base64 IDs
         /// </summary>
-        public string SerializedPermission;
+        public string SerializedPermission { get; set; }
 
         /// <summary>
         /// Full name of type of permission that this instance is representing.
         /// </summary>
-        public string SerializedType;
+        public string SerializedType { get; set; }
 
         /// <summary>
         /// Retrieve an instance representing given permission. Returns null if nothing is found.
