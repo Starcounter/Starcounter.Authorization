@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/Starcounter/authorization</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Router: Support for passing HandlerOptions to Handle.GET</releaseNotes>
+    <releaseNotes>Router: Support for multiple UrlAttributes</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>Starcounter</tags>
   </metadata>
