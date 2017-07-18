@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 
 namespace Starcounter.Authorization.Routing
@@ -7,9 +8,10 @@ namespace Starcounter.Authorization.Routing
     {
         public static void RegisterAllFromAssembly(this Router router, Assembly assembly)
         {
-            foreach (var type in assembly.GetTypes().Where(type => type.GetCustomAttribute<UrlAttribute>() != null))
+            foreach (var typeAndUrl in assembly.GetTypes()
+                .SelectMany(type => type.GetCustomAttributes<UrlAttribute>(), Tuple.Create))
             {
-                router.HandleGet(type);
+                router.HandleGet(typeAndUrl.Item2.Value, typeAndUrl.Item1);
             }
         }
 
