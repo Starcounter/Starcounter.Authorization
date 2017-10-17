@@ -185,10 +185,9 @@ public class DisplayInvoice: Permission
 {
     public Invoice Invoice {get; private set;}
     public DisplayInvoice(Invoice invoice)
-{
-
-this.Invoice = invoice;
-}
+    {
+        this.Invoice = invoice;
+    }
 }
 ```
 
@@ -226,7 +225,7 @@ There are other built-in rules in `Starcounter.Authorization.Core.Rules` namespa
 `AuthorizationEnforcement` is a class responsible for checking the if the current user has a specific permission with regard to a rule set. Let's create it using the rules we defined in previous steps:
 
 ```cs
-var enforcement = AuthorizationEnforcement(rules, new SystemUserAuthentication());
+var enforcement = new AuthorizationEnforcement(rules, new SystemUserAuthentication());
 ```
 
 The second argument passed is a authentication backend (a something that obtains the claims about a current user). It's usually enough to use the built in `SystemUserAuthentication`. It provides `SystemUserClaim` and `PersonClaim` for signed in users.
@@ -243,7 +242,7 @@ Manual checking of permissions is powerful, but usually we need something that c
 
 ### Prerequisite: Router
 
-`SecurityMiddleware` is a feature that depends on Router. If you don't know what it is - go ahead and check it out // `TODO` LINK
+`SecurityMiddleware` is a feature that depends on [Router](#router)
 
 To enable `SecurityMiddleware` add it to a Router:
 
