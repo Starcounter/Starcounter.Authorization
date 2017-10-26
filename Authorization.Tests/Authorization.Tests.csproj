@@ -110,11 +110,13 @@
     <Compile Include="PageSecurity\EditSpecificThing.cs" />
     <Compile Include="PageSecurity\ViewSpecificThing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Routing\Middleware\DefaultPageCreatorTests.cs" />
     <Compile Include="Routing\Middleware\ExamplePages\BoundContextPage.cs" />
     <Compile Include="Routing\Middleware\ExamplePages\BoundContextPageWithDifferentTypes.cs" />
     <Compile Include="Routing\Middleware\ExamplePages\BoundPage.cs" />
     <Compile Include="Routing\Middleware\ExamplePages\ContextPage.cs" />
     <Compile Include="Routing\Middleware\ExamplePages\CustomUriToContextPage.cs" />
+    <Compile Include="Routing\Middleware\ExamplePages\InitPage.cs" />
     <Compile Include="Routing\Middleware\PageContextSupportHandleContextTests.cs" />
   </ItemGroup>
   <ItemGroup>

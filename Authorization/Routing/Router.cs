@@ -20,6 +20,10 @@ namespace Starcounter.Authorization.Routing
         public static Response DefaultPageCreator(RoutingInfo routingInfo)
         {
             var page = Activator.CreateInstance(routingInfo.SelectedPageType);
+            if (page is IInitPage initPage)
+            {
+                initPage.Init();
+            }
             PageContextSupport.HandleContext(page, routingInfo.Context);
             return new Response() {Resource = (IResource) page};
         }

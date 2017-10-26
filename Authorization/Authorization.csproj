@@ -94,6 +94,7 @@
     <Compile Include="Database\PermissionTokenSerializer.cs" />
     <Compile Include="Helper\PermissionHelper.cs" />
     <Compile Include="Partial\PermissionSelectionPartialEventArgs.cs" />
+    <Compile Include="Routing\IInitPage.cs" />
     <Compile Include="Routing\IPageContext.cs" />
     <Compile Include="Routing\IPageMiddleware.cs" />
     <Compile Include="Routing\Middleware\ContextMiddleware.cs" />

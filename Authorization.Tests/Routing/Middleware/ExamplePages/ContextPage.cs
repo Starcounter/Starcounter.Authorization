@@ -3,7 +3,7 @@ using Starcounter.Authorization.Tests.PageSecurity;
 
 namespace Starcounter.Authorization.Tests.Routing.Middleware.ExamplePages
 {
-    public class ContextPage : IPageContext<Thing>
+    public class ContextPage : Json, IPageContext<Thing>
     {
         public Thing Context { get; set; }
 
