@@ -24,6 +24,7 @@ namespace Starcounter.Authorization.Database
                 this.WhatIs = value;
             }
         }
+
         /// <summary>
         /// Synonymous to <see cref="Relation.ToWhat"/>
         /// </summary>

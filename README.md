@@ -178,6 +178,7 @@ public class InvoiceInvoiceRow : Relation
             this.From = value;
         }
     }
+
     public InvoiceRow InvoiceRow
     {
         get
