@@ -167,6 +167,9 @@ public class InvoiceRow : Something
 [Database]
 public class InvoiceInvoiceRow : Relation
 {
+    /// <summary>
+    /// Synonymous to <see cref="Relation.From"/>
+    /// </summary>
     public Invoice Invoice
     {
         get
@@ -179,6 +182,9 @@ public class InvoiceInvoiceRow : Relation
         }
     }
 
+    /// <summary>
+    /// Synonymous to <see cref="Relation.To"/>
+    /// </summary>
     public InvoiceRow InvoiceRow
     {
         get
