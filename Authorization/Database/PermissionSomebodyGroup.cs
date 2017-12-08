@@ -10,8 +10,33 @@ namespace Starcounter.Authorization.Database
     [Database]
     public class PermissionSomebodyGroup : Relation
     {
-        public PermissionToken Permission;
-
-        public SomebodyGroup Group;
+        /// <summary>
+        /// Synonymous to <see cref="Relation.WhatIs"/>
+        /// </summary>
+        public PermissionToken Permission
+        {
+            get
+            {
+                return this.WhatIs as PermissionToken;
+            }
+            set
+            {
+                this.WhatIs = value;
+            }
+        }
+        /// <summary>
+        /// Synonymous to <see cref="Relation.ToWhat"/>
+        /// </summary>
+        public SomebodyGroup Group
+        {
+            get
+            {
+                return this.ToWhat as SomebodyGroup;
+            }
+            set
+            {
+                this.ToWhat = value;
+            }
+        }
     }
 }

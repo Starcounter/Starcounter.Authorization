@@ -167,8 +167,28 @@ public class InvoiceRow : Something
 [Database]
 public class InvoiceInvoiceRow : Relation
 {
-    public Invoice Invoice;
-    public InvoiceRow InvoiceRow;
+    public Invoice Invoice
+    {
+        get
+        {
+            return this.From as Invoice;
+        }
+        set
+        {
+            this.From = value;
+        }
+    }
+    public InvoiceRow InvoiceRow
+    {
+        get
+        {
+            return this.To as InvoiceRow;
+        }
+        set
+        {
+            this.To = value;
+        }
+    }
 }
 ```
 
