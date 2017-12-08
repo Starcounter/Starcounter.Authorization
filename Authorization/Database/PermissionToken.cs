@@ -50,10 +50,10 @@ namespace Starcounter.Authorization.Database
         public static PermissionToken GetForPermissionOrCreate(Permission permission)
         {
             return GetForPermissionOrNull(permission) ?? new PermissionToken
-                   {
-                       SerializedType = permission.GetType().ToString(),
-                       SerializedPermission = Serialize(permission)
-                   };
+            {
+                SerializedType = permission.GetType().ToString(),
+                SerializedPermission = Serialize(permission)
+            };
         }
 
         private static string Serialize<T>(T obj)

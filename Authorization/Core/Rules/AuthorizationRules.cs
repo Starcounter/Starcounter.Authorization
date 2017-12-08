@@ -14,7 +14,7 @@ namespace Starcounter.Authorization.Core.Rules
                 .Add(rule);
         }
 
-        public IEnumerable<IAuthorizationRule<TPermission>> Get<TPermission>() where TPermission:Permission
+        public IEnumerable<IAuthorizationRule<TPermission>> Get<TPermission>() where TPermission : Permission
         {
             return GetPredicatesForPermission<TPermission>()
                 .Cast<IAuthorizationRule<TPermission>>();

@@ -25,7 +25,7 @@ namespace Starcounter.Authorization.Routing
                 initPage.Init();
             }
             PageContextSupport.HandleContext(page, routingInfo.Context);
-            return new Response() {Resource = (IResource) page};
+            return new Response() { Resource = (IResource)page };
         }
 
         public static Router CreateDefault()
@@ -104,7 +104,7 @@ namespace Starcounter.Authorization.Routing
             var routingInfo = new RoutingInfo { Request = request, SelectedPageType = pageType, Arguments = arguments };
             return RunWithMiddleware(
                 routingInfo,
-                _middleware.Concat(new [] { new TerminalMiddleware(() => _pageCreator(routingInfo)) }));
+                _middleware.Concat(new[] { new TerminalMiddleware(() => _pageCreator(routingInfo)) }));
         }
 
         private Response RunWithMiddleware(RoutingInfo routingInfo, IEnumerable<IPageMiddleware> middlewares)

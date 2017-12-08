@@ -167,10 +167,35 @@ public class InvoiceRow : Something
 [Database]
 public class InvoiceInvoiceRow : Relation
 {
-    [SynonymousTo(nameof(From))]
-    public Invoice Invoice;
-    [SynonymousTo(nameof(To))]
-    public InvoiceRow InvoiceRow;
+    /// <summary>
+    /// Synonymous to <see cref="Relation.From"/>
+    /// </summary>
+    public Invoice Invoice
+    {
+        get
+        {
+            return this.From as Invoice;
+        }
+        set
+        {
+            this.From = value;
+        }
+    }
+
+    /// <summary>
+    /// Synonymous to <see cref="Relation.To"/>
+    /// </summary>
+    public InvoiceRow InvoiceRow
+    {
+        get
+        {
+            return this.To as InvoiceRow;
+        }
+        set
+        {
+            this.To = value;
+        }
+    }
 }
 ```
 
