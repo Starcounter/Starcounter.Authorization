@@ -167,9 +167,7 @@ public class InvoiceRow : Something
 [Database]
 public class InvoiceInvoiceRow : Relation
 {
-    [SynonymousTo(nameof(From))]
     public Invoice Invoice;
-    [SynonymousTo(nameof(To))]
     public InvoiceRow InvoiceRow;
 }
 ```

@@ -10,10 +10,8 @@ namespace Starcounter.Authorization.Database
     [Database]
     public class PermissionSomebodyGroup : Relation
     {
-        [SynonymousTo(nameof(WhatIs))]
         public PermissionToken Permission;
-
-        [SynonymousTo(nameof(ToWhat))]
+        
         public SomebodyGroup Group;
     }
 }
