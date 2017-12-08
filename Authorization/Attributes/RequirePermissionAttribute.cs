@@ -10,7 +10,7 @@ namespace Starcounter.Authorization.Attributes
     /// If placed on a Page, permission will be checked before any unmarked Handler is run 
     /// and before any Property is changed by the user
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class|AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public sealed class RequirePermissionAttribute : Attribute
     {
         public Type RequiredPermission { get; private set; }

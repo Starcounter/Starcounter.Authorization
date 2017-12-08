@@ -90,7 +90,7 @@ namespace Starcounter.Authorization.PageSecurity
 
                     // "T" in Property<T>
                     var propertyType = tuple.Item2.GetType().GetProperty(nameof(Property<int>.DefaultValue)).PropertyType;
-                    
+
                     var createInputEvent = originalHandlerMethod != null
                         ? _handlersCreator.RecreateCreateInputEvent(originalHandlerMethod, propertyType)
                         : _handlersCreator.CreateEmptyInputEvent(propertyType);
@@ -335,7 +335,7 @@ namespace Starcounter.Authorization.PageSecurity
                 {
                     var checkResult = Expression.Parameter(typeof(bool));
                     var checkLambda = Expression.Lambda(Expression.Block(
-                        new[] {checkResult},
+                        new[] { checkResult },
                         Expression.Assign(checkResult, CreateCheckPermissionCall(permissionExpression)),
                         Expression.IfThen(
                             Expression.IsFalse(checkResult),

@@ -11,7 +11,7 @@ namespace Starcounter.Authorization.Database
     public class PermissionSomebodyGroup : Relation
     {
         public PermissionToken Permission;
-        
+
         public SomebodyGroup Group;
     }
 }
