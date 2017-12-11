@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/Starcounter/authorization</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Default Router now recognizes instances of IInitPage and calls their Init method upon creation</releaseNotes>
+    <releaseNotes>Remove SynonymousToAttribute usage</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>Starcounter</tags>
   </metadata>
