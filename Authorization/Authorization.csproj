@@ -1,140 +1,38 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{48CF4A36-C006-4649-BAD6-027E7962EFAE}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Starcounter.Authorization</RootNamespace>
+    <Platform>x64</Platform>
+    <Platforms>x64</Platforms>
+    <OutputPath>bin\$(Configuration)</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <TargetFramework>net452</TargetFramework>
     <AssemblyName>Starcounter.Authorization</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SolutionDir)' != ''">
-    <PackagesDir>$(SolutionDir)\packages</PackagesDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SolutionDir)' == ''">
-    <PackagesDir>..\packages</PackagesDir>
+    <RootNamespace>Starcounter.Authorization</RootNamespace>
+    <ProjectGuid>{48CF4A36-C006-4649-BAD6-027E7962EFAE}</ProjectGuid>
+    <Version>2.0.0-rc1</Version>
+    <Authors>Starcounter, joozek78</Authors>
+    <PackageProjectUrl>https://github.com/Starcounter/authorization</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Starcounter/authorization</RepositoryUrl>
+    <PackageLicenseUrl>https://github.com/Starcounter/authorization/blob/master/LICENSE</PackageLicenseUrl>
+    <Description>Authorization helper library for Starcounter applications</Description>
+    <PackageReleaseNotes>Updated for Starcounter 2.4
+Broken compatibility with 2.3 (use 1.x for that)
+Moved features that depend on Simplified and any Database classes to Starcounter.Authorization.Simplified package
+</PackageReleaseNotes>
+    <PackageTags>Starcounter</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>$(PackagesDir)\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Starcounter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-      <Private>False</Private>
-      <hintPath>$(StarcounterBin)\Public Assemblies\Starcounter.dll</hintPath>
+      <HintPath>$(StarcounterBin)\Public Assemblies\Starcounter.dll</HintPath>
     </Reference>
     <Reference Include="Starcounter.Internal, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-      <Private>False</Private>
-      <hintPath>$(StarcounterBin)\Public Assemblies\Starcounter.Internal.dll</hintPath>
+      <HintPath>$(StarcounterBin)\Public Assemblies\Starcounter.Internal.dll</HintPath>
     </Reference>
-    <Reference Include="Starcounter.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-      <Private>False</Private>
-      <hintPath>$(StarcounterBin)\Public Assemblies\Starcounter.Logging.dll</hintPath>
-    </Reference>
-    <Reference Include="Starcounter.XSON, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-      <Private>False</Private>
-      <hintPath>$(StarcounterBin)\Public Assemblies\Starcounter.XSON.dll</hintPath>
-    </Reference>
-    <Reference Include="Simplified.Data.Model, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <hintPath>$(StarcounterBin)\Public Assemblies\Simplified.Data.Model.dll</hintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+   <Reference Include="Starcounter.XSON, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
+     <HintPath>$(StarcounterBin)\Public Assemblies\Starcounter.XSON.dll</HintPath>
+   </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Attributes\CustomCheckClassAttribute.cs" />
-    <Compile Include="Authentication\Authentication.cs" />
-    <Compile Include="Authentication\SystemUserAuthentication.cs" />
-    <Compile Include="Core\AuthorizationEnforcementExtensions.cs" />
-    <Compile Include="Core\IAuthorizationEnforcement.cs" />
-    <Compile Include="Core\Rules\MembershipRule.cs" />
-    <Compile Include="Core\AuthorizationEnforcement.cs" />
-    <Compile Include="Core\Rules\AuthorizationRules.cs" />
-    <Compile Include="Core\AuthorizationStatic.cs" />
-    <Compile Include="Authentication\IAuthenticationBackend.cs" />
-    <Compile Include="Core\Rules\ClaimRule.cs" />
-    <Compile Include="Core\Rules\IAuthorizationConfigurator.cs" />
-    <Compile Include="Core\Rules\IAuthorizationRule.cs" />
-    <Compile Include="Core\Rules\IAuthorizationRulesSource.cs" />
-    <Compile Include="Core\Misc.cs" />
-    <Compile Include="Core\PersonClaim.cs" />
-    <Compile Include="Core\Rules\PermissionGroupRule.cs" />
-    <Compile Include="Core\Rules\PredicateRule.cs" />
-    <Compile Include="Core\SystemUserClaim.cs" />
-    <Compile Include="Database\PermissionToken.cs" />
-    <Compile Include="Database\PermissionTokenSerializer.cs" />
-    <Compile Include="Helper\PermissionHelper.cs" />
-    <Compile Include="Partial\PermissionSelectionPartialEventArgs.cs" />
-    <Compile Include="Routing\IInitPage.cs" />
-    <Compile Include="Routing\IPageContext.cs" />
-    <Compile Include="Routing\IPageMiddleware.cs" />
-    <Compile Include="Routing\Middleware\ContextMiddleware.cs" />
-    <Compile Include="Routing\Middleware\LambdaMiddleware.cs" />
-    <Compile Include="Routing\Middleware\DbScopeMiddleware.cs" />
-    <Compile Include="PageSecurity\PageSecurity.cs" />
-    <Compile Include="Database\PermissionSomebodyGroup.cs" />
-    <Compile Include="Partial\PermissionSelectionPartial.json.cs">
-      <DependentUpon>PermissionSelectionPartial.json</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Attributes\RequirePermissionAttribute.cs" />
-    <Compile Include="Routing\PageContextSupport.cs" />
-    <Compile Include="Routing\ReflectionHelper.cs" />
-    <Compile Include="Routing\Router.cs" />
-    <Compile Include="Routing\RouterExtensions.cs" />
-    <Compile Include="Routing\RoutingInfo.cs" />
-    <Compile Include="Routing\Middleware\SecurityMiddleware.cs" />
-    <Compile Include="Routing\Middleware\UseDbScopeAttribute.cs" />
-    <Compile Include="Routing\UriToContextAttribute.cs" />
-    <Compile Include="Routing\UrlAttribute.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <TypedJSON Include="Partial\PermissionSelectionPartial.json">
-      <Generator>MsBuild:Compile</Generator>
-    </TypedJSON>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Partial\PermissionSelectionPartial.html" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Authorization.nuspec" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(StarcounterBin)\Starcounter.MsBuild.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
