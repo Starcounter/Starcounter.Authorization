@@ -35,4 +35,7 @@ Moved features that depend on Simplified and any Database classes to Starcounter
      <HintPath>$(StarcounterBin)\Public Assemblies\Starcounter.XSON.dll</HintPath>
    </Reference>
   </ItemGroup>
+  <Target Name="PublishArtifacts" AfterTargets="Pack">
+    <Message Text="##teamcity[publishArtifacts '%(NugetPackOutput.Identity)']" Condition="%(NuGetPackOutput.Extension) == '.nupkg' And $(TEAMCITY_VERSION) != ''" Importance="High"/>
+  </Target>
 </Project>
