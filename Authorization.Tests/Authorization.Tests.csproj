@@ -9,7 +9,6 @@
     <AssemblyName>Starcounter.Authorization.Tests</AssemblyName>
     <RootNamespace>Starcounter.Authorization.Tests</RootNamespace>
     <ProjectGuid>d45c58d4-d94c-4d3b-b166-cfa4affaaab8</ProjectGuid>
-    <CoreCompileDependsOn>$(CoreCompileDependsOn);GenerateTypedJsonCode</CoreCompileDependsOn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="4.19.4" />
