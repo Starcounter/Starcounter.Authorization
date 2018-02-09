@@ -26,13 +26,13 @@ Moved features that depend on Simplified and any Database classes to Starcounter
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Starcounter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-      <HintPath>$(StarcounterBin)\VSRefAssemblies\Starcounter.dll</HintPath>
+      <HintPath>$(StarcounterBin)\Starcounter.dll</HintPath>
     </Reference>
     <Reference Include="Starcounter.Internal, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-      <HintPath>$(StarcounterBin)\VSRefAssemblies\Starcounter.Internal.dll</HintPath>
+      <HintPath>$(StarcounterBin)\Starcounter.Internal.dll</HintPath>
     </Reference>
     <Reference Include="Starcounter.XSON, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-      <HintPath>$(StarcounterBin)\VSRefAssemblies\Starcounter.XSON.dll</HintPath>
+      <HintPath>$(StarcounterBin)\Starcounter.XSON.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Target Name="PublishArtifacts" AfterTargets="Pack">

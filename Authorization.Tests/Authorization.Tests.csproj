@@ -18,13 +18,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Authorization\Authorization.csproj" />
    <Reference Include="Starcounter.XSON, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-     <HintPath>$(StarcounterBin)\Public Assemblies\Starcounter.XSON.dll</HintPath>
+     <HintPath>$(StarcounterBin)\Starcounter.XSON.dll</HintPath>
    </Reference>
    <Reference Include="Starcounter.Internal, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-     <HintPath>$(StarcounterBin)\Public Assemblies\Starcounter.Internal.dll</HintPath>
+     <HintPath>$(StarcounterBin)\Starcounter.Internal.dll</HintPath>
    </Reference>
    <Reference Include="Starcounter.BindingInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
-     <HintPath>$(StarcounterBin)\Public Assemblies\Starcounter.BindingInterfaces.dll</HintPath>
+     <HintPath>$(StarcounterBin)\Starcounter.BindingInterfaces.dll</HintPath>
    </Reference>
   </ItemGroup>
   <Import Project="$(StarcounterBin)\Starcounter.MsBuild.targets" />
