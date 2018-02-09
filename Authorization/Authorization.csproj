@@ -5,7 +5,7 @@
     <Platforms>x64</Platforms>
     <OutputPath>bin\$(Configuration)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>net461</TargetFramework>
     <AssemblyName>Starcounter.Authorization</AssemblyName>
     <RootNamespace>Starcounter.Authorization</RootNamespace>
     <ProjectGuid>{48CF4A36-C006-4649-BAD6-027E7962EFAE}</ProjectGuid>
