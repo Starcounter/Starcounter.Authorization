@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq.Expressions;
 using FluentAssertions;
 using Moq;
@@ -28,10 +29,34 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
+        public void HandlerMarkedWithAllowAnonymous_ShouldSucceed()
+        {
+            var page = CreatePage<ExamplePage>();
+            SetupPolicyToReturn(Policies.ViewThing, false);
+            
+            ChangePropertyInPage(page, p => p.Template.PubliclyAccessibleThing);
+
+            VerifyChangedAndCheckDeniedHandlerNotCalled(page.PubliclyAccessibleThing);
+        }
+
+        [Test]
         public void HandlerMarkedWithAttribute_RequirePermission_ShouldAskForProperPermission()
         {
             var page = CreatePage<ExamplePage>();
-            SetupPermissionToReturn<ChangeThing>(true);
+            SetupPolicyToReturn(Policies.ChangeThing, true);
+            
+            ChangePropertyInPage(page, p => p.Template.ChangeThing);
+
+            _authEnforcementMock.Verify();
+        }
+
+        [Test]
+        [Ignore("Current implementation uses only innermost attribute")]
+        public void HandlerMarkedWithAttribute_RequirePermission_ShouldAskForPropertyAndPageRequirements()
+        {
+            var page = CreatePage<ExamplePage>();
+            SetupPolicyToReturn(Policies.ChangeThing, true);
+            SetupPolicyToReturn(Policies.ViewThing, true);
             
             ChangePropertyInPage(page, p => p.Template.ChangeThing);
 
@@ -42,7 +67,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void HandlerMarkedWithAttribute_RequirePermission_ShouldThrowWhenPermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
-            SetupPermissionToReturn<ChangeThing>(false);
+            SetupPolicyToReturn(Policies.ChangeThing, false);
 
             ChangePropertyInPage(page, p => p.Template.ChangeThing);
 
@@ -53,7 +78,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void HandlerMarkedWithAttribute_RequirePermission_ShouldWorkWhenPermissionIsGranted()
         {
             var page = CreatePage<ExamplePage>();
-            SetupPermissionToReturn<ChangeThing>(true);
+            SetupPolicyToReturn(Policies.ChangeThing, true);
 
             ChangePropertyInPage(page, p => p.Template.ChangeThing);
 
@@ -65,7 +90,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void HandlerWithNoAttribute_RequirePermissionOnPage_ShouldAskForProperPagePermission()
         {
             var page = CreatePage<ExamplePage>();
-            SetupPermissionToReturn<ViewThing>(true);
+            SetupPolicyToReturn(Policies.ViewThing, true);
 
             ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
 
@@ -76,7 +101,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void HandlerWithNoAttribute_RequirePermissionOnPage_ShouldNotWorkWhenPagePermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
-            SetupPermissionToReturn<ViewThing>(false);
+            SetupPolicyToReturn(Policies.ViewThing, false);
 
             ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
 
@@ -87,7 +112,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void HandlerWithNoAttribute_RequirePermissionOnPage_ShouldWorkWhenPermissionIsGranted()
         {
             var page = CreatePage<ExamplePage>();
-            SetupPermissionToReturn<ViewThing>(true);
+            SetupPolicyToReturn(Policies.ViewThing, true);
 
             ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
 
@@ -101,8 +126,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExamplePage>();
             page.Data = thing;
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(perm => perm.Thing == thing)))
-                .Returns(true)
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewSpecificThing, thing))
+                .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page, p => p.Template.ViewSpecificThing);
@@ -116,7 +141,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExamplePage>();
             page.Data = thing;
-            SetupPermissionToReturn<ViewSpecificThing>(false);
+            SetupPolicyToReturn(Policies.ViewSpecificThing, false);
 
             ChangePropertyInPage(page, p => p.Template.ViewSpecificThing);
 
@@ -129,7 +154,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExamplePage>();
             page.Data = thing;
-            SetupPermissionToReturn<ViewSpecificThing>(true);
+            SetupPolicyToReturn(Policies.ViewSpecificThing, true);
 
             ChangePropertyInPage(page, p => p.Template.ViewSpecificThing);
 
@@ -141,8 +166,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void PropertyWithoutHandler_RequirePermission_ShouldAskForProperPermission()
         {
             var page = CreatePage<ExamplePage>();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
-                .Returns(true)
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewThing, It.IsAny<object>()))
+                .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page, p => p.Template.PropertyOne);
@@ -154,7 +179,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void PropertyWithoutHandler_RequirePermission_ShouldNotWorkWhenPermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
-            SetupPermissionToReturn<ViewThing>(false);
+            SetupPolicyToReturn(Policies.ViewThing, false);
 
             ChangePropertyInPage(page, p => p.Template.PropertyOne);
 
@@ -165,7 +190,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void PropertyWithoutHandler_RequirePermission_ShouldWorkWhenPermissionIsGranted()
         {
             var page = CreatePage<ExamplePage>();
-            SetupPermissionToReturn<ViewThing>(true);
+            SetupPolicyToReturn(Policies.ViewThing, true);
 
             ChangePropertyInPage(page, p => p.Template.PropertyOne);
 
@@ -178,8 +203,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExampleDataPage>();
             page.Data = thing;
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)))
-                .Returns(true)
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewSpecificThing, thing))
+                .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page, p => p.Template.PropertyOne);
@@ -193,7 +218,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExampleDataPage>();
             page.Data = thing;
-            SetupPermissionToReturn<ViewSpecificThing>(false);
+            SetupPolicyToReturn(Policies.ViewSpecificThing, false);
 
             ChangePropertyInPage(page, p => p.Template.PropertyOne);
 
@@ -206,7 +231,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExampleDataPage>();
             page.Data = thing;
-            SetupPermissionToReturn<ViewSpecificThing>(true);
+            SetupPolicyToReturn(Policies.ViewSpecificThing, true);
 
             ChangePropertyInPage(page, p => p.Template.PropertyOne);
 
@@ -218,8 +243,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldAskForProperPagePermission()
         {
             var page = CreatePage<ExamplePage>().Elements.Add();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
-                .Returns(true)
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewThing, It.IsAny<object>()))
+                .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page, p => p.Template.ChangeSubThing);
@@ -231,8 +256,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldNotWorkWhenPagePermissionIsRejected()
         {
             var subpage = CreatePage<ExamplePage>().Elements.Add();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
-                .Returns(false);
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewThing, It.IsAny<object>()))
+                .ReturnsAsync(false);
 
             ChangePropertyInPage(subpage, p => p.Template.ChangeSubThing);
 
@@ -243,8 +268,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldWorkWhenPagePermissionIsGranted()
         {
             var subpage = CreatePage<ExamplePage>().Elements.Add();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
-                .Returns(true);
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewThing, It.IsAny<object>()))
+                .ReturnsAsync(true);
 
             ChangePropertyInPage(subpage, p => p.Template.ChangeSubThing);
 
@@ -256,19 +281,19 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void ShouldCallCheckDeniedHandlerWhenPermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<ViewThing>()))
-                .Returns(false);
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewThing, It.IsAny<object>()))
+                .ReturnsAsync(false);
 
             ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
 
-            _checkDeniedMock.Verify(action => action(It.IsAny<ViewThing>(), page), Times.Once());
+            _checkDeniedMock.Verify(action => action(It.IsAny<object>(), page), Times.Once());
         }
 
         [Test]
         public void SubpageNestedHandlerMarkedWithAttribute_RequirePermission_ShouldAskForProperPermission()
         {
             var subpage = CreatePage<ExamplePage>().Elements.Add();
-            SetupPermissionToReturn<ChangeThing>(true);
+            SetupPolicyToReturn(Policies.ChangeThing, true);
 
             ChangePropertyInPage(subpage, p => p.Template.ChangeSecuredSubThing);
 
@@ -280,7 +305,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         {
             var subpage = CreatePage<ExamplePage>().Elements.Add();
 
-            SetupPermissionToReturn<EditSpecificThing>(false);
+            SetupPolicyToReturn(Policies.EditSpecificThing, false);
 
             ChangePropertyInPage(subpage, p => p.Template.ChangeSecuredSubThing);
 
@@ -293,8 +318,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExampleDataPage>();
             page.Data = thing;
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<ViewSpecificThing>(permission => permission.Thing == thing)))
-                .Returns(true)
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewSpecificThing, thing))
+                .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page.PropertyTwo, p => p.Template.SomeProperty);
@@ -302,7 +327,10 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             _authEnforcementMock.Verify();
         }
 
+        // TODO this no longer holds, because we can't determine what type of .Data we are looking for from the policy name
+        // that's why the engine can't know it should look into parent's .Data
         [Test]
+        [Ignore("This test no longer holds")]
         public void SubpageNestedHandlerMarkedWithAttribute_RequirePermissionData_ShouldAskForProperPermission()
         {
             var thing = new Thing();
@@ -310,8 +338,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var nestedPage = page.PropertyTwo.NestedElements.Add();
             page.Data = thing;
             nestedPage.Data = new OtherThingItem();
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.Is<EditSpecificThing>(permission => permission.Thing == thing)))
-                .Returns(true)
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.EditSpecificThing, thing))
+                .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(nestedPage, p => p.Template.SomeSecuredNestedProperty);
@@ -328,7 +356,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             page.Data = thing;
             nestedPage.Data = new OtherThingItem();
 
-            SetupPermissionToReturn<EditSpecificThing>(false);
+            SetupPolicyToReturn(Policies.EditSpecificThing, false);
 
             ChangePropertyInPage(nestedPage, p => p.Template.SomeSecuredNestedProperty);
 
@@ -381,11 +409,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             return new T();
         }
 
-        private void SetupPermissionToReturn<T>(bool valueToReturn) where T : Permission
+        private void SetupPolicyToReturn(string policyName, bool valueToReturn)
         {
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPermission(It.IsAny<T>()))
-                .Returns(valueToReturn)
+            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(policyName, It.IsAny<object>()))
+                .ReturnsAsync(valueToReturn)
                 .Verifiable();
         }
+
+        
     }
 }

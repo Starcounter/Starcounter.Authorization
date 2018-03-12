@@ -1,29 +1,25 @@
 ﻿using System;
-using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Starcounter.Authorization.Authentication;
-using Starcounter.Authorization.Core.Rules;
 
 namespace Starcounter.Authorization.Core
 {
     public class AuthorizationEnforcement : IAuthorizationEnforcement
     {
-        private readonly IAuthorizationRulesSource _rules;
+        private readonly IAuthorizationService _authorizationService;
         private readonly IAuthenticationBackend _authentication;
 
-        public AuthorizationEnforcement(IAuthorizationRulesSource rules, IAuthenticationBackend authentication)
+        public AuthorizationEnforcement(IAuthorizationService authorizationService, IAuthenticationBackend authentication)
         {
-            _rules = rules;
+            _authorizationService = authorizationService;
             _authentication = authentication;
         }
 
-        public bool CheckPermission<TPermission>(TPermission permission) where TPermission : Permission
+        public async Task<bool> CheckPolicyAsync(string policyName, object resource)
         {
-            var claims = _authentication.GetCurrentClaims().ToList();
-
-            var enablingRule = _rules.Get<TPermission>()
-                .FirstOrDefault(rule => rule.Evaluate(claims, this, permission));
-            Console.WriteLine($"Permission '{permission}' granted by rule '{enablingRule}'");
-            return enablingRule != null;
+            var authorizationResult = await _authorizationService.AuthorizeAsync(_authentication.GetCurrentPrincipal(), resource, policyName);
+            return authorizationResult.Succeeded;
         }
     }
 }

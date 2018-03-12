@@ -2,7 +2,4 @@
 
 namespace Starcounter.Authorization.Tests
 {
-    public class FakePermission : Permission
-    {
-    }
 }

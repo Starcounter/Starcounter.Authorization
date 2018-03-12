@@ -1,53 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Security.Claims;
+using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Authorization;
 using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Core;
-using Starcounter.Authorization.Core.Rules;
 
 namespace Starcounter.Authorization.Tests.Core
 {
     public class AuthorizationEnforcementTests
     {
         private AuthorizationEnforcement _authorizationEnforcement;
-        private Mock<IAuthorizationRulesSource> _rulesMock;
+        private Mock<IAuthorizationService> _authorizationServiceMock;
         private Mock<IAuthenticationBackend> _authenticationMock;
-        private List<IAuthorizationRule<FakePermission>> _rules;
-        private List<Claim> _claims;
+        private ClaimsPrincipal _principal;
 
         [SetUp]
         public void SetUp()
         {
-            _rulesMock = new Mock<IAuthorizationRulesSource>();
+            _authorizationServiceMock = new Mock<IAuthorizationService>();
             _authenticationMock = new Mock<IAuthenticationBackend>();
-            _authorizationEnforcement = new AuthorizationEnforcement(_rulesMock.Object, _authenticationMock.Object);
-
-            _rulesMock.Setup(source => source.Get<FakePermission>()).Returns(() => _rules);
-            _authenticationMock.Setup(backend => backend.GetCurrentClaims()).Returns(() => _claims);
-            _rules = new List<IAuthorizationRule<FakePermission>>();
-            _claims = new List<Claim>();
+            _authorizationEnforcement = new AuthorizationEnforcement(_authorizationServiceMock.Object, _authenticationMock.Object);
+            _principal = new ClaimsPrincipal();
+            _authenticationMock
+                .Setup(authentication => authentication.GetCurrentPrincipal())
+                .Returns(_principal);
         }
 
         [Test]
-        public void ShouldRejectWhenThereAreNoRulesForPermission()
+        public async Task ShouldExtractPrincipalFromAuthenticationAndPassItToAuthorizationService()
         {
-            _authorizationEnforcement.CheckPermission(new FakePermission()).Should().BeFalse();
+            _authorizationServiceMock.Setup(service =>
+                    service.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<object>(), It.IsAny<string>()))
+                .ReturnsAsync(AuthorizationResult.Success());
+            var resource = new object();
+            var policyName = "policy";
+
+            await _authorizationEnforcement.CheckPolicyAsync(policyName, resource);
+
+            _authorizationServiceMock.Verify(service => service.AuthorizeAsync(_principal, resource, policyName));
         }
 
-        [Test]
-        public void ShouldGrantWhenThereIsARuleAndClaimsPassTheTest()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task ShouldReturnResultFromAuthorizationService(bool expectedResult)
         {
-            var ruleMock = new Mock<IAuthorizationRule<FakePermission>>();
-            ruleMock.Setup(rule => rule.Evaluate(It.IsAny<IEnumerable<Claim>>(), It.IsAny<IAuthorizationEnforcement>(), It.IsAny<FakePermission>()))
-                .Returns(true);
-            _rules.Add(ruleMock.Object);
-            var checkedPermission = new FakePermission();
+            _authorizationServiceMock.Setup(service =>
+                    service.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<object>(), It.IsAny<string>()))
+                .ReturnsAsync(expectedResult ? AuthorizationResult.Success() : AuthorizationResult.Failed());
 
-            _authorizationEnforcement.CheckPermission(checkedPermission).Should().BeTrue();
-            ruleMock.Verify(rule => rule.Evaluate(_claims, _authorizationEnforcement, checkedPermission));
+            var result = await _authorizationEnforcement.CheckPolicyAsync("policy", null);
+
+            result.Should().Be(expectedResult);
         }
     }
 }

@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Starcounter.Authorization.Attributes;
 
 namespace Starcounter.Authorization.Tests.PageSecurity
 {
-    [RequirePermission(typeof(ViewSpecificThing))]
+    [Authorize(Policy = Policies.ViewSpecificThing)]
     public partial class ExampleDataPage : Json, IBound<Thing>, IExamplePage
     {
         public string Changed { get; set; }
@@ -12,7 +13,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             Changed = nameof(Action1);
         }
 
-        [RequirePermission(typeof(ChangeThing))]
+        [Authorize(Policy = Policies.ChangeThing)]
         private void Handle(Input.Action2 action)
         {
             Changed = nameof(Action2);
@@ -27,7 +28,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
                 Changed = nameof(SomeProperty);
             }
 
-            [RequirePermission(typeof(EditSpecificThing))]
+            [Authorize(Policy = Policies.EditSpecificThing)]
             private void Handle(Input.SomeSecuredProperty action)
             {
                 Changed = nameof(SomeSecuredProperty);
@@ -38,7 +39,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             {
                 public string Changed { get; set; }
 
-                [RequirePermission(typeof(EditSpecificThing))]
+                [Authorize(Policy = Policies.EditSpecificThing)]
                 private void Handle(Input.SomeSecuredNestedProperty action)
                 {
                     Changed = nameof(SomeSecuredNestedProperty);

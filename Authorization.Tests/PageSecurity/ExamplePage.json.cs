@@ -1,13 +1,11 @@
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 using Starcounter.Authorization.Attributes;
 using Starcounter.Authorization.Core;
 
 namespace Starcounter.Authorization.Tests.PageSecurity
 {
-    public class ChangeThing : Permission { }
-    public class ViewThing : Permission { }
-
-    [RequirePermission(typeof(ViewThing))]
+    [Authorize(Policy = Policies.ViewThing)]
     public partial class ExamplePage : Json, IBound<Thing>, IExamplePage
     {
         public string Changed { get; set; }
@@ -22,16 +20,22 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             Changed = nameof(ActionNotMarked);
         }
 
-        [RequirePermission(typeof(ChangeThing))]
+        [Authorize(Policy = Policies.ChangeThing)]
         private void Handle(Input.ChangeThing action)
         {
             Changed = nameof(ChangeThing);
         }
 
-        [RequirePermission(typeof(ViewSpecificThing))]
+        [Authorize(Policy = Policies.ViewSpecificThing)]
         private void Handle(Input.ViewSpecificThing action)
         {
             Changed = nameof(ViewSpecificThing);
+        }
+
+        [AllowAnonymous]
+        private void Handle(Input.PubliclyAccessibleThing action)
+        {
+            Changed = nameof(PubliclyAccessibleThing);
         }
 
         [ExamplePage_json.Elements]
@@ -43,7 +47,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
                 Changed = nameof(ChangeSubThing);
             }
 
-            [RequirePermission(typeof(ChangeThing))]
+            [Authorize(Policy = Policies.ChangeThing)]
             private void Handle(Input.ChangeSecuredSubThing action)
             {
                 Changed = nameof(ChangeSecuredSubThing);

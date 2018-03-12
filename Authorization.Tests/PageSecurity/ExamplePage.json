@@ -5,6 +5,7 @@
   "ActionNotMarked$" : 0,
   "ChangeThing$" : 0,
   "ViewSpecificThing$": 0,
+  "PubliclyAccessibleThing$": 0, 
   "Numbers": [0], 
   "Elements": [
     {

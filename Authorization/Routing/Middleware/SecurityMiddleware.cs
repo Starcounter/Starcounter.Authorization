@@ -23,10 +23,10 @@ namespace Starcounter.Authorization.Routing.Middleware
         {
             _pageSecurity.EnhanceClass(routingInfo.SelectedPageType);
 
-            if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Context))
-            {
-                return _unauthorizedHandler(routingInfo);
-            }
+//            if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Context))
+//            {
+//                return _unauthorizedHandler(routingInfo);
+//            }
             return next();
         }
     }

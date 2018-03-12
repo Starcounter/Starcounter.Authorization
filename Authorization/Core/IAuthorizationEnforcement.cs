@@ -1,7 +1,9 @@
-﻿namespace Starcounter.Authorization.Core
+﻿using System.Threading.Tasks;
+
+namespace Starcounter.Authorization.Core
 {
     public interface IAuthorizationEnforcement
     {
-        bool CheckPermission<TPermission>(TPermission permission) where TPermission : Permission;
+        Task<bool> CheckPolicyAsync(string policyName, object resource);
     }
 }

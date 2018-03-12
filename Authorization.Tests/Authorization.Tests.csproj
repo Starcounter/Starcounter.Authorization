@@ -1,8 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <StarcounterVersionCompatibility>2.4</StarcounterVersionCompatibility>
     <Platform>x64</Platform>
     <Platforms>x64</Platforms>
+    <!-- .NET Framework doesn't display source information if portable pdb (the default) is used. See https://github.com/Microsoft/dotnet/blob/master/releases/net471/KnownIssues/517815-BCL%20Stack%20traces%20are%20missing%20source%20information%20for%20frames%20with%20debug%20information%20in%20the%20Portable%20PDB%20format.md  -->
+    <DebugType Condition="'$(Configuration)' == 'Debug'">full</DebugType>
     <OutputPath>bin\$(Configuration)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <TargetFramework>net462</TargetFramework>
