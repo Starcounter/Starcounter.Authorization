@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/Starcounter/authorization</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Remove SynonymousToAttribute usage</releaseNotes>
+    <releaseNotes>Bump compatibility with Starcounter to 2.3.2.699</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>Starcounter</tags>
   </metadata>
