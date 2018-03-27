@@ -1,0 +1,17 @@
+﻿<link rel="import" href="/sys/polymer/polymer.html">
+<h1>Hello</h1>
+
+<template>
+    <dom-bind>
+        <template is="dom-bind" id="root">
+            <h1>Hello</h1>
+            <div slot="text">{{model.Text}}</div>
+            <button slot="button" onmousedown="++this.value" value="{{model.DoTrigger$::click}}">Do</button>
+        </template>
+        
+    </dom-bind>
+    <template is="declarative-shadow-dom">
+        <slot name="text"></slot>
+        <slot name="button"></slot>
+    </template>
+</template>

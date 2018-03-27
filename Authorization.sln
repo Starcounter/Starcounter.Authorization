@@ -13,6 +13,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarcounterApplication1", "StarcounterApplication1\StarcounterApplication1.csproj", "{B7F82E3C-8A74-4EC8-B65F-AEE99125B274}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repro1", "..\repro1\Repro1\Repro1\Repro1.csproj", "{53D1DD50-EF3E-4F23-B6EA-1E411B8BA872}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarcounterApplication2", "StarcounterApplication2\StarcounterApplication2.csproj", "{3FD51147-161A-4730-8AC7-2FEFCC8CF90B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -27,6 +33,18 @@ Global
 		{D45C58D4-D94C-4D3B-B166-CFA4AFFAAAB8}.Debug|x64.Build.0 = Debug|x64
 		{D45C58D4-D94C-4D3B-B166-CFA4AFFAAAB8}.Release|x64.ActiveCfg = Release|x64
 		{D45C58D4-D94C-4D3B-B166-CFA4AFFAAAB8}.Release|x64.Build.0 = Release|x64
+		{B7F82E3C-8A74-4EC8-B65F-AEE99125B274}.Debug|x64.ActiveCfg = Debug|x64
+		{B7F82E3C-8A74-4EC8-B65F-AEE99125B274}.Debug|x64.Build.0 = Debug|x64
+		{B7F82E3C-8A74-4EC8-B65F-AEE99125B274}.Release|x64.ActiveCfg = Release|x64
+		{B7F82E3C-8A74-4EC8-B65F-AEE99125B274}.Release|x64.Build.0 = Release|x64
+		{53D1DD50-EF3E-4F23-B6EA-1E411B8BA872}.Debug|x64.ActiveCfg = Debug|x64
+		{53D1DD50-EF3E-4F23-B6EA-1E411B8BA872}.Debug|x64.Build.0 = Debug|x64
+		{53D1DD50-EF3E-4F23-B6EA-1E411B8BA872}.Release|x64.ActiveCfg = Release|x64
+		{53D1DD50-EF3E-4F23-B6EA-1E411B8BA872}.Release|x64.Build.0 = Release|x64
+		{3FD51147-161A-4730-8AC7-2FEFCC8CF90B}.Debug|x64.ActiveCfg = Debug|x64
+		{3FD51147-161A-4730-8AC7-2FEFCC8CF90B}.Debug|x64.Build.0 = Debug|x64
+		{3FD51147-161A-4730-8AC7-2FEFCC8CF90B}.Release|x64.ActiveCfg = Release|x64
+		{3FD51147-161A-4730-8AC7-2FEFCC8CF90B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

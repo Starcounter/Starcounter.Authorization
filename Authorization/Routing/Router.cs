@@ -6,18 +6,20 @@ using System.Text.RegularExpressions;
 
 namespace Starcounter.Authorization.Routing
 {
-    public class Router
+    public interface IPageCreator
     {
-        private readonly Func<RoutingInfo, Response> _pageCreator;
-        private readonly List<IPageMiddleware> _middleware = new List<IPageMiddleware>();
+        Response Create(RoutingInfo routingInfo);
+    }
 
-        /// <summary>
-        /// Creates a router that will create pages using default constructor and call <see cref="PageContextSupport.HandleContext"/>
-        /// Works only with pages that are <see cref="IResource"/> - this category includes <see cref="Json"/>, so covers most cases
-        /// </summary>
-        /// <param name="routingInfo"></param>
-        /// <returns></returns>
-        public static Response DefaultPageCreator(RoutingInfo routingInfo)
+    /// <summary>
+    /// Creates a router that will create pages using default constructor and call <see cref="PageContextSupport.HandleContext"/>
+    /// Works only with pages that are <see cref="IResource"/> - this category includes <see cref="Json"/>, so covers most cases
+    /// </summary>
+    /// <param name="routingInfo"></param>
+    /// <returns></returns>
+    public class DefaultPageCreator : IPageCreator
+    {
+        public Response Create(RoutingInfo routingInfo)
         {
             var page = Activator.CreateInstance(routingInfo.SelectedPageType);
             if (page is IInitPage initPage)
@@ -27,15 +29,17 @@ namespace Starcounter.Authorization.Routing
             PageContextSupport.HandleContext(page, routingInfo.Context);
             return new Response() { Resource = (IResource)page };
         }
+    }
 
-        public static Router CreateDefault()
-        {
-            return new Router(DefaultPageCreator);
-        }
+    public class Router
+    {
+        private readonly IPageCreator _pageCreator;
+        private readonly List<IPageMiddleware> _middleware;
 
-        public Router(Func<RoutingInfo, Response> pageCreator)
+        public Router(IPageCreator pageCreator, IEnumerable<IPageMiddleware> middlewares)
         {
             _pageCreator = pageCreator;
+            _middleware = middlewares.ToList();
         }
 
         public void HandleGet<T>(HandlerOptions handlerOptions = null)
@@ -94,17 +98,12 @@ namespace Starcounter.Authorization.Routing
             }
         }
 
-        public void AddMiddleware(IPageMiddleware middleware)
-        {
-            _middleware.Insert(0, middleware);
-        }
-
         private Response RunResponse(Type pageType, Request request, params string[] arguments)
         {
             var routingInfo = new RoutingInfo { Request = request, SelectedPageType = pageType, Arguments = arguments };
             return RunWithMiddleware(
                 routingInfo,
-                _middleware.Concat(new[] { new TerminalMiddleware(() => _pageCreator(routingInfo)) }));
+                _middleware.Concat(new[] { new TerminalMiddleware(() => _pageCreator.Create(routingInfo)) }));
         }
 
         private Response RunWithMiddleware(RoutingInfo routingInfo, IEnumerable<IPageMiddleware> middlewares)

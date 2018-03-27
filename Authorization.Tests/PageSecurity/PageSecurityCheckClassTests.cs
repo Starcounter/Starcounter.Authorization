@@ -1,13 +1,14 @@
-﻿using System;
-using System.Linq.Expressions;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Core;
+using Starcounter.Authorization.PageSecurity;
+using Starcounter.Authorization.Tests.Fixtures;
+using Starcounter.Authorization.Tests.PageSecurity.Fixtures;
+using Starcounter.Authorization.Tests.TestUtils;
+using static Starcounter.Authorization.Tests.TestUtils.AuthorizationEnforecementMockUtils;
 
 namespace Starcounter.Authorization.Tests.PageSecurity
 {
@@ -16,13 +17,15 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         private Mock<IAuthorizationEnforcement> _authEnforcementMock;
         private Authorization.PageSecurity.PageSecurity _pageSecurity;
 
+        
+
         [SetUp]
         public void Setup()
         {
             _authEnforcementMock = new Mock<IAuthorizationEnforcement>();
             _pageSecurity = new Authorization.PageSecurity.PageSecurity(
-                _authEnforcementMock.Object,
-                Authorization.PageSecurity.PageSecurity.CreateThrowingDeniedHandler<UnauthorizedException>());
+                new CheckersCreator(_authEnforcementMock.Object, new AttributeRequirementsResolver(new EmptyPolicyProvider())), 
+                Options.Create(new SecurityMiddlewareOptions()));
         }
 
         [Test]
@@ -30,7 +33,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         {
             await _pageSecurity.CheckClass(typeof(ExamplePage), null);
 
-            _authEnforcementMock.Verify(enforcement => enforcement.CheckPolicyAsync(Policies.ViewThing, null));
+            _authEnforcementMock.Verify(CheckRequirementsCallWithRoleAndResource(Roles.ThingViewer, (object)null));
         }
 
         [Test]
@@ -40,7 +43,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
 
             await _pageSecurity.CheckClass(typeof(ExampleDataPage), thing);
 
-            _authEnforcementMock.Verify(enforcement => enforcement.CheckPolicyAsync(Policies.ViewSpecificThing, thing));
+            _authEnforcementMock.Verify(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingViewer, thing));
         }
 
         [Test]
@@ -54,7 +57,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         [TestCase(false)]
         public async Task CheckClassReturnsResultOfTheCheck_RequirePermissionData(bool expectedOutcome)
         {
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewSpecificThing, It.IsAny<Thing>()))
+            _authEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.SpecificThingViewer))
                 .ReturnsAsync(expectedOutcome);
 
             var checkResult = await _pageSecurity.CheckClass(typeof(ExampleDataPage), new Thing());
@@ -66,7 +69,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         [TestCase(false)]
         public async Task CheckClassReturnsResultOfTheCheck_RequirePermission(bool expectedOutcome)
         {
-            _authEnforcementMock.Setup(enforcement => enforcement.CheckPolicyAsync(Policies.ViewThing, null))
+            _authEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.ThingViewer, (object) null))
                 .ReturnsAsync(expectedOutcome);
 
             var checkResult = await _pageSecurity.CheckClass(typeof(ExamplePage), null);

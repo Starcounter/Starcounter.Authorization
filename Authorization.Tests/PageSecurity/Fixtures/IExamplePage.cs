@@ -1,4 +1,4 @@
-namespace Starcounter.Authorization.Tests.PageSecurity
+namespace Starcounter.Authorization.Tests.PageSecurity.Fixtures
 {
     public interface IExamplePage
     {

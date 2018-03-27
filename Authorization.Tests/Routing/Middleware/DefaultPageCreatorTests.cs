@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using NUnit.Framework;
 using Starcounter.Authorization.Routing;
-using Starcounter.Authorization.Tests.PageSecurity;
+using Starcounter.Authorization.Tests.Fixtures;
 using Starcounter.Authorization.Tests.Routing.Middleware.ExamplePages;
 
 namespace Starcounter.Authorization.Tests.Routing.Middleware
@@ -16,7 +11,8 @@ namespace Starcounter.Authorization.Tests.Routing.Middleware
         [Test]
         public void ShouldCallInit()
         {
-            var response = Router.DefaultPageCreator(new RoutingInfo() {SelectedPageType = typeof(InitPage)});
+            var defaultPageCreator = new DefaultPageCreator();
+            var response = defaultPageCreator.Create(new RoutingInfo() {SelectedPageType = typeof(InitPage)});
 
             response.Resource.As<InitPage>().HasBeenInitialized.Should().BeTrue();
         }
@@ -24,8 +20,9 @@ namespace Starcounter.Authorization.Tests.Routing.Middleware
         [Test]
         public void ShouldCallHandleContextSupport()
         {
+            var defaultPageCreator = new DefaultPageCreator();
             var context = new Thing();
-            var response = Router.DefaultPageCreator(
+            var response = defaultPageCreator.Create(
                     new RoutingInfo()
                     {
                         SelectedPageType = typeof(ContextPage),

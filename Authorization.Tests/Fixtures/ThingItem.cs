@@ -1,4 +1,4 @@
-namespace Starcounter.Authorization.Tests.PageSecurity
+namespace Starcounter.Authorization.Tests.Fixtures
 {
     public class ThingItem
     {

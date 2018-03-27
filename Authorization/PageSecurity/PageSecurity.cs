@@ -1,37 +1,35 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Starcounter.Authorization.Attributes;
+using Microsoft.Extensions.Options;
 using Starcounter.Authorization.Core;
-using Starcounter.Authorization.Routing;
 using Starcounter.Templates;
-//using Check = System.Tuple<System.Type, object>;
 
 namespace Starcounter.Authorization.PageSecurity
 {
     public class PageSecurity
     {
+        private readonly Func<Type, Expression, Expression, Expression> _checkDeniedHandler;
         private readonly List<Type> _enhancedTypes = new List<Type>();
         private readonly CheckersCreator _checkersCreator;
         private readonly HandlersCreator _handlersCreator = new HandlersCreator();
 
         /// <summary>
         /// </summary>
-        /// <param name="authorizationEnforcement"></param>
         /// <param name="checkDeniedHandler">This determines what happens when access is denied inside input handler.
         /// It accepts type of page in which the handler is defined,
         /// Expression representing the permission that has been denied,
         /// Expression representing the page itself
         /// and should return an Expression representing action to be undertaken
         /// <see cref="CreateThrowingDeniedHandler{T}"/></param>
-        public PageSecurity(IAuthorizationEnforcement authorizationEnforcement, Func<Type, Expression, Expression, Expression> checkDeniedHandler)
+        public PageSecurity(CheckersCreator checkersCreator,
+            IOptions<SecurityMiddlewareOptions> options)
         {
-            _checkersCreator = new CheckersCreator(authorizationEnforcement, checkDeniedHandler);
+            _checkDeniedHandler = options.Value.CheckDeniedHandler;
+            _checkersCreator = checkersCreator;
         }
 
         /// <summary>
@@ -151,7 +149,7 @@ namespace Starcounter.Authorization.PageSecurity
         private IEnumerable<Tuple<MethodInfo, Template, Check, Type>> AllHandlersTasks(Type pageType, IEnumerable<Template> properties, Check parentCheck = null)
         {
             var pageProperties = properties.ToList();
-            Check pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, pageType);
+            Check pageCheck = _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, pageType, _checkDeniedHandler);
             if (pageCheck == null && parentCheck != null)
             {
                 pageCheck = parentCheck;
@@ -169,7 +167,7 @@ namespace Starcounter.Authorization.PageSecurity
                 .Select(
                     tpl =>
                         Tuple.Create(tpl.Item1, tpl.Item2,
-                            _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, tpl.Item1), pageType))
+                            _checkersCreator.CreateThrowingCheckFromExistingPage(pageType, tpl.Item1, _checkDeniedHandler), pageType))
                 .Where(tuple => tuple.Item3 != null)
                 .ToList();
 
@@ -254,179 +252,6 @@ namespace Starcounter.Authorization.PageSecurity
                 .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)
                 .MakeGenericMethod(typeParameter)
                 .Invoke(@this, arguments);
-        }
-
-        /// <summary>
-        /// Governs creation of Action&lt;&gt; objects that perform the actual checks
-        /// </summary>
-        private class CheckersCreator
-        {
-            private readonly IAuthorizationEnforcement _authorizationEnforcement;
-            private readonly Func<Type, Expression, Expression, Expression> _checkDeniedHandler;
-
-            public CheckersCreator(IAuthorizationEnforcement authorizationEnforcement, Func<Type, Expression, Expression, Expression> checkDeniedHandler)
-            {
-                _authorizationEnforcement = authorizationEnforcement;
-                _checkDeniedHandler = checkDeniedHandler;
-            }
-
-            public Check WrapCheck(Check existingCheck, Type pageType, int numberOfLayers)
-            {
-                if (existingCheck == null || existingCheck.AllowAnonymous)
-                {
-                    return existingCheck;
-                }
-                var pageParameterExpression = Expression.Parameter(pageType, "page");
-                Expression pageExpression = pageParameterExpression;
-                var parentMemberInfo = typeof(Json).GetProperty(nameof(Json.Parent));
-                foreach (var i in Enumerable.Range(0, numberOfLayers))
-                {
-                    pageExpression = Expression.MakeMemberAccess(pageExpression, parentMemberInfo);
-                }
-                var existingPageType = existingCheck.PageType;
-                var checkLambda = Expression.Lambda(
-                    Expression.Invoke(
-                        Expression.Constant(existingCheck.CheckAction),
-                        Expression.Convert(pageExpression, existingPageType)),
-                    pageParameterExpression).Compile();
-                return new Check(pageType, checkLambda);
-            }
-
-            /// <summary>
-            /// Creates an Func&lt;pageType, bool&gt; that checks permissions and uses <see cref="_checkDeniedHandler"/> and returns false in case it's denied. Returns true if granted
-            /// </summary>
-            /// <param name="pageType">Type of page which determines the context of check</param>
-            /// <param name="attributeProvider">A page class or its method (a input handler) that could have authorization attributes on it</param>
-            /// <returns>an object of type Func&lt;pageType, bool&gt; that either returns true if access is granted or performs <see cref="_checkDeniedHandler"/> and returns false. Null if no check needs to be performed</returns>
-            public Check CreateThrowingCheckFromExistingPage(Type pageType, ICustomAttributeProvider attributeProvider)
-            {
-                if (attributeProvider
-                    .GetCustomAttributes(true)
-                    .OfType<AllowAnonymousAttribute>()
-                    .Any())
-                {
-                    return Check.CreateAllowAnonymous();
-                }
-
-                var authorizeAttribute = attributeProvider.GetCustomAttributes(true)
-                    .OfType<AuthorizeAttribute>()
-                    .FirstOrDefault();
-                if (authorizeAttribute == null || authorizeAttribute.Policy == null)
-                {
-                    return null;
-                }
-
-                Expression resourceExpression;
-                var appParameterExpression = Expression.Parameter(pageType, "page");
-                {
-                    Func<Json, object> getData = json =>
-                    {
-                        while (json.Data == null && json.Parent != null)
-                        {
-                            json = json.Parent;
-                        }
-
-                        return json.Data;
-                    };
-                    resourceExpression = Expression.Invoke(Expression.Constant(getData), appParameterExpression);
-                }
-
-                try
-                {
-                    var checkResult = Expression.Parameter(typeof(bool));
-                    var checkLambda = Expression.Lambda(Expression.Block(
-                        new[] { checkResult },
-                        Expression.Assign(checkResult, Expression.MakeMemberAccess(
-                            CreateCheckPermissionCall(authorizeAttribute.Policy, resourceExpression),
-                            // ReSharper disable once AssignNullToNotNullAttribute
-                            typeof(Task<bool>).GetProperty(nameof(Task<bool>.Result)))),
-                        Expression.IfThen(
-                            Expression.IsFalse(checkResult),
-                            _checkDeniedHandler(pageType, resourceExpression, appParameterExpression)),
-                        checkResult),
-                        appParameterExpression).Compile();
-                    return new Check(pageType, checkLambda);
-                    // reflection based body, for reference:
-                    //            return (PageType page) => {
-                    //                bool checkResult = [CreateCheckPermissionCall(authorizeAttribute.Policy, getData(page)];
-                    //                if(!checkResult)
-                    //                {
-                    //                    [_checkDeniedHandler(PageType, getData(page), page)]
-                    //                }
-                    //                return checkResult;
-                    //            };
-                }
-                catch (Exception ex)
-                {
-                    // todo test
-                    throw new Exception(
-                        $"Could not create check for page {pageType} and permission {resourceExpression.Type}. Make sure your provided checkDeniedHandler returns correct Expression",
-                        ex);
-                }
-            }
-
-            /// <summary>
-            /// Creates a Func that accepts a resource (AKA context) and returns true if permission is granted
-            /// </summary>
-            /// <param name="pageType"></param>
-            /// <returns></returns>
-            public Func<object, Task<bool>> CreateBoolCheck(Type pageType)
-            {
-                var customAttributes = pageType.GetCustomAttributes(true)
-                    .OfType<AuthorizeAttribute>()
-                    .FirstOrDefault(); // all should be AND'ed
-                if (customAttributes?.Policy == null)
-                {
-                    return null;
-                }
-                ParameterExpression contextParameterExpression = Expression.Parameter(typeof(object), "context");
-
-                return Expression.Lambda<Func<object, Task<bool>>>(
-                        CreateCheckPermissionCall(customAttributes.Policy, contextParameterExpression),
-                        contextParameterExpression)
-                    .Compile();
-            }
-
-            /// <summary>
-            /// Creates an Expression that represents permission required by attributes in <see cref="attributesSource"/> that are defined either
-            /// on page of type <see cref="pageType"/> or its handlers
-            /// </summary>
-            /// <param name="pageType"></param>
-            /// <param name="attributesSource"></param>
-            /// <returns></returns>
-            // ReSharper disable once UnusedParameter.Local pageType will be used to support subpage checking
-            private ConstructorInfo GetRequiredPermissionsConstructor(Type pageType, ICustomAttributeProvider attributesSource)
-            {
-                var requirePermissionAttribute = attributesSource
-                    .GetCustomAttributes(true)
-                    .OfType<RequirePermissionAttribute>()
-                    .FirstOrDefault();
-
-                if (requirePermissionAttribute != null)
-                {
-                    var permissionType = requirePermissionAttribute.RequiredPermission;
-                    var permissionConstructors = permissionType.GetConstructors();
-                    if (permissionConstructors.Length != 1)
-                    {
-                        throw new ArgumentException($"Invalid usage of {nameof(RequirePermissionAttribute)} on {attributesSource}: Required permission {permissionType} should have exactly one constructor");
-                    }
-                    return permissionConstructors[0];
-                }
-
-                return null;
-            }
-
-            private MethodCallExpression CreateCheckPermissionCall(string policy, Expression resourceExpression)
-            {
-                var checkPermissionMethod = typeof(IAuthorizationEnforcement)
-                    .GetMethod(nameof(IAuthorizationEnforcement.CheckPolicyAsync));
-                var checkPermissionCall = Expression.Call(
-                    Expression.Constant(_authorizationEnforcement),
-                    checkPermissionMethod,
-                    Expression.Constant(policy),
-                    resourceExpression);
-                return checkPermissionCall;
-            }
         }
 
         /// <summary>
@@ -554,41 +379,6 @@ namespace Starcounter.Authorization.PageSecurity
                     Template = (TTemplate)property
                 };
             }
-        }
-
-        /// <summary>
-        /// A permission check that can be performed when given page instance.
-        /// </summary>
-        private class Check
-        {
-            public Check(Type pageType, Delegate checkAction)
-            {
-                PageType = pageType;
-                CheckAction = checkAction;
-            }
-
-            private Check()
-            {
-                AllowAnonymous = true;
-            }
-
-            public static Check CreateAllowAnonymous() => new Check();
-
-            /// <summary>
-            /// The type of the page that hosts the property guarded by this check.
-            /// </summary>
-            public Type PageType { get; }
-
-            /// <summary>
-            /// An executable piece of code that will perform the check. Accepts a single argument of type <see cref="PageType"/>, returns bool. 
-            /// If the check is succesful, returns true. Otherwise will perform whatever <see cref="CheckersCreator._checkDeniedHandler"/> dictates and return false.
-            /// </summary>
-            public Delegate CheckAction { get; }
-
-            /// <summary>
-            /// If this is true, then everything that is guarded by this check should be not actually be checked.
-            /// </summary>
-            public bool AllowAnonymous { get; }
         }
     }
 }

@@ -10,7 +10,8 @@
       "SomeSecuredProperty$": 0,
       "NestedElements": [
         {
-          "SomeSecuredNestedProperty$": 0
+          "SomeSecuredNestedProperty$": 0,
+          "SomeNestedPropertyWithInheritedChecks$": 0 
         }
       ]
     }

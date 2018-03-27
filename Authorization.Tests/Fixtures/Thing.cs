@@ -1,6 +1,6 @@
 using Starcounter.Advanced;
 
-namespace Starcounter.Authorization.Tests.PageSecurity
+namespace Starcounter.Authorization.Tests.Fixtures
 {
     // IBindable is to fake a db object
     public class Thing : IBindable

@@ -1,4 +1,4 @@
-﻿using Starcounter.Authorization.Tests.PageSecurity;
+﻿using Starcounter.Authorization.Tests.Fixtures;
 
 namespace Starcounter.Authorization.Tests.Routing.Middleware.ExamplePages
 {

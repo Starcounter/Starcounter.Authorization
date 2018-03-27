@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Starcounter.Authorization.Attributes;
 using Starcounter.Authorization.Core;
+using Starcounter.Authorization.Tests.Fixtures;
+using Starcounter.Authorization.Tests.PageSecurity.Fixtures;
 
-namespace Starcounter.Authorization.Tests.PageSecurity
+namespace Starcounter.Authorization.Tests.PageSecurity.Fixtures
 {
-    [Authorize(Policy = Policies.ViewThing)]
+    [Authorize(Roles = Roles.ThingViewer)]
     public partial class ExamplePage : Json, IBound<Thing>, IExamplePage
     {
         public string Changed { get; set; }
@@ -20,13 +22,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             Changed = nameof(ActionNotMarked);
         }
 
-        [Authorize(Policy = Policies.ChangeThing)]
+        [Authorize(Roles = Roles.ThingEditor)]
         private void Handle(Input.ChangeThing action)
         {
             Changed = nameof(ChangeThing);
         }
 
-        [Authorize(Policy = Policies.ViewSpecificThing)]
+        [Authorize(Roles = Roles.SpecificThingViewer)]
         private void Handle(Input.ViewSpecificThing action)
         {
             Changed = nameof(ViewSpecificThing);
@@ -47,7 +49,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
                 Changed = nameof(ChangeSubThing);
             }
 
-            [Authorize(Policy = Policies.ChangeThing)]
+            [Authorize(Roles = Roles.ThingEditor)]
             private void Handle(Input.ChangeSecuredSubThing action)
             {
                 Changed = nameof(ChangeSecuredSubThing);
