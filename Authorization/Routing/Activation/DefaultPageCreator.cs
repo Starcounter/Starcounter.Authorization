@@ -8,8 +8,6 @@ namespace Starcounter.Authorization.Routing.Activation
     /// Creates a router that will create pages using default constructor and call <see cref="PageContextSupport.HandleContext"/>
     /// Works only with pages that are <see cref="IResource"/> - this category includes <see cref="Json"/>, so covers most cases
     /// </summary>
-    /// <param name="routingInfo"></param>
-    /// <returns></returns>
     public class DefaultPageCreator : IPageCreator
     {
         private readonly IServiceProvider _serviceProvider;

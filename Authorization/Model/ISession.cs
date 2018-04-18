@@ -3,7 +3,7 @@
 namespace Starcounter.Authorization.Model
 {
     /// <summary>
-    /// Implement this interface in a mapped database class.
+    /// Implement this interface with a database Session class specific to your application.
     /// </summary>
     public interface ISession
     {

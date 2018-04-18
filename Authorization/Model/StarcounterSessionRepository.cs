@@ -17,6 +17,7 @@ namespace Starcounter.Authorization.Model
                 parameterExpression);
             return DbLinq.Objects<TSession>()
                 .FirstOrDefault(expression);
+            // for some reason the following code fails with NotSupportedException
 //            return DbLinq.Objects<TSession>()
 //                .Where(session => session.SessionId == sessionId)
 //                .FirstOrDefault();
