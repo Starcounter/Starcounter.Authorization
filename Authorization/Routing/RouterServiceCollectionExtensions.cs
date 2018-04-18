@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Starcounter.Authorization.Routing.Activation;
 
 namespace Starcounter.Authorization.Routing
 {
@@ -13,8 +15,8 @@ namespace Starcounter.Authorization.Routing
             return services;
         }
 
-        public static Router GetRouter(this IServiceCollection services) =>
-            services.BuildServiceProvider().GetRequiredService<Router>();
+        public static Router GetRouter(this IServiceProvider services) =>
+            services.GetRequiredService<Router>();
 
     }
 }

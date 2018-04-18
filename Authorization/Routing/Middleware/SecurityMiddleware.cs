@@ -28,4 +28,5 @@ namespace Starcounter.Authorization.Routing.Middleware
             return next();
         }
     }
+
 }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Security.Claims;
-using Starcounter.Authorization.Core;
+﻿using System.Security.Claims;
 
 namespace Starcounter.Authorization.Authentication
 {

@@ -7,11 +7,11 @@ using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Core;
 using Starcounter.Authorization.PageSecurity;
-using Starcounter.Authorization.Tests.Fixtures;
 using Starcounter.Authorization.Tests.PageSecurity.Fixtures;
-using Starcounter.Authorization.Tests.TestUtils;
+using Starcounter.Authorization.Tests.PageSecurity.Utils.TestUtils;
+using Starcounter.Authorization.Tests.TestModel;
 using Starcounter.Templates;
-using static Starcounter.Authorization.Tests.TestUtils.AuthorizationEnforecementMockUtils;
+using static Starcounter.Authorization.Tests.PageSecurity.Utils.TestUtils.AuthorizationEnforecementMockUtils;
 
 
 namespace Starcounter.Authorization.Tests.PageSecurity

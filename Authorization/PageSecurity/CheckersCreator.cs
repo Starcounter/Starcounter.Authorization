@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Starcounter.Authorization.Attributes;
 using Starcounter.Authorization.Core;
 
 namespace Starcounter.Authorization.PageSecurity

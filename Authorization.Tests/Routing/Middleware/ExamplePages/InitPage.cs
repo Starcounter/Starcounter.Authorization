@@ -1,4 +1,5 @@
 ﻿using Starcounter.Authorization.Routing;
+using Starcounter.Authorization.Routing.Activation;
 
 namespace Starcounter.Authorization.Tests.Routing.Middleware.ExamplePages
 {

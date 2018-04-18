@@ -4,7 +4,6 @@ using Starcounter.Authorization.Routing;
 
 namespace Starcounter.Authorization.PageSecurity
 {
-
     public class SecurityMiddlewareOptions
     {
         public Func<RoutingInfo, Response> UnauthorizedAction { get; set; } = info => 403;

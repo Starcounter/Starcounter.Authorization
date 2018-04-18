@@ -3,42 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using Starcounter.Authorization.Routing.Activation;
 
 namespace Starcounter.Authorization.Routing
 {
-    public interface IPageCreator
-    {
-        Response Create(RoutingInfo routingInfo);
-    }
-
-    /// <summary>
-    /// Creates a router that will create pages using default constructor and call <see cref="PageContextSupport.HandleContext"/>
-    /// Works only with pages that are <see cref="IResource"/> - this category includes <see cref="Json"/>, so covers most cases
-    /// </summary>
-    /// <param name="routingInfo"></param>
-    /// <returns></returns>
-    public class DefaultPageCreator : IPageCreator
-    {
-        public Response Create(RoutingInfo routingInfo)
-        {
-            var page = Activator.CreateInstance(routingInfo.SelectedPageType);
-            if (page is IInitPage initPage)
-            {
-                initPage.Init();
-            }
-            PageContextSupport.HandleContext(page, routingInfo.Context);
-            return new Response() { Resource = (IResource)page };
-        }
-    }
-
     public class Router
     {
         private readonly IPageCreator _pageCreator;
+        private readonly ILogger<Router> _logger;
         private readonly List<IPageMiddleware> _middleware;
 
-        public Router(IPageCreator pageCreator, IEnumerable<IPageMiddleware> middlewares)
+        public Router(IPageCreator pageCreator, IEnumerable<IPageMiddleware> middlewares, ILogger<Router> logger)
         {
             _pageCreator = pageCreator;
+            _logger = logger;
             _middleware = middlewares.ToList();
         }
 
@@ -65,6 +44,7 @@ namespace Starcounter.Authorization.Routing
 
         public void HandleGet(string url, Type pageType, HandlerOptions handlerOptions = null)
         {
+            _logger.LogInformation($"Registering URI '{url}' with type '{pageType}'");
             var argumentsNo = Regex.Matches(url, @"\{\?\}").Count;
             switch (argumentsNo)
             {

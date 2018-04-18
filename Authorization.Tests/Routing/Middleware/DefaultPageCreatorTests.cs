@@ -1,8 +1,9 @@
 ﻿using FluentAssertions;
 using NUnit.Framework;
 using Starcounter.Authorization.Routing;
-using Starcounter.Authorization.Tests.Fixtures;
+using Starcounter.Authorization.Routing.Activation;
 using Starcounter.Authorization.Tests.Routing.Middleware.ExamplePages;
+using Starcounter.Authorization.Tests.TestModel;
 
 namespace Starcounter.Authorization.Tests.Routing.Middleware
 {
