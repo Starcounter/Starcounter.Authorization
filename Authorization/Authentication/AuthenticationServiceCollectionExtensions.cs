@@ -12,20 +12,14 @@ namespace Starcounter.Authorization.Authentication
         {
             services.TryAddTransient<IAuthenticationBackend, AuthenticationBackend<TSession>>();
             services.TryAddTransient<IStringSerializer<ClaimsPrincipal>, Base64ClaimsPrincipalSerializer>();
-            services.TryAddTransient<ISystemClock, SystemClock>();
-            services.TryAddTransient<ICurrentSessionProvider, DefaultCurrentSessionProvider>();
-            services.TryAddTransient<ISessionRepository<TSession>, StarcounterSessionRepository<TSession>>();
-            services.TryAddTransient<ICurrentSessionRetriever<TSession>, CurrentSessionRetriever<TSession>>();
+            AddSessionRetriever<TSession>(services);
             return services;
         }
 
-        public static IServiceCollection AddUserConfiguration<TUserSession, TUser>(this IServiceCollection services) where TUserSession : class, IUserSession<TUser>, new() where TUser : IUser
+        public static IServiceCollection AddUserConfiguration<TUserSession, TUser>(this IServiceCollection services) where TUserSession : class, IUserSession<TUser>, new() where TUser : class, IUser
         {
             services.TryAddTransient<ICurrentUserProvider<TUser>, CurrentUserProvider<TUserSession, TUser>>();
-            services.TryAddTransient<ISystemClock, SystemClock>();
-            services.TryAddTransient<ICurrentSessionProvider, DefaultCurrentSessionProvider>();
-            services.TryAddTransient<ISessionRepository<TUserSession>, StarcounterSessionRepository<TUserSession>>();
-            services.TryAddTransient<ICurrentSessionRetriever<TUserSession>, CurrentSessionRetriever<TUserSession>>();
+            AddSessionRetriever<TUserSession>(services);
             return services;
         }
 
@@ -33,6 +27,13 @@ namespace Starcounter.Authorization.Authentication
         {
             services.TryAddSingleton<IAuthenticationBackend, AlwaysAdminAuthBackend>();
             return services;
+        }
+        private static void AddSessionRetriever<TSession>(IServiceCollection services) where TSession : class, ISession, new()
+        {
+            services.TryAddTransient<ISystemClock, SystemClock>();
+            services.TryAddTransient<ICurrentSessionProvider, DefaultCurrentSessionProvider>();
+            services.TryAddTransient<ISessionRepository<TSession>, StarcounterSessionRepository<TSession>>();
+            services.TryAddTransient<ICurrentSessionRetriever<TSession>, CurrentSessionRetriever<TSession>>();
         }
     }
 }

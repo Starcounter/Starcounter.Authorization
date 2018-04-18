@@ -17,19 +17,25 @@ namespace Starcounter.Authorization.Tests
 {
     public class ServiceCollectionExtensionsTests
     {
+        private ServiceCollection _serviceCollection;
+
+        [SetUp]
+        public void SetUpServiceCollection()
+        {
+            _serviceCollection = new ServiceCollection();
+            AddDefaultServices(_serviceCollection);
+        }
+
         [Test]
         public void AddSecurityMiddlewareTest()
         {
-            var services = new ServiceCollection();
-            AddDefaultServices(services);
-            services
+            _serviceCollection
                 .AddAuthorization(auth => auth.AddPolicy("DoThings", builder => builder.RequireUserName("admin")))
                 .AddSingleton(Mock.Of<IAuthenticationBackend>())
                 // sc auth
                 .AddSecurityMiddleware();
 
-            var middlewares = services.BuildServiceProvider()
-                .GetRequiredService<IEnumerable<IPageMiddleware>>();
+            var middlewares = GetRequiredService<IEnumerable<IPageMiddleware>>();
             middlewares
                 .OfType<SecurityMiddleware>()
                 .Should()
@@ -39,26 +45,36 @@ namespace Starcounter.Authorization.Tests
         [Test]
         public void AddRouterTest()
         {
-            var services = new ServiceCollection();
-            AddDefaultServices(services);
-
-            services
-                .AddRouter()
-                .BuildServiceProvider()
-                .GetRequiredService<Router>();
+            _serviceCollection.AddRouter();
+            GetRequiredService<Router>();
         }
 
         [Test]
         public void AddSignInManagerConfiguresAllDependencies()
         {
-            var serviceCollection = new ServiceCollection();
-            AddDefaultServices(serviceCollection);
-            var signInManager = serviceCollection
-                .AddSignInManager<UserSession, User>()
-                .BuildServiceProvider()
-                .GetRequiredService<ISignInManager<UserSession, User>>();
+            _serviceCollection.AddSignInManager<UserSession, User>();
+            GetRequiredService<ISignInManager<UserSession, User>>();
+        }
 
-            signInManager.Should().NotBeNull();
+        [Test]
+        public void AddAuthenticationConfiguresAllDependencies()
+        {
+            _serviceCollection.AddAuthentication<UserSession>();
+            GetRequiredService<IAuthenticationBackend>();
+        }
+
+        [Test]
+        public void AddUserConfigurationConfiguresAllDependencies()
+        {
+            _serviceCollection.AddUserConfiguration<UserSession, User>();
+            GetRequiredService<ICurrentUserProvider<User>>();
+        }
+
+        [Test]
+        public void AddFakeAuthenticationConfiguresAllDependencies()
+        {
+            _serviceCollection.AddFakeAuthentication();
+            GetRequiredService<IAuthenticationBackend>();
         }
 
         private void AddDefaultServices(IServiceCollection serviceCollection)
@@ -66,6 +82,11 @@ namespace Starcounter.Authorization.Tests
             serviceCollection
                 .AddOptions()
                 .AddLogging(builder => builder.ClearProviders());
+        }
+
+        private T GetRequiredService<T>()
+        {
+            return _serviceCollection.BuildServiceProvider().GetRequiredService<T>();
         }
     }
 }

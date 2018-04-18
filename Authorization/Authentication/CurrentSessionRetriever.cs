@@ -23,7 +23,12 @@ namespace Starcounter.Authorization.Authentication
 
         public TSession GetCurrentSession()
         {
-            var session = _sessionRepository.FindBySessionId(_currentSessionProvider.CurrentSessionId);
+            var starcounterSessionId = _currentSessionProvider.CurrentSessionId;
+            if (starcounterSessionId == null)
+            {
+                return null;
+            }
+            var session = _sessionRepository.FindBySessionId(starcounterSessionId);
             if (session == null)
             {
                 return null;

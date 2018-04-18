@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class CurrentUserProvider<TUserSession, TUser> : ICurrentUserProvider<TUser> where TUserSession : class, IUserSession<TUser> where TUser : IUser
+    public class CurrentUserProvider<TUserSession, TUser> : ICurrentUserProvider<TUser> where TUserSession : class, IUserSession<TUser> where TUser : class, IUser
     {
         private readonly ICurrentSessionRetriever<TUserSession> _currentSessionRetriever;
 
@@ -12,7 +12,8 @@ namespace Starcounter.Authorization.Authentication
         }
         public TUser GetCurrentUser()
         {
-            return _currentSessionRetriever.GetCurrentSession().User;
+            var currentSession = _currentSessionRetriever.GetCurrentSession();
+            return currentSession?.User;
         }
     }
 }
