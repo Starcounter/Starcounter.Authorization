@@ -31,27 +31,8 @@ namespace Starcounter.Authorization.Tests.Model.Serialization
                 new ClaimsIdentity(new[] {claim}, authenticationType)
                 );
 
-
             var serialized = sut.Serialize(principal);
             var deserialized = sut.Deserialize(serialized);
-
-            deserialized.Should().BeEquivalentTo(principal, options => options.IgnoringCyclicReferences());
-        }
-        [Test]
-        public void SerializedAndDeserializedGivesTheSameResult_ClaimsPrincipalDirect()
-        {
-            var claim = new Claim("type", "value");
-            var authenticationType = "authentication";
-            var principal = new ClaimsPrincipal(
-                new ClaimsIdentity(new[] {claim}, authenticationType)
-                );
-
-            var memoryStream = new MemoryStream();
-            using (var binaryWriter = new BinaryWriter(memoryStream, Encoding.UTF8, true))
-            {
-                principal.WriteTo(binaryWriter);
-            }
-            var deserialized = new ClaimsPrincipal(new BinaryReader(memoryStream, Encoding.UTF8));
 
             deserialized.Should().BeEquivalentTo(principal, options => options.IgnoringCyclicReferences());
         }
