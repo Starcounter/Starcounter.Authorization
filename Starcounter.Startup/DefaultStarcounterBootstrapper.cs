@@ -12,10 +12,11 @@ namespace Starcounter.Startup
             Application.Current.Use(new HtmlFromJsonProvider());
             Application.Current.Use(new PartialToStandaloneHtmlProvider());
 
-            var services = application.ConfigureServices(new ServiceCollection())
+            var services = new ServiceCollection()
                 .AddOptions()
                 .AddLogging(logging => logging.AddConsole());
-
+            application.ConfigureServices(services);
+            
             var serviceProvider = services.BuildServiceProvider();
             var logger = serviceProvider.GetRequiredService<ILogger<DefaultStarcounterBootstrapper>>();
             logger.LogInformation($"Configuring application {application}");

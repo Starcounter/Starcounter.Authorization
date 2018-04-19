@@ -4,7 +4,7 @@ namespace Starcounter.Startup
 {
     public interface IStartup
     {
-        IServiceCollection ConfigureServices(IServiceCollection services);
+        void ConfigureServices(IServiceCollection services);
         void Configure(IApplicationBuilder applicationBuilder);
     }
 }
