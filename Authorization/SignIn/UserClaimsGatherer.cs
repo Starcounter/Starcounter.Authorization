@@ -31,7 +31,7 @@ namespace Starcounter.Authorization.SignIn
             return serializedClaims.Select(_claimSerializer.Deserialize);
         }
 
-        private void AddClaimsFromGroup(IUserGroup userGroup, HashSet<string> claimsSet)
+        private void AddClaimsFromGroup(IUserGroup userGroup, ICollection<string> claimsSet)
         {
             foreach (var claimDb in userGroup.AssociatedClaims)
             {
