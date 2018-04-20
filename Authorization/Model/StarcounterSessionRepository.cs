@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using Starcounter.Linq;
+﻿using System.Linq;
 
 namespace Starcounter.Authorization.Model
 {
@@ -9,18 +6,9 @@ namespace Starcounter.Authorization.Model
     {
         public TSession FindBySessionId(string sessionId)
         {
-            var parameterExpression = Expression.Parameter(typeof(TSession));
-            var expression = Expression.Lambda<Func<TSession, bool>>(Expression.ReferenceEqual(Expression.Property(
-                        parameterExpression,
-                        typeof(ISession).GetProperty(nameof(ISession.SessionId)) ?? throw new InvalidOperationException("SessionId property is null")),
-                    Expression.Constant(sessionId)),
-                parameterExpression);
-            return DbLinq.Objects<TSession>()
-                .FirstOrDefault(expression);
-            // for some reason the following code fails with NotSupportedException
-//            return DbLinq.Objects<TSession>()
-//                .Where(session => session.SessionId == sessionId)
-//                .FirstOrDefault();
+            // Starcounter.Linq fails due to https://github.com/Starcounter/Starcounter.Linq/issues/45 
+            return Db.SQL<TSession>($"select a from {typeof(TSession).FullName.EscapeSql()} a where {nameof(ISession.SessionId).EscapeSql()} = ?", sessionId)
+                .FirstOrDefault();
         }
 
         public void Delete(TSession session)
