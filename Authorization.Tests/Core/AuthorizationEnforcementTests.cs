@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
@@ -29,7 +30,7 @@ namespace Starcounter.Authorization.Tests.Core
         }
 
         [Test]
-        public async Task ShouldExtractPrincipalFromAuthenticationAndPassItToAuthorizationService()
+        public async Task CheckPolicyAsync_ShouldExtractPrincipalFromAuthenticationAndPassItToAuthorizationService()
         {
             _authorizationServiceMock.Setup(service =>
                     service.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<object>(), It.IsAny<string>()))
@@ -44,13 +45,40 @@ namespace Starcounter.Authorization.Tests.Core
 
         [TestCase(true)]
         [TestCase(false)]
-        public async Task ShouldReturnResultFromAuthorizationService(bool expectedResult)
+        public async Task CheckPolicyAsync_ShouldReturnResultFromAuthorizationService(bool expectedResult)
         {
             _authorizationServiceMock.Setup(service =>
                     service.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<object>(), It.IsAny<string>()))
                 .ReturnsAsync(expectedResult ? AuthorizationResult.Success() : AuthorizationResult.Failed());
 
             var result = await _authorizationEnforcement.CheckPolicyAsync("policy", null);
+
+            result.Should().Be(expectedResult);
+        }
+
+        [Test]
+        public async Task CheckRequirementsAsync_ShouldExtractPrincipalFromAuthenticationAndPassItToAuthorizationService()
+        {
+            _authorizationServiceMock.Setup(service =>
+                    service.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<object>(), It.IsAny<IEnumerable<IAuthorizationRequirement>>()))
+                .ReturnsAsync(AuthorizationResult.Success());
+            var resource = new object();
+            var requirements = new List<IAuthorizationRequirement>();
+
+            await _authorizationEnforcement.CheckRequirementsAsync(requirements, resource);
+
+            _authorizationServiceMock.Verify(service => service.AuthorizeAsync(_principal, resource, requirements));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task CheckRequirementsAsync_ShouldReturnResultFromAuthorizationService(bool expectedResult)
+        {
+            _authorizationServiceMock.Setup(service =>
+                    service.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<object>(), It.IsAny<IEnumerable<IAuthorizationRequirement>>()))
+                .ReturnsAsync(expectedResult ? AuthorizationResult.Success() : AuthorizationResult.Failed());
+
+            var result = await _authorizationEnforcement.CheckRequirementsAsync(new IAuthorizationRequirement[0], null);
 
             result.Should().Be(expectedResult);
         }
