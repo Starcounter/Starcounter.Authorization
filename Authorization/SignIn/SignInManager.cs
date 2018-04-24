@@ -12,14 +12,14 @@ namespace Starcounter.Authorization.SignIn
         where TUser : IUserWithGroups
     {
         private readonly IUserClaimsGatherer _userClaimsGatherer;
-        private readonly IStringSerializer<ClaimsPrincipal> _principalSerializer;
+        private readonly IClaimsPrincipalSerializer _principalSerializer;
         private readonly ISystemClock _clock;
         private readonly ICurrentSessionProvider _currentSessionProvider;
         private readonly ILogger _logger;
         private readonly SignInOptions _options;
 
         public SignInManager(IUserClaimsGatherer userClaimsGatherer,
-            IStringSerializer<ClaimsPrincipal> principalSerializer,
+            IClaimsPrincipalSerializer principalSerializer,
             ISystemClock clock,
             IOptions<SignInOptions> options,
             ICurrentSessionProvider currentSessionProvider,

@@ -16,7 +16,7 @@ namespace Starcounter.Authorization.Model.Serialization
     /// https://developercommunity.visualstudio.com/content/problem/236195/claimsprincipal-deserialization-fails-on-net-frame.html
     /// It's purpose is short-term serialization for authentication ticket storage - the serialization format is not forward-compatible
     /// </remarks>
-    public class Base64ClaimsPrincipalSerializer : IStringSerializer<ClaimsPrincipal>
+    public class Base64ClaimsPrincipalSerializer : IClaimsPrincipalSerializer
     {
         public ClaimsPrincipal Deserialize(string serialized)
         {

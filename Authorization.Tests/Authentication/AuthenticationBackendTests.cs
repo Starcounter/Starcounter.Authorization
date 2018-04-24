@@ -14,13 +14,13 @@ namespace Starcounter.Authorization.Tests.Authentication
         private AuthenticationBackend<ScUserAuthenticationTicket> _sut;
         private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
         private ClaimsPrincipal _returnedPrincipal;
-        private Mock<IStringSerializer<ClaimsPrincipal>> _serializerMock;
+        private Mock<IClaimsPrincipalSerializer> _serializerMock;
 
         [SetUp]
         public void SetUp()
         {
             _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
-            _serializerMock = new Mock<IStringSerializer<ClaimsPrincipal>>();
+            _serializerMock = new Mock<IClaimsPrincipalSerializer>();
             _sut = new AuthenticationBackend<ScUserAuthenticationTicket>(
                 _authenticationTicketProviderMock.Object,
                 _serializerMock.Object

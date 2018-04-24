@@ -12,7 +12,7 @@ namespace Starcounter.Authorization.Authentication
             where TAuthenticationTicket : class, IScAuthenticationTicket, new()
         {
             services.TryAddTransient<IAuthenticationBackend, AuthenticationBackend<TAuthenticationTicket>>();
-            services.TryAddTransient<IStringSerializer<ClaimsPrincipal>, Base64ClaimsPrincipalSerializer>();
+            services.TryAddTransient<IClaimsPrincipalSerializer, Base64ClaimsPrincipalSerializer>();
             AddAuthenticationTicketProvider<TAuthenticationTicket>(services);
             return services;
         }

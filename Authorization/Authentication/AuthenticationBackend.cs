@@ -8,11 +8,11 @@ namespace Starcounter.Authorization.Authentication
     public class AuthenticationBackend<TAuthenticationTicket> : IAuthenticationBackend
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
-        private readonly IStringSerializer<ClaimsPrincipal> _principalSerializer;
+        private readonly IClaimsPrincipalSerializer _principalSerializer;
         private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
 
         public AuthenticationBackend(IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
-            IStringSerializer<ClaimsPrincipal> principalSerializer)
+            IClaimsPrincipalSerializer principalSerializer)
         {
             _authenticationTicketProvider = authenticationTicketProvider;
             _principalSerializer = principalSerializer;

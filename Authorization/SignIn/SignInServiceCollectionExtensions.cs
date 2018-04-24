@@ -14,7 +14,7 @@ namespace Starcounter.Authorization.SignIn
             where TUser : IUserWithGroups
         {
             serviceCollection.TryAddTransient<IClaimDbConverter, ClaimDbConverter>();
-            serviceCollection.TryAddTransient<IStringSerializer<ClaimsPrincipal>, Base64ClaimsPrincipalSerializer>();
+            serviceCollection.TryAddTransient<IClaimsPrincipalSerializer, Base64ClaimsPrincipalSerializer>();
             serviceCollection.TryAddTransient<IUserClaimsGatherer, UserClaimsGatherer>();
             serviceCollection.TryAddSingleton<ISystemClock>(_ => new SystemClock());
             serviceCollection.TryAddSingleton<ICurrentSessionProvider>(_ => new DefaultCurrentSessionProvider());
