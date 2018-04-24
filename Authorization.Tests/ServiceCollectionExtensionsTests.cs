@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
+using Starcounter.Authorization.Core;
 using Starcounter.Authorization.PageSecurity;
 using Starcounter.Authorization.Routing;
 using Starcounter.Authorization.Routing.Middleware;
@@ -27,12 +28,11 @@ namespace Starcounter.Authorization.Tests
         }
 
         [Test]
-        public void AddSecurityMiddlewareTest()
+        public void AddSecurityMiddlewareConfigures_SecurityMiddleware()
         {
             _serviceCollection
-                .AddAuthorization(auth => auth.AddPolicy("DoThings", builder => builder.RequireUserName("admin")))
+                .AddAuthorization()
                 .AddSingleton(Mock.Of<IAuthenticationBackend>())
-                // sc auth
                 .AddSecurityMiddleware();
 
             var middlewares = GetRequiredService<IEnumerable<IPageMiddleware>>();
@@ -50,31 +50,33 @@ namespace Starcounter.Authorization.Tests
         }
 
         [Test]
-        public void AddSignInManagerConfiguresAllDependencies()
+        public void AddSignInManagerConfigures_SignInManager()
         {
             _serviceCollection.AddSignInManager<ScUserAuthenticationTicket, User>();
             GetRequiredService<ISignInManager<ScUserAuthenticationTicket, User>>();
         }
 
         [Test]
-        public void AddAuthenticationConfiguresAllDependencies()
+        public void AddAuthenticationConfigures_AuthorizationEnforcement_ButRequiresAddAuthorization()
         {
-            _serviceCollection.AddAuthentication<ScUserAuthenticationTicket>();
-            GetRequiredService<IAuthenticationBackend>();
+            _serviceCollection.AddAuthentication<ScUserAuthenticationTicket>()
+                .AddAuthorization();
+            GetRequiredService<IAuthorizationEnforcement>();
         }
 
         [Test]
-        public void AddUserConfigurationConfiguresAllDependencies()
+        public void AddUserConfigurationConfigures_CurrentUserProvider()
         {
             _serviceCollection.AddUserConfiguration<ScUserAuthenticationTicket, User>();
             GetRequiredService<ICurrentUserProvider<User>>();
         }
 
         [Test]
-        public void AddFakeAuthenticationConfiguresAllDependencies()
+        public void AddFakeAuthenticationConfigures_AuthorizationEnforcement()
         {
-            _serviceCollection.AddFakeAuthentication();
-            GetRequiredService<IAuthenticationBackend>();
+            _serviceCollection.AddFakeAuthentication()
+                .AddAuthorization();
+            GetRequiredService<IAuthorizationEnforcement>();
         }
 
         private void AddDefaultServices(IServiceCollection serviceCollection)
