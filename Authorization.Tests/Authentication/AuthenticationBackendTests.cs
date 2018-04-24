@@ -11,28 +11,27 @@ namespace Starcounter.Authorization.Tests.Authentication
 {
     public class AuthenticationBackendTests
     {
-        private AuthenticationBackend<UserSession> _sut;
-        private Mock<ICurrentSessionRetriever<UserSession>> _sessionRetrieverMock;
+        private AuthenticationBackend<ScUserAuthenticationTicket> _sut;
+        private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
         private ClaimsPrincipal _returnedPrincipal;
         private Mock<IStringSerializer<ClaimsPrincipal>> _serializerMock;
 
         [SetUp]
         public void SetUp()
         {
-            _sessionRetrieverMock = new Mock<ICurrentSessionRetriever<UserSession>>();
+            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
             _serializerMock = new Mock<IStringSerializer<ClaimsPrincipal>>();
-            _sut = new AuthenticationBackend<UserSession>(
-                _sessionRetrieverMock.Object,
-                Mock.Of<ILogger<AuthenticationBackend<UserSession>>>(),
+            _sut = new AuthenticationBackend<ScUserAuthenticationTicket>(
+                _authenticationTicketProviderMock.Object,
                 _serializerMock.Object
             );
         }
 
         [Test]
-        public void WhenCurrentSessionIsNullThenAnonymousPrincipalIsReturned()
+        public void WhenAuthenticationTicketIsNullThenAnonymousPrincipalIsReturned()
         {
-            _sessionRetrieverMock.Setup(retriever => retriever.GetCurrentSession())
-                .Returns((UserSession) null);
+            _authenticationTicketProviderMock.Setup(provider => provider.GetCurrentAuthenticationTicket())
+                .Returns((ScUserAuthenticationTicket) null);
 
             Excercise();
 
@@ -41,12 +40,12 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void WhenCurrentSessionIsNotNullThenDeserializedPrincipalIsReturned()
+        public void WhenAuthenticationTicketIsNotNullThenDeserializedPrincipalIsReturned()
         {
             var serializedPrincipal = "serializedPrincipal";
             var deserializedPrincipal = new ClaimsPrincipal();
-            _sessionRetrieverMock.Setup(retriever => retriever.GetCurrentSession())
-                .Returns(new UserSession()
+            _authenticationTicketProviderMock.Setup(provider => provider.GetCurrentAuthenticationTicket())
+                .Returns(new ScUserAuthenticationTicket()
                 {
                     PrincipalSerialized = serializedPrincipal
                 });

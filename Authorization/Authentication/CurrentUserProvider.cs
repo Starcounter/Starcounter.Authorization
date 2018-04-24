@@ -2,18 +2,20 @@
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class CurrentUserProvider<TUserSession, TUser> : ICurrentUserProvider<TUser> where TUserSession : class, IUserSession<TUser> where TUser : class, IUser
+    public class CurrentUserProvider<TUserAuthenticationTicket, TUser> : ICurrentUserProvider<TUser>
+        where TUserAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>
+        where TUser : class, IUser
     {
-        private readonly ICurrentSessionRetriever<TUserSession> _currentSessionRetriever;
+        private readonly IAuthenticationTicketProvider<TUserAuthenticationTicket> _authenticationTicketProvider;
 
-        public CurrentUserProvider(ICurrentSessionRetriever<TUserSession> currentSessionRetriever)
+        public CurrentUserProvider(IAuthenticationTicketProvider<TUserAuthenticationTicket> authenticationTicketProvider)
         {
-            _currentSessionRetriever = currentSessionRetriever;
+            _authenticationTicketProvider = authenticationTicketProvider;
         }
         public TUser GetCurrentUser()
         {
-            var currentSession = _currentSessionRetriever.GetCurrentSession();
-            return currentSession?.User;
+            var authenticationTicket = _authenticationTicketProvider.GetCurrentAuthenticationTicket();
+            return authenticationTicket?.User;
         }
     }
 }

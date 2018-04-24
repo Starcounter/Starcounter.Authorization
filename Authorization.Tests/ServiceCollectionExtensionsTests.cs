@@ -52,21 +52,21 @@ namespace Starcounter.Authorization.Tests
         [Test]
         public void AddSignInManagerConfiguresAllDependencies()
         {
-            _serviceCollection.AddSignInManager<UserSession, User>();
-            GetRequiredService<ISignInManager<UserSession, User>>();
+            _serviceCollection.AddSignInManager<ScUserAuthenticationTicket, User>();
+            GetRequiredService<ISignInManager<ScUserAuthenticationTicket, User>>();
         }
 
         [Test]
         public void AddAuthenticationConfiguresAllDependencies()
         {
-            _serviceCollection.AddAuthentication<UserSession>();
+            _serviceCollection.AddAuthentication<ScUserAuthenticationTicket>();
             GetRequiredService<IAuthenticationBackend>();
         }
 
         [Test]
         public void AddUserConfigurationConfiguresAllDependencies()
         {
-            _serviceCollection.AddUserConfiguration<UserSession, User>();
+            _serviceCollection.AddUserConfiguration<ScUserAuthenticationTicket, User>();
             GetRequiredService<ICurrentUserProvider<User>>();
         }
 

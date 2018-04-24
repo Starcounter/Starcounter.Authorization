@@ -2,19 +2,20 @@
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Model;
 using Starcounter.Authorization.Model.Serialization;
 
 namespace Starcounter.Authorization.SignIn
 {
-    public class SignInManager<TUserSession, TUser> : ISignInManager<TUserSession, TUser> where TUserSession : IUserSession<TUser> where TUser : IUserWithGroups
+    public class SignInManager<TAuthenticationTicket, TUser> : ISignInManager<TAuthenticationTicket, TUser>
+        where TAuthenticationTicket : IScUserAuthenticationTicket<TUser>
+        where TUser : IUserWithGroups
     {
         private readonly IUserClaimsGatherer _userClaimsGatherer;
         private readonly IStringSerializer<ClaimsPrincipal> _principalSerializer;
         private readonly ISystemClock _clock;
         private readonly ICurrentSessionProvider _currentSessionProvider;
-        private readonly ILogger<SignInManager<TUserSession, TUser>> _logger;
+        private readonly ILogger _logger;
         private readonly SignInOptions _options;
 
         public SignInManager(IUserClaimsGatherer userClaimsGatherer,
@@ -22,7 +23,7 @@ namespace Starcounter.Authorization.SignIn
             ISystemClock clock,
             IOptions<SignInOptions> options,
             ICurrentSessionProvider currentSessionProvider,
-            ILogger<SignInManager<TUserSession, TUser>> logger)
+            ILogger<SignInManager<TAuthenticationTicket, TUser>> logger)
         {
             _userClaimsGatherer = userClaimsGatherer;
             _principalSerializer = principalSerializer;
@@ -31,7 +32,7 @@ namespace Starcounter.Authorization.SignIn
             _logger = logger;
             _options = options.Value;
         }
-        public void SignIn(TUser user, TUserSession session)
+        public void SignIn(TUser user, TAuthenticationTicket authenticationTicket)
         {
             try
             {
@@ -39,10 +40,10 @@ namespace Starcounter.Authorization.SignIn
                                               ?? throw new InvalidOperationException("Current session is null");
                 var principal = GeneratePrincipal(user);
 
-                session.PrincipalSerialized = _principalSerializer.Serialize(principal);
-                session.SessionId = currentSessionSessionId;
-                session.ExpiresAt = (_clock.UtcNow + _options.NewTicketExpiration).UtcDateTime;
-                session.User = user;
+                authenticationTicket.PrincipalSerialized = _principalSerializer.Serialize(principal);
+                authenticationTicket.SessionId = currentSessionSessionId;
+                authenticationTicket.ExpiresAt = (_clock.UtcNow + _options.NewTicketExpiration).UtcDateTime;
+                authenticationTicket.User = user;
                 _logger.LogInformation("User {User} signed in", user);
 
             }

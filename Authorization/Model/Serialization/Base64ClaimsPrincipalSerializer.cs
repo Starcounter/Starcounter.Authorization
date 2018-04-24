@@ -14,7 +14,7 @@ namespace Starcounter.Authorization.Model.Serialization
     /// It only serializes authentication type and list of claims for each identity inside the principal.
     /// It does that to avoid a bug in default serialization of ClaimsPrincipal - see
     /// https://developercommunity.visualstudio.com/content/problem/236195/claimsprincipal-deserialization-fails-on-net-frame.html
-    /// It's purpose is short-term serialization for session storage - the serialization format is not forward-compatible
+    /// It's purpose is short-term serialization for authentication ticket storage - the serialization format is not forward-compatible
     /// </remarks>
     public class Base64ClaimsPrincipalSerializer : IStringSerializer<ClaimsPrincipal>
     {

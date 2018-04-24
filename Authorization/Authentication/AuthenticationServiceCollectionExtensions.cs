@@ -8,18 +8,22 @@ namespace Starcounter.Authorization.Authentication
 {
     public static class AuthenticationServiceCollectionExtensions
     {
-        public static IServiceCollection AddAuthentication<TSession>(this IServiceCollection services) where TSession: class, ISession, new()
+        public static IServiceCollection AddAuthentication<TAuthenticationTicket>(this IServiceCollection services)
+            where TAuthenticationTicket : class, IScAuthenticationTicket, new()
         {
-            services.TryAddTransient<IAuthenticationBackend, AuthenticationBackend<TSession>>();
+            services.TryAddTransient<IAuthenticationBackend, AuthenticationBackend<TAuthenticationTicket>>();
             services.TryAddTransient<IStringSerializer<ClaimsPrincipal>, Base64ClaimsPrincipalSerializer>();
-            AddSessionRetriever<TSession>(services);
+            AddAuthenticationTicketProvider<TAuthenticationTicket>(services);
             return services;
         }
 
-        public static IServiceCollection AddUserConfiguration<TUserSession, TUser>(this IServiceCollection services) where TUserSession : class, IUserSession<TUser>, new() where TUser : class, IUser
+        public static IServiceCollection
+            AddUserConfiguration<TUserAuthenticationTicket, TUser>(this IServiceCollection services)
+            where TUserAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>, new()
+            where TUser : class, IUser
         {
-            services.TryAddTransient<ICurrentUserProvider<TUser>, CurrentUserProvider<TUserSession, TUser>>();
-            AddSessionRetriever<TUserSession>(services);
+            services.TryAddTransient<ICurrentUserProvider<TUser>, CurrentUserProvider<TUserAuthenticationTicket, TUser>>();
+            AddAuthenticationTicketProvider<TUserAuthenticationTicket>(services);
             return services;
         }
 
@@ -28,12 +32,13 @@ namespace Starcounter.Authorization.Authentication
             services.TryAddSingleton<IAuthenticationBackend, AlwaysAdminAuthBackend>();
             return services;
         }
-        private static void AddSessionRetriever<TSession>(IServiceCollection services) where TSession : class, ISession, new()
+        private static void AddAuthenticationTicketProvider<TAuthenticationTicket>(IServiceCollection services)
+            where TAuthenticationTicket : class, IScAuthenticationTicket, new()
         {
             services.TryAddTransient<ISystemClock, SystemClock>();
             services.TryAddTransient<ICurrentSessionProvider, DefaultCurrentSessionProvider>();
-            services.TryAddTransient<ISessionRepository<TSession>, StarcounterSessionRepository<TSession>>();
-            services.TryAddTransient<ICurrentSessionRetriever<TSession>, CurrentSessionRetriever<TSession>>();
+            services.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket>>();
+            services.TryAddTransient<IAuthenticationTicketProvider<TAuthenticationTicket>, AuthenticationTicketProvider<TAuthenticationTicket>>();
         }
     }
 }

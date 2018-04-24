@@ -1,33 +1,30 @@
-﻿using System;
-using FluentAssertions;
-using Microsoft.Extensions.Logging;
+﻿using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
-using Starcounter.Authorization.Model;
 using Starcounter.Authorization.Tests.TestModel;
 
 namespace Starcounter.Authorization.Tests.Authentication
 {
     public class CurrentUserProviderTests
     {
-        private CurrentUserProvider<UserSession, User> _sut;
+        private CurrentUserProvider<ScUserAuthenticationTicket, User> _sut;
         private User _returnedUser;
-        private Mock<ICurrentSessionRetriever<UserSession>> _sessionRetrieverMock;
+        private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
 
         [SetUp]
         public void SetUp()
         {
-            _sessionRetrieverMock = new Mock<ICurrentSessionRetriever<UserSession>>();
-            _sut = new CurrentUserProvider<UserSession, User>(
-                _sessionRetrieverMock.Object);
+            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
+            _sut = new CurrentUserProvider<ScUserAuthenticationTicket, User>(
+                _authenticationTicketProviderMock.Object);
         }
 
         [Test]
-        public void WhenCurrentSessionIsNullThenNullIsReturned()
+        public void WhenCurrentTicketIsNullThenNullIsReturned()
         {
-            _sessionRetrieverMock.Setup(retriever => retriever.GetCurrentSession())
-                .Returns((UserSession) null);
+            _authenticationTicketProviderMock.Setup(provider => provider.GetCurrentAuthenticationTicket())
+                .Returns((ScUserAuthenticationTicket) null);
 
             Excercise();
 
@@ -35,11 +32,11 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void WhenCurrentSessionIsNotNullThenUserIsReturned()
+        public void WhenCurrentTicketIsNotNullThenUserIsReturned()
         {
             var user = new User();
-            _sessionRetrieverMock.Setup(retriever => retriever.GetCurrentSession())
-                .Returns(new UserSession()
+            _authenticationTicketProviderMock.Setup(provider => provider.GetCurrentAuthenticationTicket())
+                .Returns(new ScUserAuthenticationTicket()
                 {
                     User = user
                 });

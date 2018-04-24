@@ -3,7 +3,7 @@ using Starcounter.Authorization.Model;
 
 namespace Starcounter.Authorization.Tests.TestModel
 {
-    public class UserSession : IUserSession<User>
+    public class ScUserAuthenticationTicket : IScUserAuthenticationTicket<User>
     {
         public string SessionId { get; set; }
         public string PrincipalSerialized { get; set; }

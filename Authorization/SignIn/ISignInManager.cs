@@ -2,10 +2,10 @@
 
 namespace Starcounter.Authorization.SignIn
 {
-    public interface ISignInManager<in TUserSession, in TUser> 
-        where TUserSession : IUserSession<TUser> 
+    public interface ISignInManager<in TAuthenticationTicket, in TUser> 
+        where TAuthenticationTicket : IScUserAuthenticationTicket<TUser> 
         where TUser : IUserWithGroups
     {
-        void SignIn(TUser user, TUserSession session);
+        void SignIn(TUser user, TAuthenticationTicket authenticationTicket);
     }
 }

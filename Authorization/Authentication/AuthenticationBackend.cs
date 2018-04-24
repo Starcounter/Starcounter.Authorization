@@ -1,34 +1,31 @@
 ﻿using System;
 using System.Security.Claims;
-using Microsoft.Extensions.Logging;
 using Starcounter.Authorization.Model;
 using Starcounter.Authorization.Model.Serialization;
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class AuthenticationBackend<TSession> : IAuthenticationBackend where TSession : class, ISession
+    public class AuthenticationBackend<TAuthenticationTicket> : IAuthenticationBackend
+        where TAuthenticationTicket : class, IScAuthenticationTicket
     {
         private readonly IStringSerializer<ClaimsPrincipal> _principalSerializer;
-        private readonly ICurrentSessionRetriever<TSession> _currentSessionRetriever;
-        private readonly ILogger _logger;
+        private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
 
-        public AuthenticationBackend(ICurrentSessionRetriever<TSession> currentSessionRetriever,
-            ILogger<AuthenticationBackend<TSession>> logger,
+        public AuthenticationBackend(IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
             IStringSerializer<ClaimsPrincipal> principalSerializer)
         {
-            _currentSessionRetriever = currentSessionRetriever;
-            _logger = logger;
+            _authenticationTicketProvider = authenticationTicketProvider;
             _principalSerializer = principalSerializer;
         }
 
         public ClaimsPrincipal GetCurrentPrincipal()
         {
-            var currentSession = _currentSessionRetriever.GetCurrentSession();
-            if (currentSession == null)
+            var authenticationTicket = _authenticationTicketProvider.GetCurrentAuthenticationTicket();
+            if (authenticationTicket == null)
             {
                 return new ClaimsPrincipal();
             }
-            return _principalSerializer.Deserialize(currentSession.PrincipalSerialized);
+            return _principalSerializer.Deserialize(authenticationTicket.PrincipalSerialized);
         }
     }
 }

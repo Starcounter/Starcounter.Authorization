@@ -3,9 +3,9 @@
 namespace Starcounter.Authorization.Model
 {
     /// <summary>
-    /// Implement this interface with a database Session class specific to your application.
+    /// Implement this interface with a database class specific to your application.
     /// </summary>
-    public interface ISession
+    public interface IScAuthenticationTicket
     {
         /// <summary>
         /// Corresponds to <see cref="Session.SessionId"/>
@@ -18,7 +18,7 @@ namespace Starcounter.Authorization.Model
         string PrincipalSerialized { get; set; }
 
         /// <summary>
-        /// Expiry date of this session, in UTC
+        /// in UTC. After this time passes this ticket can and should be removed
         /// </summary>
         DateTime ExpiresAt { get; set; }
     }

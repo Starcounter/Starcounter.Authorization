@@ -14,10 +14,10 @@ namespace Starcounter.Authorization.Tests.SignIn
 {
     public class SignInManagerTests
     {
-        private SignInManager<UserSession, User> _sut;
+        private SignInManager<ScUserAuthenticationTicket, User> _sut;
         private Mock<ICurrentSessionProvider> _sessionProviderMock;
         private User _user;
-        private UserSession _userSession;
+        private ScUserAuthenticationTicket _scUserAuthenticationTicket;
         private SignInOptions _options;
         private Mock<ISystemClock> _clockMock;
         private Base64ClaimsPrincipalSerializer _principalSerializer;
@@ -31,13 +31,13 @@ namespace Starcounter.Authorization.Tests.SignIn
             _clockMock = new Mock<ISystemClock>();
             _principalSerializer = new Base64ClaimsPrincipalSerializer();
             _claimsGathererMock = new Mock<IUserClaimsGatherer>();
-            _sut = new SignInManager<UserSession, User>(
+            _sut = new SignInManager<ScUserAuthenticationTicket, User>(
                 _claimsGathererMock.Object,
                 _principalSerializer, 
                 _clockMock.Object,
                 Options.Create(_options),
                 _sessionProviderMock.Object,
-                Mock.Of<ILogger<SignInManager<UserSession, User>>>()
+                Mock.Of<ILogger<SignInManager<ScUserAuthenticationTicket, User>>>()
             );
 
             _user = new User()
@@ -46,7 +46,7 @@ namespace Starcounter.Authorization.Tests.SignIn
                 Groups = new UserGroup[0],
             };
 
-            _userSession = new UserSession();
+            _scUserAuthenticationTicket = new ScUserAuthenticationTicket();
 
             _sessionProviderMock
                 .SetupGet(provider => provider.CurrentSessionId)
@@ -65,7 +65,7 @@ namespace Starcounter.Authorization.Tests.SignIn
 
             Excercise();
 
-            _userSession.SessionId.Should().Be(sessionId);
+            _scUserAuthenticationTicket.SessionId.Should().Be(sessionId);
         }
 
         [Test]
@@ -78,7 +78,7 @@ namespace Starcounter.Authorization.Tests.SignIn
 
             Excercise();
 
-            _userSession.ExpiresAt.Should().Be((fakeNow + ticketValidity).UtcDateTime);
+            _scUserAuthenticationTicket.ExpiresAt.Should().Be((fakeNow + ticketValidity).UtcDateTime);
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace Starcounter.Authorization.Tests.SignIn
         {
             Excercise();
 
-            _userSession.User.Should().Be(_user);
+            _scUserAuthenticationTicket.User.Should().Be(_user);
         }
 
         [Test]
@@ -108,7 +108,7 @@ namespace Starcounter.Authorization.Tests.SignIn
             Excercise();
 
             _principalSerializer
-                .Deserialize(_userSession.PrincipalSerialized)
+                .Deserialize(_scUserAuthenticationTicket.PrincipalSerialized)
                 .Identity.AuthenticationType
                 .Should().Be(authenticationType);
         }
@@ -124,7 +124,7 @@ namespace Starcounter.Authorization.Tests.SignIn
             Excercise();
 
             _principalSerializer
-                .Deserialize(_userSession.PrincipalSerialized)
+                .Deserialize(_scUserAuthenticationTicket.PrincipalSerialized)
                 .Claims
                 .Should().HaveCount(2)
                 .And.Contain(claim =>
@@ -139,7 +139,7 @@ namespace Starcounter.Authorization.Tests.SignIn
 
         private void Excercise()
         {
-            _sut.SignIn(_user, _userSession);
+            _sut.SignIn(_user, _scUserAuthenticationTicket);
         }
     }
 }
