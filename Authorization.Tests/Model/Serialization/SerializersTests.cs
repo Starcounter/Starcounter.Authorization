@@ -10,18 +10,6 @@ namespace Starcounter.Authorization.Tests.Model.Serialization
     public class SerializersTests
     {
         [Test]
-        public void SerializedAndDeserializedGivesTheSameResult_Claim()
-        {
-            var sut = new Base64ClaimSerializer();
-            var claim = new Claim("type", "value");
-
-            var serialized = sut.Serialize(claim);
-            var deserialized = sut.Deserialize(serialized);
-
-            deserialized.Should().BeEquivalentTo(claim);
-        }
-
-        [Test]
         public void SerializedAndDeserializedGivesTheSameResult_ClaimsPrincipal()
         {
             var sut = new Base64ClaimsPrincipalSerializer();

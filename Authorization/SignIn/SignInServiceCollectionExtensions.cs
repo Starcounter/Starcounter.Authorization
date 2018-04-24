@@ -13,7 +13,7 @@ namespace Starcounter.Authorization.SignIn
             where TAuthenticationTicket : IScUserAuthenticationTicket<TUser>
             where TUser : IUserWithGroups
         {
-            serviceCollection.TryAddTransient<IStringSerializer<Claim>, Base64ClaimSerializer>();
+            serviceCollection.TryAddTransient<IClaimDbConverter, ClaimDbConverter>();
             serviceCollection.TryAddTransient<IStringSerializer<ClaimsPrincipal>, Base64ClaimsPrincipalSerializer>();
             serviceCollection.TryAddTransient<IUserClaimsGatherer, UserClaimsGatherer>();
             serviceCollection.TryAddSingleton<ISystemClock>(_ => new SystemClock());

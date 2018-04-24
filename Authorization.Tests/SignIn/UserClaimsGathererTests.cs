@@ -16,7 +16,7 @@ namespace Starcounter.Authorization.Tests.SignIn
         private UserClaimsGatherer _sut;
         private User _user;
         private IEnumerable<Claim> _gatheredClaims;
-        private Base64ClaimSerializer _claimSerializer;
+        private ClaimDbConverter _claimDbConverter;
         private ClaimDb[] _fixtureClaimDbs;
         private string _claimType1;
         private string _claimValue1;
@@ -26,8 +26,8 @@ namespace Starcounter.Authorization.Tests.SignIn
         [SetUp]
         public void SetUp()
         {
-            _claimSerializer = new Base64ClaimSerializer();
-            _sut = new UserClaimsGatherer(_claimSerializer);
+            _claimDbConverter = new ClaimDbConverter();
+            _sut = new UserClaimsGatherer(_claimDbConverter);
             _user = new User()
             {
                 AssociatedClaims = Enumerable.Empty<IClaimDb>(),
@@ -103,11 +103,9 @@ namespace Starcounter.Authorization.Tests.SignIn
 
         private ClaimDb CreateClaimDb(string claimType, string claimValue)
         {
-            var claimSerialized = _claimSerializer.Serialize(new Claim(claimType, claimValue));
-            return new ClaimDb()
-            {
-                ClaimSerialized = claimSerialized
-            };
+            var claimDb = new ClaimDb();
+            _claimDbConverter.Pack(new Claim(claimType, claimValue), claimDb);
+            return claimDb;
         }
 
         private void Excercise()

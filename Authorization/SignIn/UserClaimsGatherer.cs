@@ -8,34 +8,34 @@ namespace Starcounter.Authorization.SignIn
 {
     public class UserClaimsGatherer : IUserClaimsGatherer
     {
-        private readonly IStringSerializer<Claim> _claimSerializer;
+        private readonly IClaimDbConverter _claimDbConverter;
 
-        public UserClaimsGatherer(IStringSerializer<Claim> claimSerializer)
+        public UserClaimsGatherer(IClaimDbConverter claimDbConverter)
         {
-            _claimSerializer = claimSerializer;
+            _claimDbConverter = claimDbConverter;
         }
 
         public IEnumerable<Claim> Gather(IUserWithGroups user)
         {
-            var serializedClaims = new HashSet<string>();
+            var dbClaims = new HashSet<IClaimDb>();
             foreach (var claimDb in user.AssociatedClaims)
             {
-                serializedClaims.Add(claimDb.ClaimSerialized);
+                dbClaims.Add(claimDb);
             }
 
             foreach (var userGroup in user.Groups)
             {
-                AddClaimsFromGroup(userGroup, serializedClaims);
+                AddClaimsFromGroup(userGroup, dbClaims);
             }
 
-            return serializedClaims.Select(_claimSerializer.Deserialize);
+            return dbClaims.Select(_claimDbConverter.Unpack);
         }
 
-        private void AddClaimsFromGroup(IUserGroup userGroup, ICollection<string> claimsSet)
+        private void AddClaimsFromGroup(IUserGroup userGroup, ICollection<IClaimDb> claimsSet)
         {
             foreach (var claimDb in userGroup.AssociatedClaims)
             {
-                claimsSet.Add(claimDb.ClaimSerialized);
+                claimsSet.Add(claimDb);
             }
 
             foreach (var subGroup in userGroup.SubGroups)
