@@ -2,8 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Starcounter.Authorization.Core;
-using Starcounter.Authorization.Routing;
-using Starcounter.Authorization.Routing.Middleware;
+using Starcounter.Authorization.Middleware;
+using Starcounter.Startup.Routing;
 
 namespace Starcounter.Authorization.PageSecurity
 {

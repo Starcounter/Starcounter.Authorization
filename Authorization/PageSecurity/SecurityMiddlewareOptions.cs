@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
-using Starcounter.Authorization.Routing;
+using Starcounter.Startup.Routing;
 
 namespace Starcounter.Authorization.PageSecurity
 {

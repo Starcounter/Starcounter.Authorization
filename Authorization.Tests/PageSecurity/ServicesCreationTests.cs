@@ -7,8 +7,6 @@ using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.PageSecurity;
-using Starcounter.Authorization.Routing;
-using Starcounter.Authorization.Routing.Middleware;
 
 namespace Starcounter.Authorization.Tests.PageSecurity
 {

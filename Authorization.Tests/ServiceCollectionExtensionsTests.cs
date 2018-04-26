@@ -8,11 +8,11 @@ using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Core;
+using Starcounter.Authorization.Middleware;
 using Starcounter.Authorization.PageSecurity;
-using Starcounter.Authorization.Routing;
-using Starcounter.Authorization.Routing.Middleware;
 using Starcounter.Authorization.SignIn;
 using Starcounter.Authorization.Tests.TestModel;
+using Starcounter.Startup.Routing;
 
 namespace Starcounter.Authorization.Tests
 {

@@ -5,6 +5,9 @@
     /// </summary>
     public static class CommonClaims
     {
-        public const string SuperuserClaimType = "Superuser";
+        /// <summary>
+        /// Anyone bearing this claim should be regarded as system-wide administrator
+        /// </summary>
+        public const string SuperuserClaimType = "http://schema.starcounter.com/Starcounter.Authorization.Superuser";
     }
 }

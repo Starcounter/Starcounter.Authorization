@@ -1,8 +1,9 @@
 ﻿using System;
 using Microsoft.Extensions.Options;
 using Starcounter.Authorization.PageSecurity;
+using Starcounter.Startup.Routing;
 
-namespace Starcounter.Authorization.Routing.Middleware
+namespace Starcounter.Authorization.Middleware
 {
     public class SecurityMiddleware : IPageMiddleware
     {
