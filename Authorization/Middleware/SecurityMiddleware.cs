@@ -1,21 +1,20 @@
 ﻿using System;
-using Microsoft.Extensions.Options;
-using Starcounter.Authorization.PageSecurity;
+using Starcounter.Authorization.Authentication;
 using Starcounter.Startup.Routing;
 
 namespace Starcounter.Authorization.Middleware
 {
     public class SecurityMiddleware : IPageMiddleware
     {
-        private readonly Func<RoutingInfo, Response> _unauthorizedHandler;
         private readonly PageSecurity.PageSecurity _pageSecurity;
+        private readonly IAuthenticationUriProvider _authenticationUriProvider;
 
         public SecurityMiddleware(
-            IOptions<SecurityMiddlewareOptions> options,
-            PageSecurity.PageSecurity pageSecurity)
+            PageSecurity.PageSecurity pageSecurity,
+            IAuthenticationUriProvider authenticationUriProvider)
         {
             _pageSecurity = pageSecurity;
-            _unauthorizedHandler = options.Value.UnauthorizedAction;
+            _authenticationUriProvider = authenticationUriProvider;
         }
         
         public Response Run(RoutingInfo routingInfo, Func<Response> next)
@@ -24,7 +23,7 @@ namespace Starcounter.Authorization.Middleware
 
             if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Context).Result)
             {
-                return _unauthorizedHandler(routingInfo);
+                return _authenticationUriProvider.CreateUnauthenticatedRedirection(routingInfo.Request.Uri);
             }
             return next();
         }

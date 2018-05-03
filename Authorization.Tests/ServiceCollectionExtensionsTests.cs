@@ -12,6 +12,7 @@ using Starcounter.Authorization.Middleware;
 using Starcounter.Authorization.PageSecurity;
 using Starcounter.Authorization.SignIn;
 using Starcounter.Authorization.Tests.TestModel;
+using Starcounter.Startup.Abstractions;
 using Starcounter.Startup.Routing;
 
 namespace Starcounter.Authorization.Tests
@@ -40,6 +41,22 @@ namespace Starcounter.Authorization.Tests
                 .OfType<SecurityMiddleware>()
                 .Should()
                 .NotBeEmpty();
+        }
+
+        [Test]
+        public void AddSecurityMiddlewareConfigures_AuthenticationStartupFilter()
+        {
+            _serviceCollection.AddSecurityMiddleware();
+            GetRequiredService<IEnumerable<IStartupFilter>>()
+                .OfType<AuthenticationStartupFilter>()
+                .Should().NotBeEmpty();
+        }
+
+        [Test]
+        public void AddSecurityMiddlewareConfigures_AuthenticationUriProvider()
+        {
+            _serviceCollection.AddSecurityMiddleware();
+            GetRequiredService<IAuthenticationUriProvider>();
         }
 
         [Test]
