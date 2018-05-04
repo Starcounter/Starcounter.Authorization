@@ -7,11 +7,15 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
+using Starcounter.Authorization.ClaimManagement;
+using Starcounter.Authorization.ClaimManagement.Central;
 using Starcounter.Authorization.Core;
 using Starcounter.Authorization.Middleware;
 using Starcounter.Authorization.PageSecurity;
 using Starcounter.Authorization.SignIn;
 using Starcounter.Authorization.Tests.TestModel;
+using Starcounter.Authorization.UserManagement;
+using Starcounter.Authorization.UserManagement.Central;
 using Starcounter.Startup.Abstractions;
 using Starcounter.Startup.Routing;
 
@@ -47,9 +51,7 @@ namespace Starcounter.Authorization.Tests
         public void AddSecurityMiddlewareConfigures_AuthenticationStartupFilter()
         {
             _serviceCollection.AddSecurityMiddleware();
-            GetRequiredService<IEnumerable<IStartupFilter>>()
-                .OfType<AuthenticationStartupFilter>()
-                .Should().NotBeEmpty();
+            ExpectStartupFilter<AuthenticationStartupFilter>();
         }
 
         [Test]
@@ -89,11 +91,31 @@ namespace Starcounter.Authorization.Tests
         }
 
         [Test]
-        public void AddFakeAuthenticationConfigures_AuthorizationEnforcement()
+        public void AddClaimManagementConfigures_StartupFilter()
         {
-            _serviceCollection.AddFakeAuthentication()
-                .AddAuthorization();
-            GetRequiredService<IAuthorizationEnforcement>();
+            _serviceCollection.AddClaimManagement<ClaimDb>("claimType", typeof(object));
+            ExpectStartupFilter<ClaimManagementStartupFilter<ClaimDb>>();
+        }
+
+        [Test]
+        public void AddCentralClaimManagementConfigures_StartupFilter()
+        {
+            _serviceCollection.AddCentralClaimsManagement<ClaimDb>();
+            ExpectStartupFilter<CentralClaimManagementStartupFilter<ClaimDb>>();
+        }
+
+        [Test]
+        public void AddUserManagementConfigures_StartupFilter()
+        {
+            _serviceCollection.AddUserManagement<User>(typeof(object));
+            ExpectStartupFilter<UserManagementStartupFilter<User>>();
+        }
+
+        [Test]
+        public void AddCentralUserManagementConfigures_StartupFilter()
+        {
+            _serviceCollection.AddCentralUsersManagement<User>();
+            ExpectStartupFilter<CentralUserManagementStartupFilter<User>>();
         }
 
         private void AddDefaultServices(IServiceCollection serviceCollection)
@@ -106,6 +128,13 @@ namespace Starcounter.Authorization.Tests
         private T GetRequiredService<T>()
         {
             return _serviceCollection.BuildServiceProvider().GetRequiredService<T>();
+        }
+
+        private void ExpectStartupFilter<T>()
+        {
+            GetRequiredService<IEnumerable<IStartupFilter>>()
+                .OfType<T>()
+                .Should().NotBeEmpty();
         }
     }
 }
