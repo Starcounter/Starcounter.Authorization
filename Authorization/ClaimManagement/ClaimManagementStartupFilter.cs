@@ -30,7 +30,7 @@ namespace Starcounter.Authorization.ClaimManagement
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
             return app => {
-                var uriTemplate = $"/{Application.Current}/Starcounter.Authorization.ClaimManagement/{_claimType}/{{?}}";
+                var uriTemplate = $"/{Application.Current.Name}/Starcounter.Authorization.ClaimManagement/{_claimType}/{{?}}";
                 Blender.MapUri2<TClaimDb>(uriTemplate);
                 Handle.GET(uriTemplate,
                     (string id, Request request) => {

@@ -24,7 +24,7 @@ namespace Starcounter.Authorization.UserManagement
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
             return app => {
-                var uriTemplate = $"/{Application.Current}/Starcounter.Authorization.UserManagement/{{?}}";
+                var uriTemplate = $"/{Application.Current.Name}/Starcounter.Authorization.UserManagement/{{?}}";
                 var pageCreator = app.ApplicationServices.GetRequiredService<IPageCreator>();
                 Blender.MapUri2<TUser>(uriTemplate);
                 Handle.GET(uriTemplate,
