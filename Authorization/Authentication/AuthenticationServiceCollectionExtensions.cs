@@ -1,10 +1,9 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Starcounter.Authorization.Core;
 using Starcounter.Authorization.Model;
 using Starcounter.Authorization.Model.Serialization;
+using Starcounter.Startup.Abstractions;
 
 namespace Starcounter.Authorization.Authentication
 {
@@ -30,12 +29,6 @@ namespace Starcounter.Authorization.Authentication
             return services;
         }
 
-        public static IServiceCollection AddFakeAuthentication(this IServiceCollection services)
-        {
-            services.TryAddSingleton<IAuthenticationBackend, AlwaysAdminAuthBackend>();
-            services.TryAddTransient<IAuthorizationEnforcement, AuthorizationEnforcement>();
-            return services;
-        }
         private static void AddAuthenticationTicketProvider<TAuthenticationTicket>(IServiceCollection services)
             where TAuthenticationTicket : class, IScAuthenticationTicket, new()
         {

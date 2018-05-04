@@ -14,21 +14,23 @@ namespace Starcounter.Authorization.ClaimManagement
         private readonly string _claimType;
         private readonly Type _viewModelType;
         private readonly ILogger _logger;
+        private readonly IPageCreator _pageCreator;
 
         public ClaimManagementStartupFilter(string claimType,
             Type viewModelType,
-            ILogger<ClaimManagementStartupFilter<TClaimDb>> logger)
+            ILogger<ClaimManagementStartupFilter<TClaimDb>> logger,
+            IPageCreator pageCreator)
         {
             _claimType = claimType;
             _viewModelType = viewModelType;
             _logger = logger;
+            _pageCreator = pageCreator;
         }
 
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
             return app => {
                 var uriTemplate = $"/{Application.Current}/Starcounter.Authorization.ClaimManagement/{_claimType}/{{?}}";
-                var pageCreator = app.ApplicationServices.GetRequiredService<IPageCreator>();
                 Blender.MapUri2<TClaimDb>(uriTemplate);
                 Handle.GET(uriTemplate,
                     (string id, Request request) => {
@@ -46,7 +48,7 @@ namespace Starcounter.Authorization.ClaimManagement
                             return new Json();
                         }
 
-                        return pageCreator.Create(new RoutingInfo()
+                        return _pageCreator.Create(new RoutingInfo()
                         {
                             Request = request,
                             SelectedPageType = _viewModelType,

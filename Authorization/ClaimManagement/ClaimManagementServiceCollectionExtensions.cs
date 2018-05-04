@@ -27,10 +27,10 @@ namespace Starcounter.Authorization.ClaimManagement
         {
             services.TryAddTransient<IClaimDbConverter, ClaimDbConverter>();
             services.TryAddTransient<IPageCreator, DefaultPageCreator>();
-            services.AddTransient<IStartupFilter>(provider => new ClaimManagementStartupFilter<TClaimDb>(
+            services.AddTransient<IStartupFilter>(provider => ActivatorUtilities.CreateInstance<ClaimManagementStartupFilter<TClaimDb>>(
+                provider,
                 managedClaimType,
-                viewModelType,
-                provider.GetService<ILogger<ClaimManagementStartupFilter<TClaimDb>>>()));
+                viewModelType));
             return services;
         }
 

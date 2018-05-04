@@ -24,9 +24,9 @@ namespace Starcounter.Authorization.UserManagement
             where TUser : class, IUser
         {
             services.TryAddTransient<IPageCreator, DefaultPageCreator>();
-            services.AddTransient<IStartupFilter>(provider => new UserManagementStartupFilter<TUser>(
-                viewModelType,
-                provider.GetService<ILogger<UserManagementStartupFilter<TUser>>>()));
+            services.AddTransient<IStartupFilter>(provider => ActivatorUtilities.CreateInstance<UserManagementStartupFilter<TUser>>(
+                provider,
+                viewModelType));
             return services;
         }
 
