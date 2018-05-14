@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Starcounter.Authorization.DatabaseAccess;
 using Starcounter.Authorization.Model;
 
 namespace Starcounter.Authorization.Authentication
@@ -11,16 +12,19 @@ namespace Starcounter.Authorization.Authentication
         private readonly ISystemClock _systemClock;
         private readonly IScAuthenticationTicketRepository<TAuthenticationTicket> _scAuthenticationTicketRepository;
         private readonly ILogger _logger;
+        private readonly ITransactionFactory _transactionFactory;
 
         public AuthenticationTicketProvider(ICurrentSessionProvider currentSessionProvider,
             ISystemClock systemClock,
             IScAuthenticationTicketRepository<TAuthenticationTicket> scAuthenticationTicketRepository,
-            ILogger<AuthenticationTicketProvider<TAuthenticationTicket>> logger)
+            ILogger<AuthenticationTicketProvider<TAuthenticationTicket>> logger,
+            ITransactionFactory transactionFactory)
         {
             _currentSessionProvider = currentSessionProvider;
             _systemClock = systemClock;
             _scAuthenticationTicketRepository = scAuthenticationTicketRepository;
             _logger = logger;
+            _transactionFactory = transactionFactory;
         }
 
         public TAuthenticationTicket GetCurrentAuthenticationTicket()
@@ -38,7 +42,7 @@ namespace Starcounter.Authorization.Authentication
             if (authenticationTicket.ExpiresAt < _systemClock.UtcNow)
             {
                 _logger.LogInformation($"Found expired authentication ticket. Removing");
-                _scAuthenticationTicketRepository.Delete(authenticationTicket);
+                _transactionFactory.ExecuteTransaction(() => _scAuthenticationTicketRepository.Delete(authenticationTicket));
                 return null;
             }
 

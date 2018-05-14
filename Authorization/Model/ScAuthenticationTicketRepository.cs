@@ -12,6 +12,13 @@ namespace Starcounter.Authorization.Model
                 .FirstOrDefault();
         }
 
+        public TAuthenticationTicket FindByPersistenceToken(string token)
+        {
+            // Starcounter.Linq fails due to https://github.com/Starcounter/Starcounter.Linq/issues/45 
+            return Db.SQL<TAuthenticationTicket>($"select a from {typeof(TAuthenticationTicket).FullName.EscapeSql()} a where {nameof(IScAuthenticationTicket.PersistenceToken).EscapeSql()} = ?", token)
+                .FirstOrDefault();
+        }
+
         public void Delete(TAuthenticationTicket ticket)
         {
             ticket.Delete();

@@ -30,7 +30,8 @@ namespace Starcounter.Authorization.Tests.Authentication
                 _sessionProviderMock.Object,
                 _clockMock.Object,
                 _authenticationTicketRepositoryMock.Object,
-                Mock.Of<ILogger<AuthenticationTicketProvider<ScUserAuthenticationTicket>>>());
+                Mock.Of<ILogger<AuthenticationTicketProvider<ScUserAuthenticationTicket>>>(),
+                new FakeTransactionFactory());
 
             _starcounterSessionid = "sessionId";
             _now = DateTime.UtcNow;

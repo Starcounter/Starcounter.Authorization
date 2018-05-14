@@ -32,6 +32,7 @@ namespace Starcounter.Authorization.SignIn
             _logger = logger;
             _options = options.Value;
         }
+
         public void SignIn(TUser user, TAuthenticationTicket authenticationTicket)
         {
             try

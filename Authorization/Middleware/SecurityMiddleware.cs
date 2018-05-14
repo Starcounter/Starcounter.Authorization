@@ -11,7 +11,8 @@ namespace Starcounter.Authorization.Middleware
 
         public SecurityMiddleware(
             PageSecurity.PageSecurity pageSecurity,
-            IAuthenticationUriProvider authenticationUriProvider)
+            IAuthenticationUriProvider authenticationUriProvider
+                )
         {
             _pageSecurity = pageSecurity;
             _authenticationUriProvider = authenticationUriProvider;
@@ -28,5 +29,4 @@ namespace Starcounter.Authorization.Middleware
             return next();
         }
     }
-
 }

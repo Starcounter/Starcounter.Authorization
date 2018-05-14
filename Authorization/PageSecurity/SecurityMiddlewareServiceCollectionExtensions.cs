@@ -11,25 +11,6 @@ namespace Starcounter.Authorization.PageSecurity
 {
     public static class SecurityMiddlewareServiceCollectionExtensions
     {
-        public static IServiceCollection AddSecurityMiddleware(this IServiceCollection services)
-        {
-            services.TryAddSingleton<IAuthorizationEnforcement, AuthorizationEnforcement>();
-            services.TryAddSingleton<PageSecurity>();
-            services.TryAddSingleton<CheckersCreator>();
-            services.TryAddSingleton<IAttributeRequirementsResolver, AttributeRequirementsResolver>();
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, SecurityMiddleware>());
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, AuthenticationStartupFilter>());
-            services.TryAddTransient<IAuthenticationUriProvider, AuthenticationUriProvider>();
-
-            return services;
-        }
-
-        public static IServiceCollection AddSecurityMiddleware(this IServiceCollection services,
-            Action<SecurityMiddlewareOptions> configure)
-        {
-            services.Configure(configure);
-            return AddSecurityMiddleware(services);
-        }
 
     }
 }

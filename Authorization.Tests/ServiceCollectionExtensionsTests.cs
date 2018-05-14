@@ -38,26 +38,46 @@ namespace Starcounter.Authorization.Tests
             _serviceCollection
                 .AddAuthorization()
                 .AddSingleton(Mock.Of<IAuthenticationBackend>())
-                .AddSecurityMiddleware();
+                .AddSecurityMiddleware<ScUserAuthenticationTicket>();
 
+            ExpectMiddleware<SecurityMiddleware>();
+        }
+
+        [Test]
+        public void AddAuthenticationConfigures_CookieSignInMiddleware()
+        {
+            _serviceCollection
+                .AddAuthorization()
+                .AddSingleton(Mock.Of<IAuthenticationBackend>())
+                .AddAuthentication<ScUserAuthenticationTicket>();
+
+            ExpectMiddleware<CookieSignInMiddleware<ScUserAuthenticationTicket>>();
+        }
+
+        [Test]
+        public void AddAuthenticationConfigures_SecurityMiddleware()
+        {
+            _serviceCollection
+                .AddAuthorization()
+                .AddSingleton(Mock.Of<IAuthenticationBackend>())
+                .AddAuthentication<ScUserAuthenticationTicket>();
+
+            ExpectMiddleware<SecurityMiddleware>();
+        }
+
+        private void ExpectMiddleware<T>()
+        {
             var middlewares = GetRequiredService<IEnumerable<IPageMiddleware>>();
             middlewares
-                .OfType<SecurityMiddleware>()
+                .OfType<T>()
                 .Should()
                 .NotBeEmpty();
         }
 
         [Test]
-        public void AddSecurityMiddlewareConfigures_AuthenticationStartupFilter()
-        {
-            _serviceCollection.AddSecurityMiddleware();
-            ExpectStartupFilter<AuthenticationStartupFilter>();
-        }
-
-        [Test]
         public void AddSecurityMiddlewareConfigures_AuthenticationUriProvider()
         {
-            _serviceCollection.AddSecurityMiddleware();
+            _serviceCollection.AddSecurityMiddleware<ScUserAuthenticationTicket>();
             GetRequiredService<IAuthenticationUriProvider>();
         }
 
