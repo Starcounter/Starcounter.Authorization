@@ -8,7 +8,7 @@
     <DebugType Condition="'$(Configuration)' == 'Debug'">full</DebugType>
     <OutputPath>bin\$(Configuration)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <TargetFramework>net471</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <AssemblyName>Starcounter.Authorization.Tests</AssemblyName>
     <RootNamespace>Starcounter.Authorization.Tests</RootNamespace>
     <ProjectGuid>d45c58d4-d94c-4d3b-b166-cfa4affaaab8</ProjectGuid>
