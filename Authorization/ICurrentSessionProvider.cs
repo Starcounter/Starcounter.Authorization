@@ -1,6 +1,6 @@
 ﻿namespace Starcounter.Authorization
 {
-    public interface ICurrentSessionProvider
+    internal interface ICurrentSessionProvider
     {
         string CurrentSessionId { get; }
     }

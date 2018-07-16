@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Starcounter.Authorization.PageSecurity
 {
-    public interface IAttributeRequirementsResolver
+    internal interface IAttributeRequirementsResolver
     {
         Task<IEnumerable<IAuthorizationRequirement>> ResolveAsync(IEnumerable<AuthorizeAttribute> attributes);
     }

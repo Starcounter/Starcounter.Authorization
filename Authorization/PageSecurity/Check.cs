@@ -5,7 +5,7 @@ namespace Starcounter.Authorization.PageSecurity
     /// <summary>
     /// A permission check that can be performed when given page instance.
     /// </summary>
-    public class Check
+    internal class Check
     {
         public Check(Type pageType, Delegate checkAction)
         {

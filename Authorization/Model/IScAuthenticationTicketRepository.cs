@@ -1,6 +1,6 @@
 ﻿namespace Starcounter.Authorization.Model
 {
-    public interface IScAuthenticationTicketRepository<TAuthenticationTicket>
+    internal interface IScAuthenticationTicketRepository<TAuthenticationTicket>
     {
         TAuthenticationTicket FindBySessionId(string sessionId);
         TAuthenticationTicket FindByPersistenceToken(string token);

@@ -26,7 +26,7 @@ namespace Starcounter.Authorization.Tests.Model.Serialization
             var issuer = "issuer";
             var originalIssuer = "originalIssuer";
 
-            var claimDb = new ClaimDb();
+            var claimDb = new ClaimTemplate();
 
             _sut.Pack(new Claim(type, value, valueType, issuer, originalIssuer), claimDb);
             var deserialized = _sut.Unpack(claimDb);
@@ -40,7 +40,7 @@ namespace Starcounter.Authorization.Tests.Model.Serialization
             var claim = new Claim("type", "value");
             var keyValuePair = new KeyValuePair<string, string>("key", "value");
             claim.Properties.Add(keyValuePair);
-            var claimDb = new ClaimDb();
+            var claimDb = new ClaimTemplate();
 
             _sut.Pack(claim, claimDb);
             var deserialized = _sut.Unpack(claimDb);

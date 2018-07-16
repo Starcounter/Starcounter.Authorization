@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.DatabaseAccess
 {
-    public interface ITransactionFactory
+    internal interface ITransactionFactory
     {
         /// <summary>
         /// Executes the supplied delegate in a transaction. The delegate can be executed multiple times if any transaction conflicts occur.

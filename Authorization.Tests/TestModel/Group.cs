@@ -3,9 +3,9 @@ using Starcounter.Authorization.Model;
 
 namespace Starcounter.Authorization.Tests.TestModel
 {
-    public class UserGroup : IUserGroup
+    public class Group : IGroup
     {
-        public IEnumerable<IClaimDb> AssociatedClaims { get; set; }
-        public IEnumerable<IUserGroup> SubGroups { get; set; }
+        public IEnumerable<IClaimTemplate> AssociatedClaims { get; set; }
+        public IEnumerable<IGroup> SubGroups { get; set; }
     }
 }

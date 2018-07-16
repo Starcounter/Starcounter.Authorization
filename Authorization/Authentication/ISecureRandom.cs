@@ -1,6 +1,6 @@
 ﻿namespace Starcounter.Authorization.Authentication
 {
-    public interface ISecureRandom
+    internal interface ISecureRandom
     {
         /// <summary>
         /// Generates a string of hex characters ([0-9a-fA-F]) with cryptographically strong PRNG.

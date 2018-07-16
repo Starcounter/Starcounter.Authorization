@@ -1,6 +1,6 @@
 ﻿namespace Starcounter.Authorization
 {
-    public class DefaultCurrentSessionProvider : ICurrentSessionProvider
+    internal class DefaultCurrentSessionProvider : ICurrentSessionProvider
     {
         public string CurrentSessionId => Session.Current?.SessionId;
     }

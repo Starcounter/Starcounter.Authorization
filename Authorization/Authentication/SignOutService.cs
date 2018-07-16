@@ -3,7 +3,7 @@ using Starcounter.Authorization.Model;
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class SignOutService<TAuthenticationTicket> : ISignOutService
+    internal class SignOutService<TAuthenticationTicket> : ISignOutService
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
         private readonly ITransactionFactory _transactionFactory;

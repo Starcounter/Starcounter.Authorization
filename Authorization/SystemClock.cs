@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization
 {
-    public class SystemClock : ISystemClock
+    internal class SystemClock : ISystemClock
     {
         public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
     }

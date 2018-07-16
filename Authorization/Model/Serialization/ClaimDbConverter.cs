@@ -6,15 +6,15 @@ using System.Security.Claims;
 
 namespace Starcounter.Authorization.Model.Serialization
 {
-    public class ClaimDbConverter : IClaimDbConverter
+    internal class ClaimDbConverter : IClaimDbConverter
     {
-        public Claim Unpack(IClaimDb claimDb)
+        public Claim Unpack(IClaimTemplate claimTemplate)
         {
             // properties
-            var claim = new Claim(claimDb.Type, claimDb.Value, claimDb.ValueType, claimDb.Issuer, claimDb.OriginalIssuer);
-            if (claimDb.PropertiesSerialized != null)
+            var claim = new Claim(claimTemplate.Type, claimTemplate.Value, claimTemplate.ValueType, claimTemplate.Issuer, claimTemplate.OriginalIssuer);
+            if (claimTemplate.PropertiesSerialized != null)
             {
-                var memoryStream = new MemoryStream(Convert.FromBase64String(claimDb.PropertiesSerialized));
+                var memoryStream = new MemoryStream(Convert.FromBase64String(claimTemplate.PropertiesSerialized));
                 using (var binaryReader = new BinaryReader(memoryStream))
                 {
                     var entriesCount = binaryReader.ReadUInt32();
@@ -29,7 +29,7 @@ namespace Starcounter.Authorization.Model.Serialization
             return claim;
         }
 
-        public void Pack(Claim claim, IClaimDb target)
+        public void Pack(Claim claim, IClaimTemplate target)
         {
             target.Type = claim.Type;
             target.Value = claim.Value;

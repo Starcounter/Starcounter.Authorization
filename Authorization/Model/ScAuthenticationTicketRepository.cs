@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.Model
 {
-    public class ScAuthenticationTicketRepository<TAuthenticationTicket> : IScAuthenticationTicketRepository<TAuthenticationTicket> 
+    internal class ScAuthenticationTicketRepository<TAuthenticationTicket> : IScAuthenticationTicketRepository<TAuthenticationTicket> 
         where TAuthenticationTicket : IScAuthenticationTicket, new()
     {
         public TAuthenticationTicket FindBySessionId(string sessionId)

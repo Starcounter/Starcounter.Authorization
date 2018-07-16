@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.Model
 {
-    public static class SqlEscaping
+    internal static class SqlEscaping
     {
         private static string EscapeSingleIdentifier(string word)
         {

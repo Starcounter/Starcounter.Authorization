@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.DatabaseAccess
 {
-    public static class TransactionFactoryExtensions
+    internal static class TransactionFactoryExtensions
     {
         /// <summary>
         /// Executes the supplied delegate in a transaction. The delegate can be executed multiple times if any transaction conflicts occur.

@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.Authentication
 {
-    public interface IAuthenticationBackend
+    internal interface IAuthenticationBackend
     {
         ClaimsPrincipal GetCurrentPrincipal();
     }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Starcounter.Authorization.Model
+namespace Starcounter.Authorization
 {
     /// <summary>
     /// Implement this interface with a database class specific to your application.
@@ -12,11 +12,6 @@ namespace Starcounter.Authorization.Model
         /// </summary>
         string SessionId { get; set; }
         
-        /// <summary>
-        /// base64-encoded and serialized <see cref="System.Security.Claims.ClaimsPrincipal"/>
-        /// </summary>
-        string PrincipalSerialized { get; set; }
-
         /// <summary>
         /// in UTC. After this time passes this ticket can and should be removed
         /// </summary>

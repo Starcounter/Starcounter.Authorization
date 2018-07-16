@@ -2,8 +2,8 @@
 
 namespace Starcounter.Authorization.UserManagement.Central
 {
-    public class UserManagementUriProvider<TUser> : IUserManagementUriProvider<TUser>
-        where TUser : IUser
+    internal class UserManagementUriProvider<TUser> : IUserManagementUriProvider<TUser>
+        where TUser : IMinimalUser
     {
         public string EditUserUriTemplate => $"/{Application.Current.Name}/Authorization.UserManagement.Master/{{?}}";
         public string CreateEditUserUri(TUser user)

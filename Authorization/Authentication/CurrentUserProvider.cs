@@ -2,9 +2,9 @@
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class CurrentUserProvider<TUserAuthenticationTicket, TUser> : ICurrentUserProvider<TUser>
+    internal class CurrentUserProvider<TUserAuthenticationTicket, TUser> : ICurrentUserProvider<TUser>
         where TUserAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>
-        where TUser : class, IUser
+        where TUser : class, IMinimalUser
     {
         private readonly IAuthenticationTicketProvider<TUserAuthenticationTicket> _authenticationTicketProvider;
 

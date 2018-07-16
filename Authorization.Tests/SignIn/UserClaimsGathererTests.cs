@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using FluentAssertions;
 using NUnit.Framework;
-using Starcounter.Authorization.Model;
 using Starcounter.Authorization.Model.Serialization;
 using Starcounter.Authorization.SignIn;
 using Starcounter.Authorization.Tests.TestModel;
@@ -17,7 +15,7 @@ namespace Starcounter.Authorization.Tests.SignIn
         private User _user;
         private IEnumerable<Claim> _gatheredClaims;
         private ClaimDbConverter _claimDbConverter;
-        private ClaimDb[] _fixtureClaimDbs;
+        private ClaimTemplate[] _fixtureClaimTemplates;
         private string _claimType1;
         private string _claimValue1;
         private string _claimType2;
@@ -30,21 +28,21 @@ namespace Starcounter.Authorization.Tests.SignIn
             _sut = new UserClaimsGatherer(_claimDbConverter);
             _user = new User()
             {
-                AssociatedClaims = Enumerable.Empty<IClaimDb>(),
-                Groups = Enumerable.Empty<IUserGroup>()
+                AssociatedClaims = Enumerable.Empty<ClaimTemplate>(),
+                MemberOf = Enumerable.Empty<IGroup>()
             };
 
             _claimType1 = "t1";
             _claimValue1 = "v1";
             _claimType2 = "t2";
             _claimValue2 = "v2";
-            _fixtureClaimDbs = new[] { CreateClaimDb(_claimType1, _claimValue1), CreateClaimDb(_claimType2, _claimValue2)};
+            _fixtureClaimTemplates = new[] { CreateClaimDb(_claimType1, _claimValue1), CreateClaimDb(_claimType2, _claimValue2)};
         }
 
         [Test]
         public void ClaimsDirectlyAssociatedWithUserShouldBeGathered()
         {
-            _user.AssociatedClaims = _fixtureClaimDbs;
+            _user.AssociatedClaims = _fixtureClaimTemplates;
 
             Excercise();
 
@@ -54,12 +52,12 @@ namespace Starcounter.Authorization.Tests.SignIn
         [Test]
         public void ClaimsAssociatedWithGroupShouldBeGathered()
         {
-            _user.Groups = new[]
+            _user.MemberOf = new[]
             {
-                new UserGroup()
+                new Group()
                 {
-                    AssociatedClaims = _fixtureClaimDbs,
-                    SubGroups = Enumerable.Empty<IUserGroup>()
+                    AssociatedClaims = _fixtureClaimTemplates,
+                    SubGroups = Enumerable.Empty<IGroup>()
 
                 },
             };
@@ -72,15 +70,15 @@ namespace Starcounter.Authorization.Tests.SignIn
         [Test]
         public void ClaimsAssociatedWithSubGroupShouldBeGathered()
         {
-            _user.Groups = new[]
+            _user.MemberOf = new[]
             {
-                new UserGroup()
+                new Group()
                 {
-                    AssociatedClaims = Enumerable.Empty<IClaimDb>(),
-                    SubGroups = new []{new UserGroup()
+                    AssociatedClaims = Enumerable.Empty<ClaimTemplate>(),
+                    SubGroups = new []{new Group()
                     {
-                        AssociatedClaims = _fixtureClaimDbs,
-                        SubGroups = Enumerable.Empty<IUserGroup>()
+                        AssociatedClaims = _fixtureClaimTemplates,
+                        SubGroups = Enumerable.Empty<IGroup>()
                     }}
 
                 },
@@ -94,16 +92,16 @@ namespace Starcounter.Authorization.Tests.SignIn
         [Test]
         public void IdenticalClaimsShouldBeGatheredOnlyOnce()
         {
-            _user.AssociatedClaims = _fixtureClaimDbs.Concat(_fixtureClaimDbs);
+            _user.AssociatedClaims = _fixtureClaimTemplates.Concat(_fixtureClaimTemplates);
 
             Excercise();
 
-            _gatheredClaims.Should().HaveCount(_fixtureClaimDbs.Length);
+            _gatheredClaims.Should().HaveCount(_fixtureClaimTemplates.Length);
         }
 
-        private ClaimDb CreateClaimDb(string claimType, string claimValue)
+        private ClaimTemplate CreateClaimDb(string claimType, string claimValue)
         {
-            var claimDb = new ClaimDb();
+            var claimDb = new ClaimTemplate();
             _claimDbConverter.Pack(new Claim(claimType, claimValue), claimDb);
             return claimDb;
         }

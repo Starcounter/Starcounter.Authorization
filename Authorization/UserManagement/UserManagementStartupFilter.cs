@@ -8,8 +8,8 @@ using Starcounter.Startup.Routing.Activation;
 
 namespace Starcounter.Authorization.UserManagement
 {
-    public class UserManagementStartupFilter<TUser> : IStartupFilter
-        where TUser: class, IUser
+    internal class UserManagementStartupFilter<TUser> : IStartupFilter
+        where TUser: class, IMinimalUser
     {
         private readonly Type _viewModelType;
         private readonly ILogger _logger;

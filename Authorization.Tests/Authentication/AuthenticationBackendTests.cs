@@ -1,29 +1,25 @@
-﻿using System.Security.Claims;
+﻿using System.Linq;
+using System.Security.Claims;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
-using Starcounter.Authorization.Model.Serialization;
 using Starcounter.Authorization.Tests.TestModel;
 
 namespace Starcounter.Authorization.Tests.Authentication
 {
     public class AuthenticationBackendTests
     {
-        private AuthenticationBackend<ScUserAuthenticationTicket> _sut;
+        private IAuthenticationBackend _sut;
         private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
         private ClaimsPrincipal _returnedPrincipal;
-        private Mock<IClaimsPrincipalSerializer> _serializerMock;
 
         [SetUp]
         public void SetUp()
         {
             _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
-            _serializerMock = new Mock<IClaimsPrincipalSerializer>();
             _sut = new AuthenticationBackend<ScUserAuthenticationTicket>(
-                _authenticationTicketProviderMock.Object,
-                _serializerMock.Object
+                _authenticationTicketProviderMock.Object
             );
         }
 
@@ -31,7 +27,7 @@ namespace Starcounter.Authorization.Tests.Authentication
         public void WhenAuthenticationTicketIsNullThenAnonymousPrincipalIsReturned()
         {
             _authenticationTicketProviderMock.Setup(provider => provider.GetCurrentAuthenticationTicket())
-                .Returns((ScUserAuthenticationTicket) null);
+                .Returns((ScUserAuthenticationTicket)null);
 
             Excercise();
 
@@ -40,21 +36,16 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void WhenAuthenticationTicketIsNotNullThenDeserializedPrincipalIsReturned()
+        public void WhenAuthenticationTicketIsNotNullThenAuthenticatedPrincipalIsReturned()
         {
-            var serializedPrincipal = "serializedPrincipal";
-            var deserializedPrincipal = new ClaimsPrincipal();
-            _authenticationTicketProviderMock.Setup(provider => provider.GetCurrentAuthenticationTicket())
-                .Returns(new ScUserAuthenticationTicket()
-                {
-                    PrincipalSerialized = serializedPrincipal
-                });
-            _serializerMock.Setup(serializer => serializer.Deserialize(serializedPrincipal))
-                .Returns(deserializedPrincipal);
+            _authenticationTicketProviderMock
+                .Setup(provider => provider.GetCurrentAuthenticationTicket())
+                .Returns(new ScUserAuthenticationTicket());
 
             Excercise();
 
-            _returnedPrincipal.Should().BeSameAs(deserializedPrincipal);
+            // derived from Microsoft.AspNetCore.Authorization.Infrastructure.DenyAnonymousAuthorizationRequirement
+            _returnedPrincipal?.Identities?.Any(i => i.IsAuthenticated).Should().BeTrue();
         }
 
         private void Excercise()

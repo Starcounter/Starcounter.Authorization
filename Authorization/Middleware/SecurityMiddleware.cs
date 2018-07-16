@@ -4,7 +4,7 @@ using Starcounter.Startup.Routing;
 
 namespace Starcounter.Authorization.Middleware
 {
-    public class SecurityMiddleware : IPageMiddleware
+    internal class SecurityMiddleware : IPageMiddleware
     {
         private readonly PageSecurity.PageSecurity _pageSecurity;
         private readonly IAuthenticationUriProvider _authenticationUriProvider;

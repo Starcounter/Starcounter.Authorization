@@ -2,13 +2,13 @@
 
 namespace Starcounter.Authorization.ClaimManagement.Central
 {
-    public class ClaimManagementUriProvider<TClaimDb> : IClaimManagementUriProvider<TClaimDb>
-        where TClaimDb : IClaimDb
+    internal class ClaimManagementUriProvider<TClaimDb> : IClaimManagementUriProvider<TClaimDb>
+        where TClaimDb : IClaimTemplate
     {
         public string EditClaimUriTemplate => $"/{Application.Current.Name}/Authorization.ClaimManagement.Master/{{?}}";
-        public string CreateEditClaimUri(TClaimDb claimDb)
+        public string CreateEditClaimUri(TClaimDb claimTemplate)
         {
-            return EditClaimUriTemplate.Replace("{?}", claimDb.GetObjectID());
+            return EditClaimUriTemplate.Replace("{?}", claimTemplate.GetObjectID());
         }
     }
 }

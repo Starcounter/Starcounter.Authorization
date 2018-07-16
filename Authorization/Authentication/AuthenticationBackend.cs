@@ -1,21 +1,21 @@
-﻿using System;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Starcounter.Authorization.Model;
-using Starcounter.Authorization.Model.Serialization;
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class AuthenticationBackend<TAuthenticationTicket> : IAuthenticationBackend
+    /// <summary>
+    /// Provides <see cref="ClaimsPrincipal"/> that is either anonymous or authenticated, but without any claims.
+    /// To get <see cref="ClaimsPrincipal"/> with claims, use <see cref="UserAuthenticationBackend{TAuthenticationTicket,TUser}"/>
+    /// </summary>
+    /// <typeparam name="TAuthenticationTicket"></typeparam>
+    internal class AuthenticationBackend<TAuthenticationTicket> : IAuthenticationBackend
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
-        private readonly IClaimsPrincipalSerializer _principalSerializer;
         private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
 
-        public AuthenticationBackend(IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
-            IClaimsPrincipalSerializer principalSerializer)
+        public AuthenticationBackend(IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider)
         {
             _authenticationTicketProvider = authenticationTicketProvider;
-            _principalSerializer = principalSerializer;
         }
 
         public ClaimsPrincipal GetCurrentPrincipal()
@@ -25,7 +25,8 @@ namespace Starcounter.Authorization.Authentication
             {
                 return new ClaimsPrincipal();
             }
-            return _principalSerializer.Deserialize(authenticationTicket.PrincipalSerialized);
+
+            return new ClaimsPrincipal(new ClaimsIdentity(new Claim[0], AuthenticationTypes.Starcounter));
         }
     }
 }

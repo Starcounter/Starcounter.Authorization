@@ -10,7 +10,7 @@ using Starcounter.Templates;
 
 namespace Starcounter.Authorization.PageSecurity
 {
-    public class PageSecurity
+    internal class PageSecurity
     {
         private readonly Func<Type, Expression, Expression, Expression> _checkDeniedHandler;
         private readonly List<Type> _enhancedTypes = new List<Type>();

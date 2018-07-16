@@ -1,5 +1,8 @@
-﻿namespace Starcounter.Authorization.Authentication
+﻿namespace Starcounter.Authorization
 {
+    /// <summary>
+    /// Provides various URIs and URI templates for handlers related to authentication and its blending.
+    /// </summary>
     public interface IAuthenticationUriProvider
     {
         /// <summary>

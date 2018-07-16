@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.DatabaseAccess
 {
-    public class StarcounterTransactionFactory : ITransactionFactory
+    internal class StarcounterTransactionFactory : ITransactionFactory
     {
         public T ExecuteTransaction<T>(Func<T> action)
         {

@@ -4,7 +4,7 @@ using Starcounter.Authorization.Model;
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class AuthenticationTicketProvider<TAuthenticationTicket> :
+    internal class AuthenticationTicketProvider<TAuthenticationTicket> :
         IAuthenticationTicketProvider<TAuthenticationTicket>
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {

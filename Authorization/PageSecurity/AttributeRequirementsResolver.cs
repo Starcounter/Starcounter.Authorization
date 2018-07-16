@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace Starcounter.Authorization.PageSecurity
 {
-    public class AttributeRequirementsResolver : IAttributeRequirementsResolver
+    internal class AttributeRequirementsResolver : IAttributeRequirementsResolver
     {
         private readonly IAuthorizationPolicyProvider _policyProvider;
 

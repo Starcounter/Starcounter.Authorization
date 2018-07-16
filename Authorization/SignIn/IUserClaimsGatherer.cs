@@ -4,8 +4,8 @@ using Starcounter.Authorization.Model;
 
 namespace Starcounter.Authorization.SignIn
 {
-    public interface IUserClaimsGatherer
+    internal interface IUserClaimsGatherer
     {
-        IEnumerable<Claim> Gather(IUserWithGroups user);
+        IEnumerable<Claim> Gather(IUser user);
     }
 }

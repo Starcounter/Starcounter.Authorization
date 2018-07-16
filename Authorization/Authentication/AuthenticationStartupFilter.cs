@@ -7,7 +7,7 @@ using Starcounter.Startup.Abstractions;
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class AuthenticationStartupFilter : IStartupFilter
+    internal class AuthenticationStartupFilter : IStartupFilter
     {
         private const string UnauthenticatedPageViewContent = @"<template><h1>You need to sign in to access this page. Please contact your administrator to find out how to do that</h1></template>";
         private const string RedirectionPageViewContent = @"<link rel=""import"" href=""/sys/palindrom-redirect/palindrom-redirect.html"">"

@@ -1,6 +1,6 @@
-﻿namespace Starcounter.Authorization.Model
+﻿namespace Starcounter.Authorization
 {
-    public interface IClaimDb
+    public interface IClaimTemplate
     {
         string Type { get; set; }
         string Value { get; set; }

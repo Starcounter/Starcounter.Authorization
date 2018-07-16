@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization
 {
-    public interface ISystemClock
+    internal interface ISystemClock
     {
         DateTimeOffset UtcNow { get; }
     }

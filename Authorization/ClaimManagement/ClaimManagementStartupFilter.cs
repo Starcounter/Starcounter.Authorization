@@ -8,8 +8,8 @@ using Starcounter.Startup.Routing.Activation;
 
 namespace Starcounter.Authorization.ClaimManagement
 {
-    public class ClaimManagementStartupFilter<TClaimDb> : IStartupFilter
-        where TClaimDb: class, IClaimDb
+    internal class ClaimManagementStartupFilter<TClaimDb> : IStartupFilter
+        where TClaimDb: class, IClaimTemplate
     {
         private readonly string _claimType;
         private readonly Type _viewModelType;

@@ -6,7 +6,7 @@ using Starcounter.Startup.Routing;
 
 namespace Starcounter.Authorization.Middleware
 {
-    public class CookieSignInMiddleware<TAuthenticationTicket> : IPageMiddleware where TAuthenticationTicket : class, IScAuthenticationTicket
+    internal class CookieSignInMiddleware<TAuthenticationTicket> : IPageMiddleware where TAuthenticationTicket : class, IScAuthenticationTicket
     {
         private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
         private readonly IAuthCookieService _authCookieService;

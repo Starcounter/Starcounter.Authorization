@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Starcounter.Authorization.Authentication
 {
+    [Obsolete("Don't use this interface. It will be made internal soon")]
     public interface IAuthCookieService
     {
         /// <summary>

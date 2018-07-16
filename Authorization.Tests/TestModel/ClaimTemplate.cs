@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.Tests.TestModel
 {
-    public class ClaimDb : IClaimDb
+    public class ClaimTemplate : IClaimTemplate
     {
         public string Type { get; set; }
         public string Value { get; set; }

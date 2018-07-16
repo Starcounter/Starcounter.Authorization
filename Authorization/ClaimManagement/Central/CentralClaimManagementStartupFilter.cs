@@ -4,8 +4,8 @@ using Starcounter.Startup.Abstractions;
 
 namespace Starcounter.Authorization.ClaimManagement.Central
 {
-    public class CentralClaimManagementStartupFilter<TClaimDb> : IStartupFilter
-        where TClaimDb : class, IClaimDb
+    internal class CentralClaimManagementStartupFilter<TClaimDb> : IStartupFilter
+        where TClaimDb : class, IClaimTemplate
     {
         private readonly IClaimManagementUriProvider<TClaimDb> _claimManagementUriProvider;
 

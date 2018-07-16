@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Starcounter.Authorization.Core
+namespace Starcounter.Authorization
 {
     public interface IAuthorizationEnforcement
     {

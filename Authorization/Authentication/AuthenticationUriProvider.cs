@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class AuthenticationUriProvider : IAuthenticationUriProvider
+    internal class AuthenticationUriProvider : IAuthenticationUriProvider
     {
         public string UnauthenticatedUriTemplate => $"/{Application.Current}/Starcounter.Authorization.Unauthenticated/{{?}}";
 

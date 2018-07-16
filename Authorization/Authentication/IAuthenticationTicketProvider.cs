@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.Authentication
 {
-    public interface IAuthenticationTicketProvider<out TAuthenticationTicket> 
+    internal interface IAuthenticationTicketProvider<out TAuthenticationTicket> 
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
         /// <summary>

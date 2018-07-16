@@ -33,6 +33,31 @@ namespace Starcounter.Authorization.Tests
         }
 
         [Test]
+        public void AddStarcounterAuthorizationConfigures_AllServices()
+        {
+            _serviceCollection
+                .AddStarcounterAuthorization<ScUserAuthenticationTicket>();
+
+            ExpectMiddleware<SecurityMiddleware>();
+            ExpectMiddleware<CookieSignInMiddleware<ScUserAuthenticationTicket>>();
+            GetRequiredService<IAuthorizationEnforcement>();
+        }
+
+        [Test]
+        public void AddStarcounterAuthorizationWithUserConfigures_AllServices()
+        {
+            _serviceCollection
+                .AddStarcounterAuthorization<ScUserAuthenticationTicket, User>();
+
+            ExpectMiddleware<SecurityMiddleware>();
+            ExpectMiddleware<CookieSignInMiddleware<ScUserAuthenticationTicket>>();
+            GetRequiredService<IAuthorizationEnforcement>();
+            GetRequiredService<ICurrentUserProvider<User>>();
+            GetRequiredService<IAuthenticationBackend>().Should()
+                .BeOfType<UserAuthenticationBackend<ScUserAuthenticationTicket, User>>();
+        }
+
+        [Test]
         public void AddSecurityMiddlewareConfigures_SecurityMiddleware()
         {
             _serviceCollection
@@ -92,36 +117,28 @@ namespace Starcounter.Authorization.Tests
         public void AddSignInManagerConfigures_SignInManager()
         {
             _serviceCollection.AddSignInManager<ScUserAuthenticationTicket, User>();
-            GetRequiredService<ISignInManager<ScUserAuthenticationTicket, User>>();
-        }
-
-        [Test]
-        public void AddAuthenticationConfigures_AuthorizationEnforcement_ButRequiresAddAuthorization()
-        {
-            _serviceCollection.AddAuthentication<ScUserAuthenticationTicket>()
-                .AddAuthorization();
-            GetRequiredService<IAuthorizationEnforcement>();
+            GetRequiredService<ISignInManager<User>>();
         }
 
         [Test]
         public void AddUserConfigurationConfigures_CurrentUserProvider()
         {
-            _serviceCollection.AddUserConfiguration<ScUserAuthenticationTicket, User>();
+            _serviceCollection.AddCurrentUserProvider<ScUserAuthenticationTicket, User>();
             GetRequiredService<ICurrentUserProvider<User>>();
         }
 
         [Test]
         public void AddClaimManagementConfigures_StartupFilter()
         {
-            _serviceCollection.AddClaimManagement<ClaimDb>("claimType", typeof(object));
-            ExpectStartupFilter<ClaimManagementStartupFilter<ClaimDb>>();
+            _serviceCollection.AddClaimManagement<ClaimTemplate>("claimType", typeof(object));
+            ExpectStartupFilter<ClaimManagementStartupFilter<ClaimTemplate>>();
         }
 
         [Test]
         public void AddCentralClaimManagementConfigures_StartupFilter()
         {
-            _serviceCollection.AddCentralClaimsManagement<ClaimDb>();
-            ExpectStartupFilter<CentralClaimManagementStartupFilter<ClaimDb>>();
+            _serviceCollection.AddCentralClaimsManagement<ClaimTemplate>();
+            ExpectStartupFilter<CentralClaimManagementStartupFilter<ClaimTemplate>>();
         }
 
         [Test]

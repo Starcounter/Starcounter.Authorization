@@ -12,7 +12,7 @@ namespace Starcounter.Authorization.PageSecurity
     /// <summary>
     /// Governs creation of Action&lt;&gt; objects that perform the actual checks
     /// </summary>
-    public class CheckersCreator
+    internal class CheckersCreator
     {
         private readonly IAuthorizationEnforcement _authorizationEnforcement;
         private readonly IAttributeRequirementsResolver _attributeRequirementsResolver;

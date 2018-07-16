@@ -7,7 +7,7 @@ using Starcounter.XSON.Interfaces;
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class AuthCookieService<TAuthenticationTicket> : IAuthCookieService
+    internal class AuthCookieService<TAuthenticationTicket> : IAuthCookieService
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
         private readonly IScAuthenticationTicketRepository<TAuthenticationTicket> _authenticationTicketRepository;

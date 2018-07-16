@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Starcounter.Authorization.Authentication
 {
-    public class SecureRandom : ISecureRandom
+    internal class SecureRandom : ISecureRandom
     {
         private readonly RandomNumberGenerator _randomNumberGenerator;
 

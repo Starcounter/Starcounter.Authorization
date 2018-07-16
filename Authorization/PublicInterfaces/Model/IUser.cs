@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
+using Starcounter.Authorization.Model;
 
-namespace Starcounter.Authorization.Model
+namespace Starcounter.Authorization
 {
     /// <summary>
     /// Implement this interface with a database UserGroup class specific to your application to enable user groups manipulation
     /// </summary>
-    public interface IUserWithGroups: IUser, IAssociatedToClaims
+    public interface IUser: IMinimalUser, IClaimHolder
     {
-        IEnumerable<IUserGroup> Groups { get; }
+        IEnumerable<IGroup> MemberOf { get; }
     }
 }

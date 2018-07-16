@@ -4,8 +4,8 @@ using Starcounter.Startup.Abstractions;
 
 namespace Starcounter.Authorization.UserManagement.Central
 {
-    public class CentralUserManagementStartupFilter<TUser> : IStartupFilter
-        where TUser : class, IUser
+    internal class CentralUserManagementStartupFilter<TUser> : IStartupFilter
+        where TUser : class, IMinimalUser
     {
         private readonly IUserManagementUriProvider<TUser> _userManagementUriProvider;
 

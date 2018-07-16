@@ -7,7 +7,7 @@ using Starcounter.Authorization.Authentication;
 
 namespace Starcounter.Authorization.Core
 {
-    public class AuthorizationEnforcement : IAuthorizationEnforcement
+    internal class AuthorizationEnforcement : IAuthorizationEnforcement
     {
         private readonly IAuthorizationService _authorizationService;
         private readonly IAuthenticationBackend _authentication;
