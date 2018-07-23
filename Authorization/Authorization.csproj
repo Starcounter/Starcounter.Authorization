@@ -11,7 +11,7 @@
     <AssemblyName>Starcounter.Authorization</AssemblyName>
     <RootNamespace>Starcounter.Authorization</RootNamespace>
     <ProjectGuid>{48CF4A36-C006-4649-BAD6-027E7962EFAE}</ProjectGuid>
-    <Version>3.0.0-rc2</Version>
+    <Version>3.0.0</Version>
     <Authors>Starcounter, joozek78</Authors>
     <PackageProjectUrl>https://github.com/Starcounter/authorization</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Starcounter/authorization</RepositoryUrl>
