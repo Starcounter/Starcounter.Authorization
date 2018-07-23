@@ -60,6 +60,21 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
+        public void ThrowsMeaningfulExceptionWhenPolicyIsNotFound()
+        {
+            var policy = "policy";
+            _policyProviderMock.Setup(provider => provider.GetPolicyAsync(policy))
+                .ReturnsAsync((AuthorizationPolicy) null);
+
+            _attributeRequirementsResolver
+                .Awaiting(sut => sut.ResolveAsync(new[] { new AuthorizeAttribute { Policy = policy} }))
+                .Should()
+                .Throw<InvalidOperationException>()
+                .WithMessage($"The AuthorizationPolicy named: '{policy}' was not found.")
+                ;
+        }
+
+        [Test]
         public async Task IncludesDenyAnonymousRequirementFromEmptyAttribute()
         {
             var requirements = await _attributeRequirementsResolver.ResolveAsync(new[] { new AuthorizeAttribute(), });
