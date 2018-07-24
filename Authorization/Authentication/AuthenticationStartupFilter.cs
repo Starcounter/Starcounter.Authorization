@@ -2,6 +2,7 @@
 using System.Net;
 using System.Web;
 using Microsoft.Extensions.Logging;
+using Starcounter.Advanced;
 using Starcounter.Authorization.DatabaseAccess;
 using Starcounter.Startup.Abstractions;
 
