@@ -103,13 +103,6 @@ namespace Starcounter.Authorization.Tests
         }
 
         [Test]
-        public void AddRouterTest()
-        {
-            _serviceCollection.AddRouter();
-            GetRequiredService<Router>();
-        }
-
-        [Test]
         public void AddSignInManagerConfigures_SignInManager()
         {
             _serviceCollection.AddSignInManager<ScUserAuthenticationTicket, User>();
@@ -121,6 +114,13 @@ namespace Starcounter.Authorization.Tests
         {
             _serviceCollection.AddCurrentUserProvider<ScUserAuthenticationTicket, User>();
             GetRequiredService<ICurrentUserProvider<User>>();
+        }
+
+        [Test]
+        public void AddClaimTypeConfigures_StartupFilter()
+        {
+            _serviceCollection.AddClaimType<ClaimTemplate>("claimType");
+            ExpectStartupFilter<ClaimCreatorStartupFilter<ClaimTemplate>>();
         }
 
         private void AddDefaultServices(IServiceCollection serviceCollection)
