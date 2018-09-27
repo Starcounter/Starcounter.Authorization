@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Linq;
+using System.Security.Claims;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
@@ -66,6 +67,19 @@ namespace Starcounter.Authorization.Tests.Authentication
                     claim.Value == intClaim.Value && claim.Type == intClaim.Type
                                                   && claim.ValueType == intClaim.ValueType
                                                   && claim.Issuer == intClaim.Issuer);
+        }
+
+        [Test]
+        public void WhenAuthenticationTicketIsNotNullThenAuthenticatedPrincipalIsReturned()
+        {
+            _authenticationTicketProviderMock
+                .Setup(provider => provider.GetCurrentAuthenticationTicket())
+                .Returns(new ScUserAuthenticationTicket());
+
+            Excercise();
+
+            // derived from Microsoft.AspNetCore.Authorization.Infrastructure.DenyAnonymousAuthorizationRequirement
+            _returnedPrincipal?.Identities?.Any(i => i.IsAuthenticated).Should().BeTrue();
         }
 
         private void Excercise()

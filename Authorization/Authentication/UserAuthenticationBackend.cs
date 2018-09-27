@@ -32,7 +32,7 @@ namespace Starcounter.Authorization.Authentication
                 return new ClaimsPrincipal();
             }
 
-            return new ClaimsPrincipal(new ClaimsIdentity(_claimsGatherer.Gather(authenticationTicket.User)));
+            return new ClaimsPrincipal(new ClaimsIdentity(_claimsGatherer.Gather(authenticationTicket.User), AuthenticationTypes.Starcounter));
         }
     }
 }
