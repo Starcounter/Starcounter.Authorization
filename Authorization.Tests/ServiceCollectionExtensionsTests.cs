@@ -116,6 +116,13 @@ namespace Starcounter.Authorization.Tests
             GetRequiredService<ICurrentUserProvider<User>>();
         }
 
+        [Test]
+        public void AddClaimTypeConfigures_StartupFilter()
+        {
+            _serviceCollection.AddClaimType<ClaimTemplate>("claimType");
+            ExpectStartupFilter<ClaimCreatorStartupFilter<ClaimTemplate>>();
+        }
+
         private void AddDefaultServices(IServiceCollection serviceCollection)
         {
             serviceCollection

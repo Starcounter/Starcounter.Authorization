@@ -100,6 +100,23 @@ namespace Starcounter.Authorization
             return services;
         }
 
+        /// <summary>
+        /// Registers a claim type this application will use. The claim template for this type will be created if required.
+        /// </summary>
+        /// <typeparam name="TClaimTemplate"></typeparam>
+        /// <param name="services">Service collection to add to. This will be modified, not copied, by this method.</param>
+        /// <param name="claimType">The string representation of claim type to add. It should be globally unique.
+        /// It's recommended to use a URI associated with the registering app as a prefix. This string should never change after it is registered for the first time.</param>
+        /// <returns>Original service collection, with new services added.</returns>
+        public static IServiceCollection AddClaimType<TClaimTemplate>(this IServiceCollection services,
+            string claimType)
+            where TClaimTemplate : IClaimTemplate, new()
+        {
+            services.TryAddTransient<IClaimDbConverter, ClaimDbConverter>();
+            services.AddTransient<IStartupFilter>(provider => ActivatorUtilities.CreateInstance<ClaimCreatorStartupFilter<TClaimTemplate>>(provider, claimType));
+            return services;
+        }
+
         internal static IServiceCollection AddAuthentication<TAuthenticationTicket>(this IServiceCollection services)
             where TAuthenticationTicket : class, IScAuthenticationTicket, new()
         {
