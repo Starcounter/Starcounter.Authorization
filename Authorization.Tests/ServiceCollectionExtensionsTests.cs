@@ -103,13 +103,6 @@ namespace Starcounter.Authorization.Tests
         }
 
         [Test]
-        public void AddRouterTest()
-        {
-            _serviceCollection.AddRouter();
-            GetRequiredService<Router>();
-        }
-
-        [Test]
         public void AddSignInManagerConfigures_SignInManager()
         {
             _serviceCollection.AddSignInManager<ScUserAuthenticationTicket, User>();
