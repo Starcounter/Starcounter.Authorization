@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Starcounter.Authorization.Authentication
 {
-    [Obsolete("Don't use this interface. It will be made internal soon")]
-    public interface IAuthCookieService
+    internal interface IAuthCookieService
     {
         /// <summary>
         /// Generates a persistent token for the current authentication ticket and associates it with said token.
