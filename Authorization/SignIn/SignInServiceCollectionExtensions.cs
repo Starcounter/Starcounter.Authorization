@@ -21,6 +21,7 @@ namespace Starcounter.Authorization.SignIn
             serviceCollection.TryAddSingleton<ICurrentSessionProvider>(_ => new DefaultCurrentSessionProvider());
             serviceCollection.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket>>();
             serviceCollection.TryAddTransient<ISignInManager<TUser>, SignInManager<TAuthenticationTicket, TUser>>();
+            serviceCollection.AddAuthenticationTicketProvider<TAuthenticationTicket>();
 
             return serviceCollection;
         }

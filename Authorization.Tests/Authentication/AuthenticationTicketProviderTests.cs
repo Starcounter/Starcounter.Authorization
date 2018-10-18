@@ -1,10 +1,12 @@
 ﻿using System;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Model;
+using Starcounter.Authorization.SignIn;
 using Starcounter.Authorization.Tests.TestModel;
 
 namespace Starcounter.Authorization.Tests.Authentication
@@ -16,34 +18,39 @@ namespace Starcounter.Authorization.Tests.Authentication
         private Mock<ICurrentSessionProvider> _sessionProviderMock;
         private Mock<ISystemClock> _clockMock;
         private Mock<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>> _authenticationTicketRepositoryMock;
-        private string _starcounterSessionid;
-        private ScUserAuthenticationTicket _scUserAuthenticationTicket;
+        private string _starcounterSessionId;
+        private ScUserAuthenticationTicket _existingTicket;
         private DateTime _now;
+        private SignInOptions _options;
 
         [SetUp]
         public void SetUp()
         {
             _sessionProviderMock = new Mock<ICurrentSessionProvider>();
             _clockMock = new Mock<ISystemClock>();
+            _options = new SignInOptions();
             _authenticationTicketRepositoryMock = new Mock<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>>();
             _sut = new AuthenticationTicketProvider<ScUserAuthenticationTicket>(
+                Options.Create(_options), 
                 _sessionProviderMock.Object,
                 _clockMock.Object,
                 _authenticationTicketRepositoryMock.Object,
                 Mock.Of<ILogger<AuthenticationTicketProvider<ScUserAuthenticationTicket>>>(),
                 new FakeTransactionFactory());
 
-            _starcounterSessionid = "sessionId";
+            _starcounterSessionId = "sessionId";
             _now = DateTime.UtcNow;
-            _scUserAuthenticationTicket = new ScUserAuthenticationTicket()
+            _existingTicket = new ScUserAuthenticationTicket()
             {
                 ExpiresAt = _now.AddDays(1)
             };
 
             _sessionProviderMock.Setup(provider => provider.CurrentSessionId)
-                .Returns(() => _starcounterSessionid);
-            _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySessionId(_starcounterSessionid))
-                .Returns(() => _scUserAuthenticationTicket);
+                .Returns(() => _starcounterSessionId);
+            _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySessionId(_starcounterSessionId))
+                .Returns(() => _existingTicket);
+            _authenticationTicketRepositoryMock.Setup(repository => repository.Create())
+                .Returns(() => new ScUserAuthenticationTicket());
             _clockMock.Setup(clock => clock.UtcNow)
                 .Returns(() => _now);
         }
@@ -51,9 +58,9 @@ namespace Starcounter.Authorization.Tests.Authentication
         [Test]
         public void WhenCurrentSessionIsNullThenNullIsReturned()
         {
-            _starcounterSessionid = null;
+            _starcounterSessionId = null;
 
-            Excercise();
+            ExerciseCurrent();
 
             _returnedAuthenticationTicket.Should().BeNull();
         }
@@ -61,10 +68,10 @@ namespace Starcounter.Authorization.Tests.Authentication
         [Test]
         public void WhenCurrentSessionHasNoCorrespondingUserTicketThenNullIsReturned()
         {
-            _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySessionId(_starcounterSessionid))
+            _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySessionId(_starcounterSessionId))
                 .Returns((ScUserAuthenticationTicket) null);
 
-            Excercise();
+            ExerciseCurrent();
 
             _returnedAuthenticationTicket.Should().BeNull();
         }
@@ -72,28 +79,73 @@ namespace Starcounter.Authorization.Tests.Authentication
         [Test]
         public void WhenCurrentTicketHasExpiredThenNullIsReturnedAndTheTicketIsDeleted()
         {
-            _scUserAuthenticationTicket.ExpiresAt = _now.AddDays(-1);
+            _existingTicket.ExpiresAt = _now.AddDays(-1);
 
-            Excercise();
+            ExerciseCurrent();
 
             _returnedAuthenticationTicket.Should().BeNull();
-            _authenticationTicketRepositoryMock.Verify(repository => repository.Delete(_scUserAuthenticationTicket));
+            _authenticationTicketRepositoryMock.Verify(repository => repository.Delete(_existingTicket));
         }
 
         [Test]
         public void WhenEverythingChecksOutThenTheTicketFromRepositoryIsReturned()
         {
 
-            Excercise();
+            ExerciseCurrent();
 
-            _returnedAuthenticationTicket.Should().BeSameAs(_scUserAuthenticationTicket);
+            _returnedAuthenticationTicket.Should().BeSameAs(_existingTicket);
         }
 
+        [Test]
+        public void Ensure_ReturnsExistingTicketIfThereIsOne()
+        {
+            ExerciseEnsure();
 
+            _returnedAuthenticationTicket.Should().BeSameAs(_existingTicket);
+        }
 
-        private void Excercise()
+        [Test]
+        public void Ensure_SetsCurrentSessionIdInUserSession()
+        {
+            _existingTicket = null;
+
+            ExerciseEnsure();
+
+            _returnedAuthenticationTicket.SessionId.Should().Be(_starcounterSessionId);
+        }
+
+        [Test]
+        public void Ensure_SetsExpirationTimeAccordingToCurrentTimeAndOptions()
+        {
+            _existingTicket = null;
+            var fakeNow = DateTimeOffset.FromUnixTimeSeconds(123456);
+            var ticketValidity = TimeSpan.FromHours(3);
+            _options.NewTicketExpiration = ticketValidity;
+            _clockMock.SetupGet(clock => clock.UtcNow).Returns(fakeNow);
+
+            ExerciseEnsure();
+
+            _returnedAuthenticationTicket.ExpiresAt.Should().Be((fakeNow + ticketValidity).UtcDateTime);
+        }
+
+        [Test]
+        public void Ensure_ThrowsWhenCurrentSessionIsNull()
+        {
+            _sessionProviderMock
+                .SetupGet(provider => provider.CurrentSessionId)
+                .Returns((string)null);
+
+            new Action(ExerciseEnsure).Should().Throw<InvalidOperationException>();
+        }
+
+        private void ExerciseCurrent()
         {
             _returnedAuthenticationTicket = _sut.GetCurrentAuthenticationTicket();
+        }
+
+        private void ExerciseEnsure()
+        {
+            _returnedAuthenticationTicket = _sut.EnsureTicket();
         }
     }
 }

@@ -160,8 +160,8 @@ namespace Starcounter.Authorization
             return AddSecurityMiddleware<TAuthenticationTicket>(services);
         }
 
-        private static void AddAuthenticationTicketProvider<TAuthenticationTicket>(IServiceCollection services)
-            where TAuthenticationTicket : class, IScAuthenticationTicket, new()
+        internal static void AddAuthenticationTicketProvider<TAuthenticationTicket>(this IServiceCollection services)
+            where TAuthenticationTicket : IScAuthenticationTicket, new()
         {
             services.TryAddTransient<ISystemClock, SystemClock>();
             services.TryAddTransient<ITransactionFactory, StarcounterTransactionFactory>();
@@ -176,6 +176,7 @@ namespace Starcounter.Authorization
             services.TryAddTransient<IAuthCookieService, AuthCookieService<TAuthenticationTicket>>();
             services.TryAddTransient<ISecureRandom, SecureRandom>();
             services.TryAddTransient<ITransactionFactory, StarcounterTransactionFactory>();
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, EnsureSessionMiddleware>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, CookieSignInMiddleware<TAuthenticationTicket>>());
         }
     }

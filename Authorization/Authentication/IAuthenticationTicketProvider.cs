@@ -2,8 +2,8 @@
 
 namespace Starcounter.Authorization.Authentication
 {
-    internal interface IAuthenticationTicketProvider<out TAuthenticationTicket> 
-        where TAuthenticationTicket : class, IScAuthenticationTicket
+    public interface IAuthenticationTicketProvider<out TAuthenticationTicket> 
+        where TAuthenticationTicket : IScAuthenticationTicket
     {
         /// <summary>
         /// Returns the authentication ticket for current session, or null if there is none.
@@ -11,5 +11,12 @@ namespace Starcounter.Authorization.Authentication
         /// </summary>
         /// <returns></returns>
         TAuthenticationTicket GetCurrentAuthenticationTicket();
+
+        /// <summary>
+        /// Returns the authentication ticket for current session, creating one if necessary.
+        /// If the preexisting ticket is expired, this method will delete it and return a new one.
+        /// </summary>
+        /// <returns></returns>
+        TAuthenticationTicket EnsureTicket();
     }
 }

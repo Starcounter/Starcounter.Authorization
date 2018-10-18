@@ -70,7 +70,8 @@ namespace Starcounter.Authorization.Tests.Middleware
                 {
                     Request = new Request()
                     {
-                        Cookies = _cookies
+                        Cookies = _cookies,
+                        Uri = "/app/feature"
                     }
                 },
                 _next);

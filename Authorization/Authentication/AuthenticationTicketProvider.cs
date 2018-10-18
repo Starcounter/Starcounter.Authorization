@@ -1,25 +1,32 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Starcounter.Authorization.DatabaseAccess;
 using Starcounter.Authorization.Model;
+using Starcounter.Authorization.SignIn;
 
 namespace Starcounter.Authorization.Authentication
 {
     internal class AuthenticationTicketProvider<TAuthenticationTicket> :
         IAuthenticationTicketProvider<TAuthenticationTicket>
-        where TAuthenticationTicket : class, IScAuthenticationTicket
+        where TAuthenticationTicket : IScAuthenticationTicket
     {
         private readonly ICurrentSessionProvider _currentSessionProvider;
         private readonly ISystemClock _systemClock;
         private readonly IScAuthenticationTicketRepository<TAuthenticationTicket> _scAuthenticationTicketRepository;
         private readonly ILogger _logger;
         private readonly ITransactionFactory _transactionFactory;
+        private readonly SignInOptions _options;
 
-        public AuthenticationTicketProvider(ICurrentSessionProvider currentSessionProvider,
+        public AuthenticationTicketProvider(
+            IOptions<SignInOptions> options,
+            ICurrentSessionProvider currentSessionProvider,
             ISystemClock systemClock,
             IScAuthenticationTicketRepository<TAuthenticationTicket> scAuthenticationTicketRepository,
             ILogger<AuthenticationTicketProvider<TAuthenticationTicket>> logger,
             ITransactionFactory transactionFactory)
         {
+            _options = options.Value;
             _currentSessionProvider = currentSessionProvider;
             _systemClock = systemClock;
             _scAuthenticationTicketRepository = scAuthenticationTicketRepository;
@@ -32,21 +39,40 @@ namespace Starcounter.Authorization.Authentication
             var starcounterSessionId = _currentSessionProvider.CurrentSessionId;
             if (starcounterSessionId == null)
             {
-                return null;
+                return default(TAuthenticationTicket);
             }
             var authenticationTicket = _scAuthenticationTicketRepository.FindBySessionId(starcounterSessionId);
             if (authenticationTicket == null)
             {
-                return null;
+                return default(TAuthenticationTicket);
             }
             if (authenticationTicket.ExpiresAt < _systemClock.UtcNow)
             {
                 _logger.LogInformation($"Found expired authentication ticket. Removing");
                 _transactionFactory.ExecuteTransaction(() => _scAuthenticationTicketRepository.Delete(authenticationTicket));
-                return null;
+                return default(TAuthenticationTicket);
             }
 
             return authenticationTicket;
+        }
+
+        public TAuthenticationTicket EnsureTicket()
+        {
+            var existingTicket = GetCurrentAuthenticationTicket();
+            if (existingTicket != null)
+            {
+                return existingTicket;
+            }
+
+            var currentSessionSessionId = _currentSessionProvider.CurrentSessionId
+                                          ?? throw new InvalidOperationException("Current session is null");
+            return _transactionFactory.ExecuteTransaction(() =>
+            {
+                var authenticationTicket = _scAuthenticationTicketRepository.Create();
+                authenticationTicket.SessionId = currentSessionSessionId;
+                authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.NewTicketExpiration).UtcDateTime;
+                return authenticationTicket;
+            });
         }
     }
 }

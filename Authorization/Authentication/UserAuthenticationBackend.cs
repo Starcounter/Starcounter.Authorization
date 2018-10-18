@@ -27,7 +27,7 @@ namespace Starcounter.Authorization.Authentication
         public ClaimsPrincipal GetCurrentPrincipal()
         {
             var authenticationTicket = _authenticationTicketProvider.GetCurrentAuthenticationTicket();
-            if (authenticationTicket == null)
+            if (authenticationTicket == null || authenticationTicket.User == null)
             {
                 return new ClaimsPrincipal();
             }
