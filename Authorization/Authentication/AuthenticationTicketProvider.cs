@@ -46,7 +46,10 @@ namespace Starcounter.Authorization.Authentication
             {
                 return default(TAuthenticationTicket);
             }
-            if (authenticationTicket.ExpiresAt < _systemClock.UtcNow)
+
+            // Specifying Kind manually, because of https://github.com/Starcounter/level1/issues/4798
+            // when this bug is fixed, we can simplify the line below
+            if (DateTime.SpecifyKind(authenticationTicket.ExpiresAt, DateTimeKind.Utc) < _systemClock.UtcNow)
             {
                 _logger.LogInformation($"Found expired authentication ticket. Removing");
                 _transactionFactory.ExecuteTransaction(() => _scAuthenticationTicketRepository.Delete(authenticationTicket));
