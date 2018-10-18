@@ -55,7 +55,7 @@ namespace Starcounter.Authorization.Authentication
                 _transactionFactory.ExecuteTransaction(() => _scAuthenticationTicketRepository.Delete(authenticationTicket));
                 return default(TAuthenticationTicket);
             }
-
+            _transactionFactory.ExecuteTransaction(() => authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.NewTicketExpiration).UtcDateTime);
             return authenticationTicket;
         }
 

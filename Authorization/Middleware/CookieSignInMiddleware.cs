@@ -40,8 +40,9 @@ namespace Starcounter.Authorization.Middleware
             }
 
             _authenticationTicketProvider.EnsureTicket();
+            var authCookie = _authCookieService.CreateAuthCookie();
             var response = next();
-            response.Cookies.Add(_authCookieService.CreateAuthCookie());
+            response.Cookies.Add(authCookie);
             return response;
         }
     }

@@ -56,7 +56,7 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void WhenCurrentSessionIsNullThenNullIsReturned()
+        public void Current_WhenCurrentSessionIsNullThenNullIsReturned()
         {
             _starcounterSessionId = null;
 
@@ -66,7 +66,7 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void WhenCurrentSessionHasNoCorrespondingUserTicketThenNullIsReturned()
+        public void Current_WhenCurrentSessionHasNoCorrespondingUserTicketThenNullIsReturned()
         {
             _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySessionId(_starcounterSessionId))
                 .Returns((ScUserAuthenticationTicket) null);
@@ -77,7 +77,7 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void WhenCurrentTicketHasExpiredThenNullIsReturnedAndTheTicketIsDeleted()
+        public void Current_WhenCurrentTicketHasExpiredThenNullIsReturnedAndTheTicketIsDeleted()
         {
             _existingTicket.ExpiresAt = _now.AddDays(-1);
 
@@ -88,12 +88,25 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void WhenEverythingChecksOutThenTheTicketFromRepositoryIsReturned()
+        public void Current_WhenEverythingChecksOutThenTheTicketFromRepositoryIsReturned()
         {
 
             ExerciseCurrent();
 
             _returnedAuthenticationTicket.Should().BeSameAs(_existingTicket);
+        }
+
+        [Test]
+        public void Current_ResetsExpirationTime()
+        {
+            var fakeNow = DateTimeOffset.FromUnixTimeSeconds(123456);
+            var ticketValidity = TimeSpan.FromHours(3);
+            _options.NewTicketExpiration = ticketValidity;
+            _clockMock.SetupGet(clock => clock.UtcNow).Returns(fakeNow);
+
+            ExerciseCurrent();
+
+            _returnedAuthenticationTicket.ExpiresAt.Should().Be((fakeNow + ticketValidity).UtcDateTime);
         }
 
         [Test]
