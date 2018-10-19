@@ -10,12 +10,12 @@ namespace Starcounter.Authorization.Tests.Authentication
     {
         private CurrentUserProvider<ScUserAuthenticationTicket, User> _sut;
         private User _returnedUser;
-        private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
+        private Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
 
         [SetUp]
         public void SetUp()
         {
-            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
+            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>>();
             _sut = new CurrentUserProvider<ScUserAuthenticationTicket, User>(
                 _authenticationTicketProviderMock.Object);
         }

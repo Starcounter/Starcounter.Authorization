@@ -13,7 +13,7 @@ namespace Starcounter.Authorization.Authentication
         private readonly IScAuthenticationTicketRepository<TAuthenticationTicket> _authenticationTicketRepository;
         private readonly ICurrentSessionProvider _currentSessionProvider;
         private readonly ISecureRandom _secureRandom;
-        private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
+        private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
         private readonly ITransactionFactory _transactionFactory;
         public const string CookieName = "scauthtoken";
 
@@ -21,19 +21,19 @@ namespace Starcounter.Authorization.Authentication
             IScAuthenticationTicketRepository<TAuthenticationTicket> authenticationTicketRepository,
             ICurrentSessionProvider currentSessionProvider,
             ISecureRandom secureRandom,
-            IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
+            IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService,
             ITransactionFactory transactionFactory)
         {
             _authenticationTicketRepository = authenticationTicketRepository;
             _currentSessionProvider = currentSessionProvider;
             _secureRandom = secureRandom;
-            _authenticationTicketProvider = authenticationTicketProvider;
+            _authenticationTicketService = authenticationTicketService;
             _transactionFactory = transactionFactory;
         }
 
         public string CreateAuthCookie()
         {
-            var ticket = _authenticationTicketProvider.GetCurrentAuthenticationTicket();
+            var ticket = _authenticationTicketService.GetCurrentAuthenticationTicket();
             if (ticket == null)
             {
                 return null;

@@ -167,7 +167,8 @@ namespace Starcounter.Authorization
             services.TryAddTransient<ITransactionFactory, StarcounterTransactionFactory>();
             services.TryAddTransient<ICurrentSessionProvider, DefaultCurrentSessionProvider>();
             services.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket>>();
-            services.TryAddTransient<IAuthenticationTicketProvider<TAuthenticationTicket>, AuthenticationTicketProvider<TAuthenticationTicket>>();
+            services.TryAddTransient<IAuthenticationTicketService<TAuthenticationTicket>, AuthenticationTicketService<TAuthenticationTicket>>();
+            services.TryAddTransient<IStartupFilter, CleanupStartupFilter<TAuthenticationTicket>>();
         }
 
         private static void AddCookieSignInMiddleware<TAuthenticationTicket>(IServiceCollection services)

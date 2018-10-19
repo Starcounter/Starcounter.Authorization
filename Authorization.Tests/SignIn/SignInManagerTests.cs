@@ -17,12 +17,12 @@ namespace Starcounter.Authorization.Tests.SignIn
         private SignInManager<ScUserAuthenticationTicket, User> _sut;
         private User _user;
         private ScUserAuthenticationTicket _scUserAuthenticationTicket;
-        private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
+        private Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
 
         [SetUp]
         public void SetUp()
         {
-            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
+            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>>();
             _sut = new SignInManager<ScUserAuthenticationTicket, User>(
                 _authenticationTicketProviderMock.Object, 
                 Mock.Of<ILogger<SignInManager<ScUserAuthenticationTicket, User>>>()

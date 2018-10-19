@@ -29,7 +29,7 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
                 _ticketRepositoryMock.Object,
                 _currentSessionProviderMock.Object,
                 Mock.Of<ISecureRandom>(),
-                Mock.Of<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>(),
+                Mock.Of<IAuthenticationTicketService<ScUserAuthenticationTicket>>(),
                 new FakeTransactionFactory());
             var token = "token";
             _availableCookies = new List<string>() { $"{CookieName}={token}" };

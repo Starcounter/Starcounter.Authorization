@@ -12,14 +12,14 @@ namespace Starcounter.Authorization.Tests.Authentication
     public class UserAuthenticationBackendTests
     {
         private IAuthenticationBackend _sut;
-        private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
+        private Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
         private ClaimsPrincipal _returnedPrincipal;
         private Mock<IUserClaimsGatherer> _claimsGathererMock;
 
         [SetUp]
         public void SetUp()
         {
-            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
+            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>>();
             _claimsGathererMock = new Mock<IUserClaimsGatherer>();
             _sut = new UserAuthenticationBackend<ScUserAuthenticationTicket, User>(
                 _authenticationTicketProviderMock.Object,

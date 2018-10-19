@@ -18,13 +18,13 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
         private string _returnedCookieValue;
         private string _returnedCookieAttributes;
         private string _returnedCookieString;
-        private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
+        private Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
 
         [SetUp]
         public void SetUp()
         {
             _secureRandomMock = new Mock<ISecureRandom>();
-            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
+            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>>();
             _sut = new AuthCookieService<ScUserAuthenticationTicket>(
                 Mock.Of<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>>(),
                 Mock.Of<ICurrentSessionProvider>(),

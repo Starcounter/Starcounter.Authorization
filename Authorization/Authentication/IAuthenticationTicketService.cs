@@ -2,7 +2,7 @@
 
 namespace Starcounter.Authorization.Authentication
 {
-    public interface IAuthenticationTicketProvider<out TAuthenticationTicket> 
+    public interface IAuthenticationTicketService<out TAuthenticationTicket> 
         where TAuthenticationTicket : IScAuthenticationTicket
     {
         /// <summary>
@@ -18,5 +18,11 @@ namespace Starcounter.Authorization.Authentication
         /// </summary>
         /// <returns></returns>
         TAuthenticationTicket EnsureTicket();
+
+        /// <summary>
+        /// Removes all expired tickets. This method is always safe to execute, but must be invoked on
+        /// a scheduler thread.
+        /// </summary>
+        void CleanExpiredTickets();
     }
 }

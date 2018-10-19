@@ -11,9 +11,9 @@ using Starcounter.Authorization.Tests.TestModel;
 
 namespace Starcounter.Authorization.Tests.Authentication
 {
-    public class AuthenticationTicketProviderTests
+    public class AuthenticationTicketServiceTests
     {
-        private AuthenticationTicketProvider<ScUserAuthenticationTicket> _sut;
+        private AuthenticationTicketService<ScUserAuthenticationTicket> _sut;
         private ScUserAuthenticationTicket _returnedAuthenticationTicket;
         private Mock<ICurrentSessionProvider> _sessionProviderMock;
         private Mock<ISystemClock> _clockMock;
@@ -30,12 +30,12 @@ namespace Starcounter.Authorization.Tests.Authentication
             _clockMock = new Mock<ISystemClock>();
             _options = new SignInOptions();
             _authenticationTicketRepositoryMock = new Mock<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>>();
-            _sut = new AuthenticationTicketProvider<ScUserAuthenticationTicket>(
+            _sut = new AuthenticationTicketService<ScUserAuthenticationTicket>(
                 Options.Create(_options), 
                 _sessionProviderMock.Object,
                 _clockMock.Object,
                 _authenticationTicketRepositoryMock.Object,
-                Mock.Of<ILogger<AuthenticationTicketProvider<ScUserAuthenticationTicket>>>(),
+                Mock.Of<ILogger<AuthenticationTicketService<ScUserAuthenticationTicket>>>(),
                 new FakeTransactionFactory());
 
             _starcounterSessionId = "sessionId";

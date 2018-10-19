@@ -7,8 +7,8 @@ using Starcounter.Authorization.SignIn;
 
 namespace Starcounter.Authorization.Authentication
 {
-    internal class AuthenticationTicketProvider<TAuthenticationTicket> :
-        IAuthenticationTicketProvider<TAuthenticationTicket>
+    internal class AuthenticationTicketService<TAuthenticationTicket> :
+        IAuthenticationTicketService<TAuthenticationTicket>
         where TAuthenticationTicket : IScAuthenticationTicket
     {
         private readonly ICurrentSessionProvider _currentSessionProvider;
@@ -18,12 +18,12 @@ namespace Starcounter.Authorization.Authentication
         private readonly ITransactionFactory _transactionFactory;
         private readonly SignInOptions _options;
 
-        public AuthenticationTicketProvider(
+        public AuthenticationTicketService(
             IOptions<SignInOptions> options,
             ICurrentSessionProvider currentSessionProvider,
             ISystemClock systemClock,
             IScAuthenticationTicketRepository<TAuthenticationTicket> scAuthenticationTicketRepository,
-            ILogger<AuthenticationTicketProvider<TAuthenticationTicket>> logger,
+            ILogger<AuthenticationTicketService<TAuthenticationTicket>> logger,
             ITransactionFactory transactionFactory)
         {
             _options = options.Value;
@@ -34,6 +34,7 @@ namespace Starcounter.Authorization.Authentication
             _transactionFactory = transactionFactory;
         }
 
+        /// <inheritdoc />
         public TAuthenticationTicket GetCurrentAuthenticationTicket()
         {
             var starcounterSessionId = _currentSessionProvider.CurrentSessionId;
@@ -59,6 +60,7 @@ namespace Starcounter.Authorization.Authentication
             return authenticationTicket;
         }
 
+        /// <inheritdoc />
         public TAuthenticationTicket EnsureTicket()
         {
             var existingTicket = GetCurrentAuthenticationTicket();
@@ -76,6 +78,15 @@ namespace Starcounter.Authorization.Authentication
                 authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.NewTicketExpiration).UtcDateTime;
                 return authenticationTicket;
             });
+        }
+
+        /// <inheritdoc />
+        public void CleanExpiredTickets()
+        {
+            _transactionFactory.ExecuteTransaction(() =>
+                {
+                    _scAuthenticationTicketRepository.DeleteExpired(_systemClock.UtcNow.UtcDateTime);
+                });
         }
     }
 }

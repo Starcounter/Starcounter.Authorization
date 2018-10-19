@@ -13,7 +13,7 @@ namespace Starcounter.Authorization.Tests.Middleware
     public class CookieSignInMiddlewareTests
     {
         private CookieSignInMiddleware<ScUserAuthenticationTicket> _sut;
-        private Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
+        private Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>> _authenticationTicketProviderMock;
         private Mock<IAuthCookieService> _authCookieServiceMock;
         private Response _returnedResponse;
         private Func<Response> _next;
@@ -22,7 +22,7 @@ namespace Starcounter.Authorization.Tests.Middleware
         [SetUp]
         public void SetUp()
         {
-            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketProvider<ScUserAuthenticationTicket>>();
+            _authenticationTicketProviderMock = new Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>>();
             _authCookieServiceMock = new Mock<IAuthCookieService>();
             _sut = new CookieSignInMiddleware<ScUserAuthenticationTicket>(
                 _authenticationTicketProviderMock.Object,

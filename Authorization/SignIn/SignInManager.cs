@@ -11,13 +11,13 @@ namespace Starcounter.Authorization.SignIn
         where TAuthenticationTicket : IScUserAuthenticationTicket<TUser>
         where TUser : IMinimalUser
     {
-        private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
+        private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
         private readonly ILogger _logger;
 
-        public SignInManager(IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
+        public SignInManager(IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService,
             ILogger<SignInManager<TAuthenticationTicket, TUser>> logger)
         {
-            _authenticationTicketProvider = authenticationTicketProvider;
+            _authenticationTicketService = authenticationTicketService;
             _logger = logger;
         }
 
@@ -25,7 +25,7 @@ namespace Starcounter.Authorization.SignIn
         {
             try
             {
-                var authenticationTicket = _authenticationTicketProvider.EnsureTicket();
+                var authenticationTicket = _authenticationTicketService.EnsureTicket();
                 authenticationTicket.User = user;
                 _logger.LogInformation("User {User} signed in", user);
             }

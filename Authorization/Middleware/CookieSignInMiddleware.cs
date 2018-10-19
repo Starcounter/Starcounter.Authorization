@@ -8,15 +8,15 @@ namespace Starcounter.Authorization.Middleware
     internal class CookieSignInMiddleware<TAuthenticationTicket> : IPageMiddleware
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
-        private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
+        private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
         private readonly IAuthCookieService _authCookieService;
 
         public CookieSignInMiddleware(
-            IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
+            IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService,
             IAuthCookieService authCookieService
         )
         {
-            _authenticationTicketProvider = authenticationTicketProvider;
+            _authenticationTicketService = authenticationTicketService;
             _authCookieService = authCookieService;
         }
 
@@ -26,11 +26,11 @@ namespace Starcounter.Authorization.Middleware
             if (UriHelper.IsPartialUri(routingInfo.Request.Uri))
             {
                 // internal requests have no cookies
-                _authenticationTicketProvider.EnsureTicket();
+                _authenticationTicketService.EnsureTicket();
                 return next();
             }
 
-            if (_authenticationTicketProvider.GetCurrentAuthenticationTicket() != null)
+            if (_authenticationTicketService.GetCurrentAuthenticationTicket() != null)
             {
                 return next();
             }
@@ -39,7 +39,7 @@ namespace Starcounter.Authorization.Middleware
                 return next();
             }
 
-            _authenticationTicketProvider.EnsureTicket();
+            _authenticationTicketService.EnsureTicket();
             var authCookie = _authCookieService.CreateAuthCookie();
             var response = next();
             response.Cookies.Add(authCookie);
