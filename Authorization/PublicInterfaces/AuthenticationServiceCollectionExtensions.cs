@@ -160,14 +160,15 @@ namespace Starcounter.Authorization
             return AddSecurityMiddleware<TAuthenticationTicket>(services);
         }
 
-        private static void AddAuthenticationTicketProvider<TAuthenticationTicket>(IServiceCollection services)
-            where TAuthenticationTicket : class, IScAuthenticationTicket, new()
+        internal static void AddAuthenticationTicketProvider<TAuthenticationTicket>(this IServiceCollection services)
+            where TAuthenticationTicket : IScAuthenticationTicket, new()
         {
             services.TryAddTransient<ISystemClock, SystemClock>();
             services.TryAddTransient<ITransactionFactory, StarcounterTransactionFactory>();
             services.TryAddTransient<ICurrentSessionProvider, DefaultCurrentSessionProvider>();
             services.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket>>();
-            services.TryAddTransient<IAuthenticationTicketProvider<TAuthenticationTicket>, AuthenticationTicketProvider<TAuthenticationTicket>>();
+            services.TryAddTransient<IAuthenticationTicketService<TAuthenticationTicket>, AuthenticationTicketService<TAuthenticationTicket>>();
+            services.TryAddTransient<IStartupFilter, CleanupStartupFilter<TAuthenticationTicket>>();
         }
 
         private static void AddCookieSignInMiddleware<TAuthenticationTicket>(IServiceCollection services)
@@ -176,6 +177,7 @@ namespace Starcounter.Authorization
             services.TryAddTransient<IAuthCookieService, AuthCookieService<TAuthenticationTicket>>();
             services.TryAddTransient<ISecureRandom, SecureRandom>();
             services.TryAddTransient<ITransactionFactory, StarcounterTransactionFactory>();
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, EnsureSessionMiddleware>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, CookieSignInMiddleware<TAuthenticationTicket>>());
         }
     }

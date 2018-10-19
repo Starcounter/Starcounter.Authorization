@@ -11,16 +11,16 @@ namespace Starcounter.Authorization.Authentication
     internal class AuthenticationBackend<TAuthenticationTicket> : IAuthenticationBackend
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
-        private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
+        private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
 
-        public AuthenticationBackend(IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider)
+        public AuthenticationBackend(IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService)
         {
-            _authenticationTicketProvider = authenticationTicketProvider;
+            _authenticationTicketService = authenticationTicketService;
         }
 
         public ClaimsPrincipal GetCurrentPrincipal()
         {
-            var authenticationTicket = _authenticationTicketProvider.GetCurrentAuthenticationTicket();
+            var authenticationTicket = _authenticationTicketService.GetCurrentAuthenticationTicket();
             if (authenticationTicket == null)
             {
                 return new ClaimsPrincipal();

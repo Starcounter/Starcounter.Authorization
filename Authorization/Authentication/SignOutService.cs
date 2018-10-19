@@ -7,22 +7,22 @@ namespace Starcounter.Authorization.Authentication
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
         private readonly ITransactionFactory _transactionFactory;
-        private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
+        private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
         private readonly IScAuthenticationTicketRepository<TAuthenticationTicket> _authenticationTicketRepository;
 
         public SignOutService(
             ITransactionFactory transactionFactory,
-            IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
+            IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService,
             IScAuthenticationTicketRepository<TAuthenticationTicket> authenticationTicketRepository)
         {
             _transactionFactory = transactionFactory;
-            _authenticationTicketProvider = authenticationTicketProvider;
+            _authenticationTicketService = authenticationTicketService;
             _authenticationTicketRepository = authenticationTicketRepository;
         }
 
         public void SignOut()
         {
-            var ticket = _authenticationTicketProvider.GetCurrentAuthenticationTicket();
+            var ticket = _authenticationTicketService.GetCurrentAuthenticationTicket();
             if (ticket != null)
             {
                 _transactionFactory.ExecuteTransaction(() => _authenticationTicketRepository.Delete(ticket));

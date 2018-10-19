@@ -14,20 +14,20 @@ namespace Starcounter.Authorization.Authentication
         where TAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>
         where TUser : IUser
     {
-        private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
+        private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
         private readonly IUserClaimsGatherer _claimsGatherer;
 
-        public UserAuthenticationBackend(IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
+        public UserAuthenticationBackend(IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService,
             IUserClaimsGatherer claimsGatherer)
         {
-            _authenticationTicketProvider = authenticationTicketProvider;
+            _authenticationTicketService = authenticationTicketService;
             _claimsGatherer = claimsGatherer;
         }
 
         public ClaimsPrincipal GetCurrentPrincipal()
         {
-            var authenticationTicket = _authenticationTicketProvider.GetCurrentAuthenticationTicket();
-            if (authenticationTicket == null)
+            var authenticationTicket = _authenticationTicketService.GetCurrentAuthenticationTicket();
+            if (authenticationTicket == null || authenticationTicket.User == null)
             {
                 return new ClaimsPrincipal();
             }

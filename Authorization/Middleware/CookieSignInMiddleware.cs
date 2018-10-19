@@ -1,34 +1,49 @@
 ﻿using System;
-using System.Linq;
 using Starcounter.Authorization.Authentication;
-using Starcounter.Authorization.Model;
 using Starcounter.Startup.Routing;
+using Starcounter.Startup.Routing.Middleware;
 
 namespace Starcounter.Authorization.Middleware
 {
-    internal class CookieSignInMiddleware<TAuthenticationTicket> : IPageMiddleware where TAuthenticationTicket : class, IScAuthenticationTicket
+    internal class CookieSignInMiddleware<TAuthenticationTicket> : IPageMiddleware
+        where TAuthenticationTicket : class, IScAuthenticationTicket
     {
-        private readonly IAuthenticationTicketProvider<TAuthenticationTicket> _authenticationTicketProvider;
+        private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
         private readonly IAuthCookieService _authCookieService;
 
         public CookieSignInMiddleware(
-            IAuthenticationTicketProvider<TAuthenticationTicket> authenticationTicketProvider,
+            IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService,
             IAuthCookieService authCookieService
         )
         {
-            _authenticationTicketProvider = authenticationTicketProvider;
+            _authenticationTicketService = authenticationTicketService;
             _authCookieService = authCookieService;
         }
 
         public Response Run(RoutingInfo routingInfo, Func<Response> next)
         {
-            if (_authenticationTicketProvider.GetCurrentAuthenticationTicket() != null)
+            // we could use Request.IsExternal, but it would be untestable
+            if (UriHelper.IsPartialUri(routingInfo.Request.Uri))
+            {
+                // internal requests have no cookies
+                _authenticationTicketService.EnsureTicket();
+                return next();
+            }
+
+            if (_authenticationTicketService.GetCurrentAuthenticationTicket() != null)
+            {
+                return next();
+            }
+            if (_authCookieService.TryReattachToTicketWithToken(routingInfo.Request.Cookies))
             {
                 return next();
             }
 
-            _authCookieService.TryReattachToTicketWithToken(routingInfo.Request.Cookies);
-            return next();
+            _authenticationTicketService.EnsureTicket();
+            var authCookie = _authCookieService.CreateAuthCookie();
+            var response = next();
+            response.Cookies.Add(authCookie);
+            return response;
         }
     }
 }

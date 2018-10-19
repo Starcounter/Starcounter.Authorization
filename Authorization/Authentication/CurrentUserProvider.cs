@@ -6,15 +6,15 @@ namespace Starcounter.Authorization.Authentication
         where TUserAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>
         where TUser : class, IMinimalUser
     {
-        private readonly IAuthenticationTicketProvider<TUserAuthenticationTicket> _authenticationTicketProvider;
+        private readonly IAuthenticationTicketService<TUserAuthenticationTicket> _authenticationTicketService;
 
-        public CurrentUserProvider(IAuthenticationTicketProvider<TUserAuthenticationTicket> authenticationTicketProvider)
+        public CurrentUserProvider(IAuthenticationTicketService<TUserAuthenticationTicket> authenticationTicketService)
         {
-            _authenticationTicketProvider = authenticationTicketProvider;
+            _authenticationTicketService = authenticationTicketService;
         }
         public TUser GetCurrentUser()
         {
-            var authenticationTicket = _authenticationTicketProvider.GetCurrentAuthenticationTicket();
+            var authenticationTicket = _authenticationTicketService.GetCurrentAuthenticationTicket();
             return authenticationTicket?.User;
         }
     }
