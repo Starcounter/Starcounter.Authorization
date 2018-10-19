@@ -11,13 +11,13 @@
     <AssemblyName>Starcounter.Authorization</AssemblyName>
     <RootNamespace>Starcounter.Authorization</RootNamespace>
     <ProjectGuid>{48CF4A36-C006-4649-BAD6-027E7962EFAE}</ProjectGuid>
-    <Version>3.1.0</Version>
+    <Version>3.2.0</Version>
     <Authors>Starcounter, joozek78</Authors>
     <PackageProjectUrl>https://github.com/Starcounter/authorization</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Starcounter/authorization</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/Starcounter/authorization/blob/master/LICENSE</PackageLicenseUrl>
     <Description>Authorization helper library for Starcounter applications</Description>
-    <PackageReleaseNotes>Completely new Authorization library, designed for Starcounter 2.4, highly reusing standard ASP.NET Core components
+    <PackageReleaseNotes>Authentication Tickets can now be used to identify returning anonymous users.
 </PackageReleaseNotes>
     <PackageTags>Starcounter</PackageTags>
   </PropertyGroup>
