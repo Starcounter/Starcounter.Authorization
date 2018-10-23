@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Starcounter.Authorization.Settings;
 using Starcounter.Authorization.SignIn;
 using Starcounter.Startup.Abstractions;
 
@@ -11,17 +12,17 @@ namespace Starcounter.Authorization.Authentication
         where TAuthenticationTicket : IScAuthenticationTicket
     {
         private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
-        private readonly SignInOptions _options;
+        private readonly IOptions<AuthorizationOptions> _options;
         private readonly ILogger<CleanupStartupFilter<TAuthenticationTicket>> _logger;
         private Timer _timer;
 
-        public CleanupStartupFilter(IOptions<SignInOptions> options,
+        public CleanupStartupFilter(IOptions<AuthorizationOptions> options,
             IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService,
             ILogger<CleanupStartupFilter<TAuthenticationTicket>> logger)
         {
             _logger = logger;
             _authenticationTicketService = authenticationTicketService;
-            _options = options.Value;
+            _options = options;
         }
 
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
@@ -29,7 +30,13 @@ namespace Starcounter.Authorization.Authentication
             return app =>
             {
                 _timer?.Dispose();
-                _timer = new Timer(CleanUp, null, TimeSpan.Zero, _options.TicketCleanupInterval ?? TimeSpan.FromMilliseconds(-1));
+                var ticketCleanupInterval = _options.Value.TicketCleanupInterval;
+                _timer = new Timer(CleanUp,
+                    null, // state
+                    TimeSpan.Zero, // initial delay
+                    ticketCleanupInterval != TimeSpan.Zero // interval
+                        ? ticketCleanupInterval
+                        : TimeSpan.FromMilliseconds(-1));
                 next(app);
             };
         }

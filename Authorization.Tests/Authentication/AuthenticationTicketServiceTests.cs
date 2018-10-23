@@ -6,6 +6,7 @@ using Moq;
 using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Model;
+using Starcounter.Authorization.Settings;
 using Starcounter.Authorization.SignIn;
 using Starcounter.Authorization.Tests.TestModel;
 
@@ -21,14 +22,14 @@ namespace Starcounter.Authorization.Tests.Authentication
         private string _starcounterSessionId;
         private ScUserAuthenticationTicket _existingTicket;
         private DateTime _now;
-        private SignInOptions _options;
+        private AuthorizationOptions _options;
 
         [SetUp]
         public void SetUp()
         {
             _sessionProviderMock = new Mock<ICurrentSessionProvider>();
             _clockMock = new Mock<ISystemClock>();
-            _options = new SignInOptions();
+            _options = new AuthorizationOptions();
             _authenticationTicketRepositoryMock = new Mock<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>>();
             _sut = new AuthenticationTicketService<ScUserAuthenticationTicket>(
                 Options.Create(_options), 

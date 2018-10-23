@@ -1,7 +1,7 @@
 ﻿using System;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Core;
 using Starcounter.Authorization.DatabaseAccess;
@@ -9,9 +9,11 @@ using Starcounter.Authorization.Middleware;
 using Starcounter.Authorization.Model;
 using Starcounter.Authorization.Model.Serialization;
 using Starcounter.Authorization.PageSecurity;
+using Starcounter.Authorization.Settings;
 using Starcounter.Authorization.SignIn;
 using Starcounter.Startup.Abstractions;
 using Starcounter.Startup.Routing;
+using AuthorizationOptions = Starcounter.Authorization.Settings.AuthorizationOptions;
 
 namespace Starcounter.Authorization
 {
@@ -21,19 +23,23 @@ namespace Starcounter.Authorization
         /// Add full starcounter authorization services to the service collection.
         /// Claims associated with the user and its groups will be retrieved every time
         /// any authorization rules will be evaluated. To use starcounter authorization without
-        /// defining user class, use <see cref="AddStarcounterAuthorization{TAuthenticationTicket}"/>
+        /// defining user class, use <see cref="AddStarcounterAuthorization{TAuthorizationSettings, TAuthenticationTicket}"/>
         /// </summary>
+        /// <typeparam name="TAuthorizationSettings">Authentication settings type defined in application model. Should implement <see cref="IAuthorizationSettings"/> and nothing more</typeparam>
         /// <typeparam name="TAuthenticationTicket">Authentication ticket type defined in application model. Should implement <see cref="IScUserAuthenticationTicket{TUser}"/> and nothing more</typeparam>
         /// <typeparam name="TUser">Application-specific user type</typeparam>
         /// <param name="services">Service collection to add to. This will be modified, not copied, by this method.</param>
         /// <param name="configure">Configuration of authorization rules. This will be passed to <see cref="AuthorizationServiceCollectionExtensions.AddAuthorization(IServiceCollection)"/>.</param>
         /// <returns>Original service collection, with new services added.</returns>
-        public static IServiceCollection AddStarcounterAuthorization<TAuthenticationTicket, TUser>(
+        public static IServiceCollection AddStarcounterAuthorization<TAuthorizationSettings, TAuthenticationTicket, TUser>(
             this IServiceCollection services,
-            Action<AuthorizationOptions> configure = null)
+            Action<Microsoft.AspNetCore.Authorization.AuthorizationOptions> configure = null)
+            where TAuthorizationSettings: class, IAuthorizationSettings, new()
             where TAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>, new()
             where TUser : class, IUser
         {
+            // it's important this comes first, because it enables the use of IOptions<AuthorizationOptions>
+            AddAuthorizationSettings<TAuthorizationSettings>(services);
             AddCurrentUserProvider<TAuthenticationTicket, TUser>(services);
             AddUserAuthenticationBackend<TAuthenticationTicket, TUser>(services);
             AddAuthenticationTicketProvider<TAuthenticationTicket>(services);
@@ -53,18 +59,22 @@ namespace Starcounter.Authorization
         /// <summary>
         /// Add minimal starcounter authorization services to the service collection.
         /// No claims will be retrieved when evaluating authorization rules.
-        /// To use full starcounter authorization use <see cref="AddStarcounterAuthorization{TAuthenticationTicket, TUser}"/>
+        /// To use full starcounter authorization use <see cref="AddStarcounterAuthorization{TAuthorizationSettings, TAuthenticationTicket, TUser}"/>
         /// </summary>
+        /// <typeparam name="TAuthorizationSettings">Authentication settings type defined in application model. Should implement <see cref="IAuthorizationSettings"/> and nothing more</typeparam>
         /// <typeparam name="TAuthenticationTicket">Authentication ticket type defined in application model. Should implement <see cref="IScUserAuthenticationTicket{TUser}"/> and nothing more</typeparam>
         /// <param name="services">Service collection to add to. This will be modified, not copied, by this method.</param>
         /// <param name="configure">Configuration of authorization rules. This will be passed to <see cref="AuthorizationServiceCollectionExtensions.AddAuthorization(IServiceCollection)"/>.
         /// Since no claims will be available to the rules, it's recommended to only check if the user is authenticated or not</param>
         /// <returns>Original service collection, with new services added.</returns>
-        public static IServiceCollection AddStarcounterAuthorization<TAuthenticationTicket>(
+        public static IServiceCollection AddStarcounterAuthorization<TAuthorizationSettings, TAuthenticationTicket>(
             this IServiceCollection services,
-            Action<AuthorizationOptions> configure = null)
+            Action<Microsoft.AspNetCore.Authorization.AuthorizationOptions> configure = null)
+            where TAuthorizationSettings : class, IAuthorizationSettings, new()
             where TAuthenticationTicket : class, IScAuthenticationTicket, new()
         {
+            // it's important this comes first, because it enables the use of IOptions<AuthorizationOptions>
+            AddAuthorizationSettings<TAuthorizationSettings>(services);
             services.TryAddTransient<IAuthenticationBackend, AuthenticationBackend<TAuthenticationTicket>>();
             AddAuthenticationTicketProvider<TAuthenticationTicket>(services);
             AddCookieSignInMiddleware<TAuthenticationTicket>(services);
@@ -114,6 +124,22 @@ namespace Starcounter.Authorization
         {
             services.TryAddTransient<IClaimDbConverter, ClaimDbConverter>();
             services.AddTransient<IStartupFilter>(provider => ActivatorUtilities.CreateInstance<ClaimCreatorStartupFilter<TClaimTemplate>>(provider, claimType));
+            return services;
+        }
+
+        /// <summary>
+        /// Add support for using authorization settings from the database.
+        /// </summary>
+        /// <typeparam name="TAuthorizationSettings">Authentication settings type defined in application model. Should implement <see cref="IAuthorizationSettings"/> and nothing more</typeparam>
+        /// <param name="services">Service collection to add to. This will be modified, not copied, by this method.</param>
+        /// <returns>Original service collection, with new services added.</returns>
+        private static IServiceCollection AddAuthorizationSettings<TAuthorizationSettings>(
+            this IServiceCollection services)
+            where TAuthorizationSettings : class, IAuthorizationSettings, new()
+        {
+            services.TryAddTransient<IOptions<AuthorizationOptions>, OptionsProvider<TAuthorizationSettings>>();
+            services.TryAddTransient<ISettingsService<TAuthorizationSettings>, SettingsService<TAuthorizationSettings>>();
+            services.TryAddTransient<IStartupFilter, EnsureSettingsStartupFilter<TAuthorizationSettings>>();
             return services;
         }
 

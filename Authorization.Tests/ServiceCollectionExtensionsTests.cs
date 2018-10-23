@@ -32,7 +32,7 @@ namespace Starcounter.Authorization.Tests
         public void AddStarcounterAuthorizationConfigures_AllServices()
         {
             _serviceCollection
-                .AddStarcounterAuthorization<ScUserAuthenticationTicket>();
+                .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket>();
 
             ExpectMiddleware<SecurityMiddleware>();
             ExpectMiddleware<CookieSignInMiddleware<ScUserAuthenticationTicket>>();
@@ -43,7 +43,7 @@ namespace Starcounter.Authorization.Tests
         public void AddStarcounterAuthorizationWithUserConfigures_AllServices()
         {
             _serviceCollection
-                .AddStarcounterAuthorization<ScUserAuthenticationTicket, User>();
+                .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket, User>();
 
             ExpectMiddleware<SecurityMiddleware>();
             ExpectMiddleware<CookieSignInMiddleware<ScUserAuthenticationTicket>>();
