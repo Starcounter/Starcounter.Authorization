@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Starcounter.Authorization.DatabaseAccess;
 using Starcounter.Authorization.Model;
+using Starcounter.Authorization.Settings;
 using Starcounter.Authorization.SignIn;
 
 namespace Starcounter.Authorization.Authentication
@@ -16,17 +17,17 @@ namespace Starcounter.Authorization.Authentication
         private readonly IScAuthenticationTicketRepository<TAuthenticationTicket> _scAuthenticationTicketRepository;
         private readonly ILogger _logger;
         private readonly ITransactionFactory _transactionFactory;
-        private readonly SignInOptions _options;
+        private readonly IOptions<AuthorizationOptions> _options;
 
         public AuthenticationTicketService(
-            IOptions<SignInOptions> options,
+            IOptions<AuthorizationOptions> options,
             ICurrentSessionProvider currentSessionProvider,
             ISystemClock systemClock,
             IScAuthenticationTicketRepository<TAuthenticationTicket> scAuthenticationTicketRepository,
             ILogger<AuthenticationTicketService<TAuthenticationTicket>> logger,
             ITransactionFactory transactionFactory)
         {
-            _options = options.Value;
+            _options = options;
             _currentSessionProvider = currentSessionProvider;
             _systemClock = systemClock;
             _scAuthenticationTicketRepository = scAuthenticationTicketRepository;
@@ -56,7 +57,7 @@ namespace Starcounter.Authorization.Authentication
                 _transactionFactory.ExecuteTransaction(() => _scAuthenticationTicketRepository.Delete(authenticationTicket));
                 return default(TAuthenticationTicket);
             }
-            _transactionFactory.ExecuteTransaction(() => authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.NewTicketExpiration).UtcDateTime);
+            _transactionFactory.ExecuteTransaction(() => authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.Value.NewTicketExpiration).UtcDateTime);
             return authenticationTicket;
         }
 
@@ -75,7 +76,7 @@ namespace Starcounter.Authorization.Authentication
             {
                 var authenticationTicket = _scAuthenticationTicketRepository.Create();
                 authenticationTicket.SessionId = currentSessionSessionId;
-                authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.NewTicketExpiration).UtcDateTime;
+                authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.Value.NewTicketExpiration).UtcDateTime;
                 return authenticationTicket;
             });
         }
