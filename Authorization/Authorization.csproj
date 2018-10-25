@@ -11,6 +11,7 @@
     <AssemblyName>Starcounter.Authorization</AssemblyName>
     <RootNamespace>Starcounter.Authorization</RootNamespace>
     <ProjectGuid>{48CF4A36-C006-4649-BAD6-027E7962EFAE}</ProjectGuid>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <Version>3.4.0</Version>
     <Authors>Starcounter, joozek78</Authors>
     <PackageProjectUrl>https://github.com/Starcounter/authorization</PackageProjectUrl>
@@ -29,6 +30,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="Starcounter.Linq" Version="2.2.0" />
     <PackageReference Include="Starcounter.Startup" Version="0.7.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All"/>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Starcounter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d2df1e81d0ca3abf">
