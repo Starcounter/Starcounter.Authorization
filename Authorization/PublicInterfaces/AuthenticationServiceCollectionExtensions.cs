@@ -139,7 +139,7 @@ namespace Starcounter.Authorization
         {
             services.TryAddTransient<IOptions<AuthorizationOptions>, OptionsProvider<TAuthorizationSettings>>();
             services.TryAddTransient<ISettingsService<TAuthorizationSettings>, SettingsService<TAuthorizationSettings>>();
-            services.TryAddTransient<IStartupFilter, EnsureSettingsStartupFilter<TAuthorizationSettings>>();
+            services.TryAddEnumerable(ServiceDescriptor.Transient<IStartupFilter, EnsureSettingsStartupFilter<TAuthorizationSettings>>());
             return services;
         }
 
@@ -194,7 +194,7 @@ namespace Starcounter.Authorization
             services.TryAddTransient<ICurrentSessionProvider, DefaultCurrentSessionProvider>();
             services.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket>>();
             services.TryAddTransient<IAuthenticationTicketService<TAuthenticationTicket>, AuthenticationTicketService<TAuthenticationTicket>>();
-            services.TryAddTransient<IStartupFilter, CleanupStartupFilter<TAuthenticationTicket>>();
+            services.TryAddEnumerable(ServiceDescriptor.Transient<IStartupFilter, CleanupStartupFilter<TAuthenticationTicket>>());
         }
 
         private static void AddCookieSignInMiddleware<TAuthenticationTicket>(IServiceCollection services)

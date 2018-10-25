@@ -15,7 +15,6 @@ namespace Starcounter.Authorization.Authentication
         private readonly ISecureRandom _secureRandom;
         private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
         private readonly ITransactionFactory _transactionFactory;
-        public const string CookieName = "scauthtoken";
 
         public AuthCookieService(
             IScAuthenticationTicketRepository<TAuthenticationTicket> authenticationTicketRepository,
@@ -31,6 +30,7 @@ namespace Starcounter.Authorization.Authentication
             _transactionFactory = transactionFactory;
         }
 
+        /// <inheritdoc />
         public string CreateAuthCookie()
         {
             var ticket = _authenticationTicketService.GetCurrentAuthenticationTicket();
@@ -42,14 +42,19 @@ namespace Starcounter.Authorization.Authentication
             var bytesLength = 16;
             var token = _secureRandom.GenerateRandomHexString(bytesLength);
             _transactionFactory.ExecuteTransaction(() => ticket.PersistenceToken = token);
-            return $"{CookieName}={token};HttpOnly;Path=/";
+            return $"{token};HttpOnly;Path=/";
         }
 
+        /// <inheritdoc />
         public string CreateSignOutCookie()
         {
-            return $"{CookieName}=;Max-Age=0;Path=/";
+            return "Max-Age=0;Path=/";
         }
 
+        /// <inheritdoc />
+        public string CookieName => "scauthtoken";
+
+        /// <inheritdoc />
         public bool TryReattachToTicketWithToken(IEnumerable<string> availableCookies)
         {
             var cookie = availableCookies

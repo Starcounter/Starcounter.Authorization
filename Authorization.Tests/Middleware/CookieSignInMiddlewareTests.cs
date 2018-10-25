@@ -28,6 +28,9 @@ namespace Starcounter.Authorization.Tests.Middleware
                 _authenticationTicketProviderMock.Object,
                 _authCookieServiceMock.Object
             );
+            _authCookieServiceMock
+                .Setup(service => service.CookieName)
+                .Returns("cookie");
             _cookies = new List<string>();
             _next = () => new Response();
         }

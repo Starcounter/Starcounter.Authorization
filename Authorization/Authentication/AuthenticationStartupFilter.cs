@@ -48,7 +48,7 @@ namespace Starcounter.Authorization.Authentication
                         // probably the authentication ticket expired and the sign-in flow will be re-initiated
                         if (authCookie != null)
                         {
-                            response.Cookies.Add(authCookie);
+                            Handle.AddOutgoingCookie(_authCookieService.CookieName, authCookie);
                         }
 
                         return response;
@@ -57,7 +57,7 @@ namespace Starcounter.Authorization.Authentication
                     (string redirectTo, Request request) => {
                         var response = CreateRedirectionResponse(redirectTo);
                         _signOutService.SignOut();
-                        response.Cookies.Add(_authCookieService.CreateSignOutCookie());
+                        Handle.AddOutgoingCookie(_authCookieService.CookieName, _authCookieService.CreateSignOutCookie());
                         return response;
                     });
                 

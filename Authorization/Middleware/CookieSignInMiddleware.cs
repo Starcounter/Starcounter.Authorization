@@ -42,7 +42,7 @@ namespace Starcounter.Authorization.Middleware
             _authenticationTicketService.EnsureTicket();
             var authCookie = _authCookieService.CreateAuthCookie();
             var response = next();
-            response.Cookies.Add(authCookie);
+            Handle.AddOutgoingCookie(_authCookieService.CookieName, authCookie);
             return response;
         }
     }

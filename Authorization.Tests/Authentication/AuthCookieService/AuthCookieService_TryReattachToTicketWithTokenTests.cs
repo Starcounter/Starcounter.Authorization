@@ -6,7 +6,6 @@ using NUnit.Framework;
 using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Model;
 using Starcounter.Authorization.Tests.TestModel;
-using static Starcounter.Authorization.Authentication.AuthCookieService<Starcounter.Authorization.Tests.TestModel.ScUserAuthenticationTicket>;
 
 namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
 {
@@ -19,6 +18,8 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
         private List<string> _availableCookies;
         private ScUserAuthenticationTicket _ticket;
         private string _sessionId;
+
+        private const string CookieName = "scauthtoken";
 
         [SetUp]
         public void SetUp()

@@ -14,7 +14,6 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
         private Mock<ISecureRandom> _secureRandomMock;
         private ScUserAuthenticationTicket _ticket;
         private string _randomToken;
-        private string _returnedCookieName;
         private string _returnedCookieValue;
         private string _returnedCookieAttributes;
         private string _returnedCookieString;
@@ -70,14 +69,6 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
         }
 
         [Test]
-        public void ReturnedCookieNameIsCorrect()
-        {
-            Exercise();
-
-            _returnedCookieName.Should().Be(AuthCookieService<ScUserAuthenticationTicket>.CookieName);
-        }
-
-        [Test]
         public void ReturnsHttpOnlyCookieWithGlobalPath()
         {
 
@@ -94,8 +85,7 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
                 return;
             }
 
-            var matches = Regex.Match(_returnedCookieString, "^(?<name>[a-zA-Z]+)=(?<value>[a-zA-Z0-9]+);(?<other>.*)");
-            _returnedCookieName = matches.Groups["name"].Value;
+            var matches = Regex.Match(_returnedCookieString, "^(?<value>[a-zA-Z0-9]+);(?<other>.*)");
             _returnedCookieValue = matches.Groups["value"].Value;
             _returnedCookieAttributes = matches.Groups["other"].Value;
         }
