@@ -173,7 +173,7 @@ namespace Starcounter.Authorization
             services.TryAddTransient<ISignOutService, SignOutService<TAuthenticationTicket>>();
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, AuthenticationStartupFilter>());
             services.TryAddTransient<IAuthenticationUriProvider, AuthenticationUriProvider>();
-
+            services.TryAddTransient<IPostConfigureOptions<SecurityMiddlewareOptions>, DefaultSecurityMiddlewareOptions>();
             return services;
         }
 

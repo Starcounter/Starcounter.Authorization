@@ -17,12 +17,6 @@ namespace Starcounter.Authorization.Authentication
         public string RedirectionViewUri =>
             $"/{Application.Current}/Starcounter.Authorization.Redirection.html";
 
-        public Json CreateUnauthenticatedRedirection(string deniedUri) => new Json
-        {
-            ["Html"] = RedirectionViewUri,
-            ["RedirectUrl"] = UnauthenticatedUriTemplate.Replace("{?}", HttpUtility.UrlEncode(deniedUri))
-        };
-
         public string CreateSetTokenUri(string destinationUri) => SetTokenUriTemplate.Replace("{?}", destinationUri);
         public string CreateSignOutUri(string destinationUri) => SignOutUriTemplate.Replace("{?}", destinationUri);
     }
