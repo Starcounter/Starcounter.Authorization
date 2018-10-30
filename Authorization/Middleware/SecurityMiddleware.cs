@@ -1,5 +1,5 @@
 ﻿using System;
-using Starcounter.Authorization.Authentication;
+using Microsoft.Extensions.Options;
 using Starcounter.Startup.Routing;
 
 namespace Starcounter.Authorization.Middleware
@@ -7,15 +7,15 @@ namespace Starcounter.Authorization.Middleware
     internal class SecurityMiddleware : IPageMiddleware
     {
         private readonly PageSecurity.PageSecurity _pageSecurity;
-        private readonly IAuthenticationUriProvider _authenticationUriProvider;
+        private readonly Func<string, Json> _unauthenticatedResponseFactory;
 
         public SecurityMiddleware(
             PageSecurity.PageSecurity pageSecurity,
-            IAuthenticationUriProvider authenticationUriProvider
+            IOptions<SecurityMiddlewareOptions> options
                 )
         {
             _pageSecurity = pageSecurity;
-            _authenticationUriProvider = authenticationUriProvider;
+            _unauthenticatedResponseFactory = options.Value.UnauthenticatedResponseCreator;
         }
         
         public Response Run(RoutingInfo routingInfo, Func<Response> next)
@@ -24,7 +24,7 @@ namespace Starcounter.Authorization.Middleware
 
             if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Context).Result)
             {
-                return _authenticationUriProvider.CreateUnauthenticatedRedirection(routingInfo.Request.Uri);
+                return _unauthenticatedResponseFactory(routingInfo.Request.Uri);
             }
             return next();
         }

@@ -1,4 +1,7 @@
-﻿namespace Starcounter.Authorization
+﻿using System.Web;
+using Starcounter.Startup.Routing.Middleware;
+
+namespace Starcounter.Authorization
 {
     /// <summary>
     /// Provides various URIs and URI templates for handlers related to authentication and its blending.
@@ -29,13 +32,6 @@
         /// URI template for the handler of <see cref="CreateSetTokenUri"/>
         /// </summary>
         string SetTokenUriTemplate { get; }
-
-        /// <summary>
-        /// Returns a response which should be use if the user is not authenticated. This initiates the sign-in flow.
-        /// </summary>
-        /// <param name="deniedUri">The original URI that the user wished to access, relative to the application root</param>
-        /// <returns></returns>
-        Json CreateUnauthenticatedRedirection(string deniedUri);
 
         /// <summary>
         /// Returns a URI to which the application should redirect the user after successful sign-in, or whenever there is a need
