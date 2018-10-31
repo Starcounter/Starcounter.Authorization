@@ -12,7 +12,7 @@
     <RootNamespace>Starcounter.Authorization</RootNamespace>
     <ProjectGuid>{48CF4A36-C006-4649-BAD6-027E7962EFAE}</ProjectGuid>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <Version>3.5.0</Version>
+    <Version>3.5.1</Version>
     <Authors>Starcounter, joozek78</Authors>
     <PackageProjectUrl>https://github.com/Starcounter/authorization</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Starcounter/authorization</RepositoryUrl>
