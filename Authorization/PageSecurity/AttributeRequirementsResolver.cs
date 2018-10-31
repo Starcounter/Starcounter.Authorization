@@ -24,7 +24,7 @@ namespace Starcounter.Authorization.PageSecurity
             requirements.AddRange(await GatherPolicyRequirementsAsync(attributes));
             if (attributes.Any(attribute => attribute.Policy == null && attribute.Roles == null))
             {
-                requirements.Add(new DenyAnonymousAuthorizationRequirement());
+                requirements.AddRange((await _policyProvider.GetDefaultPolicyAsync()).Requirements);
             }
             return requirements;
         }

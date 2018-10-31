@@ -75,12 +75,14 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         }
 
         [Test]
-        public async Task IncludesDenyAnonymousRequirementFromEmptyAttribute()
+        public async Task IncludesDefaultPolicyRequirementFromEmptyAttribute()
         {
+            var expected = new DenyAnonymousAuthorizationRequirement();
+            _policyProviderMock.Setup(provider => provider.GetDefaultPolicyAsync())
+                .ReturnsAsync(new AuthorizationPolicy(new[] {expected}, new string[0]));
             var requirements = await _attributeRequirementsResolver.ResolveAsync(new[] { new AuthorizeAttribute(), });
 
-            requirements.Should().ContainSingle(authorizationRequirement =>
-                authorizationRequirement is DenyAnonymousAuthorizationRequirement);
+            requirements.Should().ContainSingle(authorizationRequirement => authorizationRequirement == expected);
         }
     }
 
