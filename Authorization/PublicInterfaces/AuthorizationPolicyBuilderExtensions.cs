@@ -13,9 +13,9 @@ namespace Starcounter.Authorization
         /// rules yet.
         /// </summary>
         /// <param name="builder">The builder to configure.</param>
-        public static void AllowAnonymous(this AuthorizationPolicyBuilder builder)
+        public static AuthorizationPolicyBuilder AllowAnonymous(this AuthorizationPolicyBuilder builder)
         {
-            builder.AddRequirements(AllowAnonymousRequirement);
+            return builder.AddRequirements(AllowAnonymousRequirement);
         }
     }
 }
