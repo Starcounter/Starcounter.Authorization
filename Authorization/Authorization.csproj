@@ -12,14 +12,13 @@
     <RootNamespace>Starcounter.Authorization</RootNamespace>
     <ProjectGuid>{48CF4A36-C006-4649-BAD6-027E7962EFAE}</ProjectGuid>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <Version>3.5.1</Version>
+    <Version>3.5.2</Version>
     <Authors>Starcounter, joozek78</Authors>
     <PackageProjectUrl>https://github.com/Starcounter/authorization</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Starcounter/authorization</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/Starcounter/authorization/blob/master/LICENSE</PackageLicenseUrl>
     <Description>Authorization helper library for Starcounter applications</Description>
-    <PackageReleaseNotes>Unauthenticated response can now be configured from app code. Use IServiceCollection.Configure&lt;SecurityMiddlewareOptions&gt;
-      ISignOutService is now public
+    <PackageReleaseNotes>Authorization now registers a global middleware to recognize cookies.
 </PackageReleaseNotes>
     <PackageTags>Starcounter</PackageTags>
   </PropertyGroup>
