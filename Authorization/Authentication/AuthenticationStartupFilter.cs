@@ -60,6 +60,16 @@ namespace Starcounter.Authorization.Authentication
                         Handle.AddOutgoingCookie(_authCookieService.CookieName, _authCookieService.CreateSignOutCookie());
                         return response;
                     });
+                Application.Current.Use(request =>
+                {
+                    if (request.IsStaticFileRequest)
+                    {
+                        return null;
+                    }
+                    Session.Ensure();
+                    _authCookieService.TryReattachToTicketWithToken(request.Cookies);
+                    return null;
+                });
                 
                 next(app);
             };
