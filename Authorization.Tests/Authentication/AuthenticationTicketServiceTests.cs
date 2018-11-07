@@ -99,12 +99,26 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void Current_ResetsExpirationTime()
+        public void Current_ResetsExpirationTime_WhenAnonymous()
+        {
+            var fakeNow = DateTimeOffset.FromUnixTimeSeconds(123456);
+            var ticketValidity = TimeSpan.FromHours(3);
+            _options.AnonymousTicketExpiration = ticketValidity;
+            _clockMock.SetupGet(clock => clock.UtcNow).Returns(fakeNow);
+
+            ExerciseCurrent();
+
+            _returnedAuthenticationTicket.ExpiresAt.Should().Be((fakeNow + ticketValidity).UtcDateTime);
+        }
+
+        [Test]
+        public void Current_ResetsExpirationTime_WhenAuthenticated()
         {
             var fakeNow = DateTimeOffset.FromUnixTimeSeconds(123456);
             var ticketValidity = TimeSpan.FromHours(3);
             _options.AuthenticatedTicketExpiration = ticketValidity;
             _clockMock.SetupGet(clock => clock.UtcNow).Returns(fakeNow);
+            _existingTicket.User = new User();
 
             ExerciseCurrent();
 
