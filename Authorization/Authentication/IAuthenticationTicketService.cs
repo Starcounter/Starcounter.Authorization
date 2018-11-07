@@ -13,16 +13,23 @@ namespace Starcounter.Authorization.Authentication
         TAuthenticationTicket GetCurrentAuthenticationTicket();
 
         /// <summary>
-        /// Returns the authentication ticket for current session, creating one if necessary.
-        /// If the preexisting ticket is expired, this method will delete it and return a new one.
-        /// </summary>
-        /// <returns></returns>
-        TAuthenticationTicket EnsureTicket();
-
-        /// <summary>
         /// Removes all expired tickets. This method is always safe to execute, but must be invoked on
         /// a scheduler thread.
         /// </summary>
         void CleanExpiredTickets();
+
+        /// <summary>
+        /// Finds a ticket using supplied token and attaches it to the current session. Returns true if ticket
+        /// was found.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns>true if ticket with supplied token was found and attached</returns>
+        bool AttachToToken(string token);
+
+        /// <summary>
+        /// Creates a brand new ticket.
+        /// </summary>
+        /// <returns></returns>
+        TAuthenticationTicket Create();
     }
 }

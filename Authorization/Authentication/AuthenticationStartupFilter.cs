@@ -40,19 +40,9 @@ namespace Starcounter.Authorization.Authentication
                     {
                         ["Html"] = _authenticationUriProvider.UnauthenticatedViewUri
                     });
+                // middleware will set the auth cookie
                 Handle.GET(_authenticationUriProvider.SetTokenUriTemplate,
-                    (string redirectTo, Request request) => {
-                        var response = CreateRedirectionResponse(redirectTo);
-                        var authCookie = _authCookieService.CreateAuthCookie();
-                        // if the cookie could not be set, then redirect the user to their destination
-                        // probably the authentication ticket expired and the sign-in flow will be re-initiated
-                        if (authCookie != null)
-                        {
-                            Handle.AddOutgoingCookie(_authCookieService.CookieName, authCookie);
-                        }
-
-                        return response;
-                    });
+                    (string redirectTo, Request request) => CreateRedirectionResponse(redirectTo));
                 Handle.GET(_authenticationUriProvider.SignOutUriTemplate,
                     (string redirectTo, Request request) => {
                         var response = CreateRedirectionResponse(redirectTo);
@@ -67,7 +57,7 @@ namespace Starcounter.Authorization.Authentication
                         return null;
                     }
                     Session.Ensure();
-                    _authCookieService.TryReattachToTicketWithToken(request.Cookies);
+                    _authCookieService.ReattachOrCreate(request.Cookies);
                     return null;
                 });
                 

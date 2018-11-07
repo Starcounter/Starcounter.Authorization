@@ -16,6 +16,7 @@ namespace Starcounter.Authorization.Authentication
         private readonly ISystemClock _systemClock;
         private readonly IScAuthenticationTicketRepository<TAuthenticationTicket> _scAuthenticationTicketRepository;
         private readonly ILogger _logger;
+        private readonly ISecureRandom _secureRandom;
         private readonly ITransactionFactory _transactionFactory;
         private readonly IOptions<AuthorizationOptions> _options;
 
@@ -25,6 +26,7 @@ namespace Starcounter.Authorization.Authentication
             ISystemClock systemClock,
             IScAuthenticationTicketRepository<TAuthenticationTicket> scAuthenticationTicketRepository,
             ILogger<AuthenticationTicketService<TAuthenticationTicket>> logger,
+            ISecureRandom secureRandom,
             ITransactionFactory transactionFactory)
         {
             _options = options;
@@ -32,6 +34,7 @@ namespace Starcounter.Authorization.Authentication
             _systemClock = systemClock;
             _scAuthenticationTicketRepository = scAuthenticationTicketRepository;
             _logger = logger;
+            _secureRandom = secureRandom;
             _transactionFactory = transactionFactory;
         }
 
@@ -62,32 +65,47 @@ namespace Starcounter.Authorization.Authentication
         }
 
         /// <inheritdoc />
-        public TAuthenticationTicket EnsureTicket()
-        {
-            var existingTicket = GetCurrentAuthenticationTicket();
-            if (existingTicket != null)
-            {
-                return existingTicket;
-            }
-
-            var currentSessionSessionId = _currentSessionProvider.CurrentSessionId
-                                          ?? throw new InvalidOperationException("Current session is null");
-            return _transactionFactory.ExecuteTransaction(() =>
-            {
-                var authenticationTicket = _scAuthenticationTicketRepository.Create();
-                authenticationTicket.SessionId = currentSessionSessionId;
-                authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.Value.NewTicketExpiration).UtcDateTime;
-                return authenticationTicket;
-            });
-        }
-
-        /// <inheritdoc />
         public void CleanExpiredTickets()
         {
             _transactionFactory.ExecuteTransaction(() =>
                 {
                     _scAuthenticationTicketRepository.DeleteExpired(_systemClock.UtcNow.UtcDateTime);
                 });
+        }
+
+        public bool AttachToToken(string token)
+        {
+            var currentSessionId = _currentSessionProvider.CurrentSessionId;
+            return _transactionFactory.ExecuteTransaction(() =>
+            {
+                var existingTicket = _scAuthenticationTicketRepository.FindByPersistenceToken(token);
+                if (existingTicket == null)
+                {
+                    return false;
+                }
+                if (!existingTicket.SessionId.Contains(currentSessionId))
+                {
+                    existingTicket.SessionId += ";" + currentSessionId;
+                }
+
+                return true;
+            });
+        }
+
+        public TAuthenticationTicket Create()
+        {
+            var currentSessionId = _currentSessionProvider.CurrentSessionId ?? throw new InvalidOperationException("Current session is null");
+            return _transactionFactory.ExecuteTransaction(() =>
+            {
+                var authenticationTicket = _scAuthenticationTicketRepository.Create();
+                authenticationTicket.SessionId = currentSessionId;
+                authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.Value.NewTicketExpiration).UtcDateTime;
+                // Source: https://www.owasp.org/index.php/Session_Management_Cheat_Sheet#Session_ID_Length
+                var bytesLength = 16;
+                authenticationTicket.PersistenceToken = _secureRandom.GenerateRandomHexString(bytesLength);
+
+                return authenticationTicket;
+            });
         }
     }
 }

@@ -25,7 +25,7 @@ namespace Starcounter.Authorization.SignIn
         {
             try
             {
-                var authenticationTicket = _authenticationTicketService.EnsureTicket();
+                var authenticationTicket = _authenticationTicketService.GetCurrentAuthenticationTicket();
                 authenticationTicket.User = user;
                 _logger.LogInformation("User {User} signed in", user);
             }

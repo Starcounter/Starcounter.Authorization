@@ -1,48 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using Starcounter.Authorization.DatabaseAccess;
-using Starcounter.Authorization.Model;
-using Starcounter.XSON.Interfaces;
 
 namespace Starcounter.Authorization.Authentication
 {
     internal class AuthCookieService<TAuthenticationTicket> : IAuthCookieService
         where TAuthenticationTicket : class, IScAuthenticationTicket
     {
-        private readonly IScAuthenticationTicketRepository<TAuthenticationTicket> _authenticationTicketRepository;
-        private readonly ICurrentSessionProvider _currentSessionProvider;
-        private readonly ISecureRandom _secureRandom;
         private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
-        private readonly ITransactionFactory _transactionFactory;
 
         public AuthCookieService(
-            IScAuthenticationTicketRepository<TAuthenticationTicket> authenticationTicketRepository,
-            ICurrentSessionProvider currentSessionProvider,
-            ISecureRandom secureRandom,
-            IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService,
-            ITransactionFactory transactionFactory)
+            IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService
+            )
         {
-            _authenticationTicketRepository = authenticationTicketRepository;
-            _currentSessionProvider = currentSessionProvider;
-            _secureRandom = secureRandom;
             _authenticationTicketService = authenticationTicketService;
-            _transactionFactory = transactionFactory;
         }
 
-        /// <inheritdoc />
-        public string CreateAuthCookie()
+        public string CreateAuthCookie(TAuthenticationTicket authenticationTicket)
         {
-            var ticket = _authenticationTicketService.GetCurrentAuthenticationTicket();
-            if (ticket == null)
-            {
-                return null;
-            }
-            // Source: https://www.owasp.org/index.php/Session_Management_Cheat_Sheet#Session_ID_Length
-            var bytesLength = 16;
-            var token = _secureRandom.GenerateRandomHexString(bytesLength);
-            _transactionFactory.ExecuteTransaction(() => ticket.PersistenceToken = token);
-            return $"{token};HttpOnly;Path=/";
+            return $"{authenticationTicket.PersistenceToken};HttpOnly;Path=/";
         }
 
         /// <inheritdoc />
@@ -57,6 +32,10 @@ namespace Starcounter.Authorization.Authentication
         /// <inheritdoc />
         public bool TryReattachToTicketWithToken(IEnumerable<string> availableCookies)
         {
+            if (_authenticationTicketService.GetCurrentAuthenticationTicket() != null)
+            {
+                return true;
+            }
             var cookie = availableCookies
                 .FirstOrDefault(c => c.StartsWith($"{CookieName}="));
             if (cookie == null)
@@ -66,14 +45,16 @@ namespace Starcounter.Authorization.Authentication
             var token = cookie
                 .Split(new []{ '=' },2)[1] // '=' is guaranteed to exist because of the filter above
                 .Split(';')[0]; // first part is always guaranteed to exist
-            var ticket = _authenticationTicketRepository.FindByPersistenceToken(token);
-            if (ticket == null)
-            {
-                return false;
-            }
+            return _authenticationTicketService.AttachToToken(token);
+        }
 
-            _transactionFactory.ExecuteTransaction(() => ticket.SessionId = _currentSessionProvider.CurrentSessionId);
-            return true;
+        public void ReattachOrCreate(IEnumerable<string> cookies)
+        {
+            if (!TryReattachToTicketWithToken(cookies))
+            {
+                var authenticationTicket = _authenticationTicketService.Create();
+                Handle.AddOutgoingCookie(CookieName, CreateAuthCookie(authenticationTicket));
+            }
         }
     }
 }

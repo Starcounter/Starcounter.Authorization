@@ -35,7 +35,6 @@ namespace Starcounter.Authorization.Tests
                 .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket>();
 
             ExpectMiddleware<SecurityMiddleware>();
-            ExpectMiddleware<CookieSignInMiddleware<ScUserAuthenticationTicket>>();
             GetRequiredService<IAuthorizationEnforcement>();
         }
 
@@ -46,7 +45,6 @@ namespace Starcounter.Authorization.Tests
                 .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket, User>();
 
             ExpectMiddleware<SecurityMiddleware>();
-            ExpectMiddleware<CookieSignInMiddleware<ScUserAuthenticationTicket>>();
             GetRequiredService<IAuthorizationEnforcement>();
             GetRequiredService<ICurrentUserProvider<User>>();
             GetRequiredService<IAuthenticationBackend>().Should()
@@ -60,28 +58,6 @@ namespace Starcounter.Authorization.Tests
                 .AddAuthorization()
                 .AddSingleton(Mock.Of<IAuthenticationBackend>())
                 .AddSecurityMiddleware<ScUserAuthenticationTicket>();
-
-            ExpectMiddleware<SecurityMiddleware>();
-        }
-
-        [Test]
-        public void AddAuthenticationConfigures_CookieSignInMiddleware()
-        {
-            _serviceCollection
-                .AddAuthorization()
-                .AddSingleton(Mock.Of<IAuthenticationBackend>())
-                .AddAuthentication<ScUserAuthenticationTicket>();
-
-            ExpectMiddleware<CookieSignInMiddleware<ScUserAuthenticationTicket>>();
-        }
-
-        [Test]
-        public void AddAuthenticationConfigures_SecurityMiddleware()
-        {
-            _serviceCollection
-                .AddAuthorization()
-                .AddSingleton(Mock.Of<IAuthenticationBackend>())
-                .AddAuthentication<ScUserAuthenticationTicket>();
 
             ExpectMiddleware<SecurityMiddleware>();
         }

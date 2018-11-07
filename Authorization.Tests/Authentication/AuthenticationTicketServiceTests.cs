@@ -37,6 +37,7 @@ namespace Starcounter.Authorization.Tests.Authentication
                 _clockMock.Object,
                 _authenticationTicketRepositoryMock.Object,
                 Mock.Of<ILogger<AuthenticationTicketService<ScUserAuthenticationTicket>>>(),
+                Mock.Of<ISecureRandom>(),
                 new FakeTransactionFactory());
 
             _starcounterSessionId = "sessionId";
@@ -111,25 +112,17 @@ namespace Starcounter.Authorization.Tests.Authentication
         }
 
         [Test]
-        public void Ensure_ReturnsExistingTicketIfThereIsOne()
-        {
-            ExerciseEnsure();
-
-            _returnedAuthenticationTicket.Should().BeSameAs(_existingTicket);
-        }
-
-        [Test]
-        public void Ensure_SetsCurrentSessionIdInUserSession()
+        public void Create_SetsCurrentSessionIdInUserSession()
         {
             _existingTicket = null;
 
-            ExerciseEnsure();
+            ExerciseCreate();
 
             _returnedAuthenticationTicket.SessionId.Should().Be(_starcounterSessionId);
         }
 
         [Test]
-        public void Ensure_SetsExpirationTimeAccordingToCurrentTimeAndOptions()
+        public void Create_SetsExpirationTimeAccordingToCurrentTimeAndOptions()
         {
             _existingTicket = null;
             var fakeNow = DateTimeOffset.FromUnixTimeSeconds(123456);
@@ -137,19 +130,19 @@ namespace Starcounter.Authorization.Tests.Authentication
             _options.NewTicketExpiration = ticketValidity;
             _clockMock.SetupGet(clock => clock.UtcNow).Returns(fakeNow);
 
-            ExerciseEnsure();
+            ExerciseCreate();
 
             _returnedAuthenticationTicket.ExpiresAt.Should().Be((fakeNow + ticketValidity).UtcDateTime);
         }
 
         [Test]
-        public void Ensure_ThrowsWhenCurrentSessionIsNull()
+        public void Create_ThrowsWhenCurrentSessionIsNull()
         {
             _sessionProviderMock
                 .SetupGet(provider => provider.CurrentSessionId)
                 .Returns((string)null);
 
-            new Action(ExerciseEnsure).Should().Throw<InvalidOperationException>();
+            new Action(ExerciseCreate).Should().Throw<InvalidOperationException>();
         }
 
         private void ExerciseCurrent()
@@ -157,9 +150,9 @@ namespace Starcounter.Authorization.Tests.Authentication
             _returnedAuthenticationTicket = _sut.GetCurrentAuthenticationTicket();
         }
 
-        private void ExerciseEnsure()
+        private void ExerciseCreate()
         {
-            _returnedAuthenticationTicket = _sut.EnsureTicket();
+            _returnedAuthenticationTicket = _sut.Create();
         }
     }
 }

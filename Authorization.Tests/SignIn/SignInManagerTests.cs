@@ -36,7 +36,7 @@ namespace Starcounter.Authorization.Tests.SignIn
 
             _scUserAuthenticationTicket = new ScUserAuthenticationTicket();
             _authenticationTicketProviderMock
-                .Setup(provider => provider.EnsureTicket())
+                .Setup(provider => provider.GetCurrentAuthenticationTicket())
                 .Returns(_scUserAuthenticationTicket);
         }
 

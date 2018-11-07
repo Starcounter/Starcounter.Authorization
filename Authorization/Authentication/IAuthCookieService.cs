@@ -5,12 +5,6 @@ namespace Starcounter.Authorization.Authentication
     internal interface IAuthCookieService
     {
         /// <summary>
-        /// Generates a persistent token for the current authentication ticket and associates it with said token.
-        /// </summary>
-        /// <returns>The cookie that should be sent to the browser. It is the value of the cookie and its attributes, meaning its name should be appended</returns>
-        string CreateAuthCookie();
-
-        /// <summary>
         /// Generates value for Set-Cookie header that should be sent to the browser to expire any stored auth cookie.
         /// Does not remove or invalidate the authentication ticket itself
         /// </summary>
@@ -32,5 +26,11 @@ namespace Starcounter.Authorization.Authentication
         /// <param name="availableCookies"></param>
         /// <returns>true if the session has been reattached, false otherwise</returns>
         bool TryReattachToTicketWithToken(IEnumerable<string> availableCookies);
+
+        /// <summary>
+        /// Calls <see cref="TryReattachToTicketWithToken"/> and if that fails, creates a new ticket and sets a cookie for it in current response
+        /// </summary>
+        /// <param name="cookies"></param>
+        void ReattachOrCreate(IEnumerable<string> cookies);
     }
 }

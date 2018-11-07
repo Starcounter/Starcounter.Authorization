@@ -12,45 +12,32 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
     public class AuthCookieService_TryReattachToTicketWithTokenTests
     {
         private AuthCookieService<ScUserAuthenticationTicket> _sut;
-        private Mock<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>> _ticketRepositoryMock;
-        private Mock<ICurrentSessionProvider> _currentSessionProviderMock;
         private bool _result;
         private List<string> _availableCookies;
-        private ScUserAuthenticationTicket _ticket;
-        private string _sessionId;
+        private Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>> _ticketServiceMock;
+        private string _token;
 
         private const string CookieName = "scauthtoken";
 
         [SetUp]
         public void SetUp()
         {
-            _ticketRepositoryMock = new Mock<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>>();
-            _currentSessionProviderMock = new Mock<ICurrentSessionProvider>();
+            _ticketServiceMock = new Mock<IAuthenticationTicketService<ScUserAuthenticationTicket>>();
             _sut = new AuthCookieService<ScUserAuthenticationTicket>(
-                _ticketRepositoryMock.Object,
-                _currentSessionProviderMock.Object,
-                Mock.Of<ISecureRandom>(),
-                Mock.Of<IAuthenticationTicketService<ScUserAuthenticationTicket>>(),
-                new FakeTransactionFactory());
-            var token = "token";
-            _availableCookies = new List<string>() { $"{CookieName}={token}" };
-            _ticket = new ScUserAuthenticationTicket();
-            _sessionId = "sessionId";
-            _ticketRepositoryMock
-                .Setup(repository => repository.FindByPersistenceToken(token))
-                .Returns(() => _ticket);
-            _currentSessionProviderMock.Setup(provider => provider.CurrentSessionId)
-                .Returns(() => _sessionId);
+                _ticketServiceMock.Object
+                );
+            _token = "token";
+            _availableCookies = new List<string>() { $"{CookieName}={_token}" };
         }
 
         [Test]
-        public void ReturnsFalseIfNoTicketIsFoundForToken()
+        public void ReturnsTrueIfThereIsAlreadyATicket()
         {
-            _ticket = null;
-
+            _ticketServiceMock
+                .Setup(service => service.GetCurrentAuthenticationTicket())
+                .Returns(new ScUserAuthenticationTicket());
             Exercise();
-
-            _result.Should().BeFalse();
+            _result.Should().BeTrue();
         }
 
         [TestCaseSource(nameof(NonMatchingCookiesSets))]
@@ -76,9 +63,9 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
         public bool HandlesVariousFormats(string cookie, string token)
         {
             _availableCookies = new List<string>(){cookie};
-            _ticketRepositoryMock
-                .Setup(repository => repository.FindByPersistenceToken(token))
-                .Returns(() => _ticket);
+            _ticketServiceMock
+                .Setup(service => service.AttachToToken(token))
+                .Returns(() => true);
 
             Exercise();
 
@@ -98,19 +85,11 @@ namespace Starcounter.Authorization.Tests.Authentication.AuthCookieService
         }
 
         [Test]
-        public void ReturnsTrue()
-        {
-            Exercise();
-
-            _result.Should().BeTrue();
-        }
-
-        [Test]
         public void AttachesTicketToCurrentSession()
         {
             Exercise();
 
-            _ticket.SessionId.Should().Be(_sessionId);
+            _ticketServiceMock.Verify(service => service.AttachToToken(_token));
         }
 
         private void Exercise()

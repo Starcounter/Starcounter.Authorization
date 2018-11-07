@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Starcounter.Linq;
 
 namespace Starcounter.Authorization.Model
@@ -11,7 +12,7 @@ namespace Starcounter.Authorization.Model
         public TAuthenticationTicket FindBySessionId(string sessionId)
         {
             return DbLinq.Objects<TAuthenticationTicket>()
-                .FirstOrDefault(ticket => ticket.SessionId == sessionId);
+                .FirstOrDefault(ticket => ticket.SessionId.Contains(sessionId));
         }
 
         public TAuthenticationTicket FindByPersistenceToken(string token)
