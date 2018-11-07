@@ -10,10 +10,16 @@ namespace Starcounter.Authorization.Settings
     internal class AuthorizationOptions
     {
         /// <summary>
-        /// Authentication tickets will expire after this time of inactivity.
+        /// Authenticated tickets (i.e. those with non-null User) will expire after this time of inactivity.
         /// </summary>
-        public TimeSpan NewTicketExpiration { get; set; } =
+        public TimeSpan AuthenticatedTicketExpiration { get; set; } =
             TimeSpan.FromSeconds(AuthorizationSettings.DefaultNewTicketExpirationSeconds);
+        
+        /// <summary>
+        /// Anonymous tickets (i.e. those with null User) will expire after this time of inactivity.
+        /// </summary>
+        public TimeSpan AnonymousTicketExpiration { get; set; } =
+            TimeSpan.FromSeconds(AuthorizationSettings.DefaultAnonymousTicketExpiration);
         
         /// <summary>
         /// Interval of expired tickets cleanup. 0 if no periodic cleanup should be performed.

@@ -29,16 +29,6 @@ namespace Starcounter.Authorization.Tests
         }
 
         [Test]
-        public void AddStarcounterAuthorizationConfigures_AllServices()
-        {
-            _serviceCollection
-                .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket>();
-
-            ExpectMiddleware<SecurityMiddleware>();
-            GetRequiredService<IAuthorizationEnforcement>();
-        }
-
-        [Test]
         public void AddStarcounterAuthorizationWithUserConfigures_AllServices()
         {
             _serviceCollection

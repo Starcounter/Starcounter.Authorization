@@ -12,8 +12,8 @@ namespace Starcounter.Authorization.SignIn
     {
         public static IServiceCollection
             AddSignInManager<TAuthenticationTicket, TUser>(this IServiceCollection serviceCollection)
-            where TAuthenticationTicket : IScUserAuthenticationTicket<TUser>, new()
-            where TUser : IUser
+            where TAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>, new()
+            where TUser : class, IUser
         {
             serviceCollection.TryAddTransient<IClaimDbConverter, ClaimDbConverter>();
             serviceCollection.TryAddTransient<IUserClaimsGatherer, UserClaimsGatherer>();
@@ -21,7 +21,7 @@ namespace Starcounter.Authorization.SignIn
             serviceCollection.TryAddSingleton<ICurrentSessionProvider>(_ => new DefaultCurrentSessionProvider());
             serviceCollection.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket>>();
             serviceCollection.TryAddTransient<ISignInManager<TUser>, SignInManager<TAuthenticationTicket, TUser>>();
-            serviceCollection.AddAuthenticationTicketProvider<TAuthenticationTicket>();
+            serviceCollection.AddAuthenticationTicketProvider<TAuthenticationTicket, TUser>();
 
             return serviceCollection;
         }

@@ -14,7 +14,7 @@ namespace Starcounter.Authorization.Tests.Authentication
 {
     public class AuthenticationTicketServiceTests
     {
-        private AuthenticationTicketService<ScUserAuthenticationTicket> _sut;
+        private AuthenticationTicketService<ScUserAuthenticationTicket, User> _sut;
         private ScUserAuthenticationTicket _returnedAuthenticationTicket;
         private Mock<ICurrentSessionProvider> _sessionProviderMock;
         private Mock<ISystemClock> _clockMock;
@@ -31,12 +31,12 @@ namespace Starcounter.Authorization.Tests.Authentication
             _clockMock = new Mock<ISystemClock>();
             _options = new AuthorizationOptions();
             _authenticationTicketRepositoryMock = new Mock<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>>();
-            _sut = new AuthenticationTicketService<ScUserAuthenticationTicket>(
+            _sut = new AuthenticationTicketService<ScUserAuthenticationTicket, User>(
                 Options.Create(_options), 
                 _sessionProviderMock.Object,
                 _clockMock.Object,
                 _authenticationTicketRepositoryMock.Object,
-                Mock.Of<ILogger<AuthenticationTicketService<ScUserAuthenticationTicket>>>(),
+                Mock.Of<ILogger<AuthenticationTicketService<ScUserAuthenticationTicket, User>>>(),
                 Mock.Of<ISecureRandom>(),
                 new FakeTransactionFactory());
 
@@ -103,7 +103,7 @@ namespace Starcounter.Authorization.Tests.Authentication
         {
             var fakeNow = DateTimeOffset.FromUnixTimeSeconds(123456);
             var ticketValidity = TimeSpan.FromHours(3);
-            _options.NewTicketExpiration = ticketValidity;
+            _options.AuthenticatedTicketExpiration = ticketValidity;
             _clockMock.SetupGet(clock => clock.UtcNow).Returns(fakeNow);
 
             ExerciseCurrent();
@@ -127,7 +127,7 @@ namespace Starcounter.Authorization.Tests.Authentication
             _existingTicket = null;
             var fakeNow = DateTimeOffset.FromUnixTimeSeconds(123456);
             var ticketValidity = TimeSpan.FromHours(3);
-            _options.NewTicketExpiration = ticketValidity;
+            _options.AnonymousTicketExpiration = ticketValidity;
             _clockMock.SetupGet(clock => clock.UtcNow).Returns(fakeNow);
 
             ExerciseCreate();

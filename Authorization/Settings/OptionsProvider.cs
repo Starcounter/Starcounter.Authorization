@@ -22,7 +22,7 @@ namespace Starcounter.Authorization.Settings
                 return new AuthorizationOptions
                 {
                     TicketCleanupInterval = TimeSpan.FromSeconds(settings.TicketCleanupIntervalSeconds),
-                    NewTicketExpiration = TimeSpan.FromSeconds(settings.NewTicketExpirationSeconds)
+                    AuthenticatedTicketExpiration = TimeSpan.FromSeconds(settings.NewTicketExpirationSeconds)
                 };
             }
         }

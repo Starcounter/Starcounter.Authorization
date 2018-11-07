@@ -25,7 +25,10 @@ namespace Starcounter.Authorization.Authentication
             var ticket = _authenticationTicketService.GetCurrentAuthenticationTicket();
             if (ticket != null)
             {
-                _transactionFactory.ExecuteTransaction(() => _authenticationTicketRepository.Delete(ticket));
+                _transactionFactory.ExecuteTransaction(() =>
+                {
+                    _authenticationTicketRepository.Delete(ticket);
+                });
             }
         }
             

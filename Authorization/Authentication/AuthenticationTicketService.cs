@@ -8,9 +8,10 @@ using Starcounter.Authorization.SignIn;
 
 namespace Starcounter.Authorization.Authentication
 {
-    internal class AuthenticationTicketService<TAuthenticationTicket> :
+    internal class AuthenticationTicketService<TAuthenticationTicket, TUser> :
         IAuthenticationTicketService<TAuthenticationTicket>
-        where TAuthenticationTicket : IScAuthenticationTicket
+        where TAuthenticationTicket : IScUserAuthenticationTicket<TUser>
+        where TUser : IMinimalUser
     {
         private readonly ICurrentSessionProvider _currentSessionProvider;
         private readonly ISystemClock _systemClock;
@@ -25,7 +26,7 @@ namespace Starcounter.Authorization.Authentication
             ICurrentSessionProvider currentSessionProvider,
             ISystemClock systemClock,
             IScAuthenticationTicketRepository<TAuthenticationTicket> scAuthenticationTicketRepository,
-            ILogger<AuthenticationTicketService<TAuthenticationTicket>> logger,
+            ILogger<AuthenticationTicketService<TAuthenticationTicket, TUser>> logger,
             ISecureRandom secureRandom,
             ITransactionFactory transactionFactory)
         {
@@ -60,7 +61,12 @@ namespace Starcounter.Authorization.Authentication
                 _transactionFactory.ExecuteTransaction(() => _scAuthenticationTicketRepository.Delete(authenticationTicket));
                 return default(TAuthenticationTicket);
             }
-            _transactionFactory.ExecuteTransaction(() => authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.Value.NewTicketExpiration).UtcDateTime);
+            _transactionFactory.ExecuteTransaction(() =>
+            {
+                var addToExpiration = authenticationTicket.User == null ? _options.Value.AnonymousTicketExpiration : _options.Value.AuthenticatedTicketExpiration;
+                return authenticationTicket.ExpiresAt =
+                        (_systemClock.UtcNow + addToExpiration).UtcDateTime;
+            });
             return authenticationTicket;
         }
 
@@ -99,7 +105,7 @@ namespace Starcounter.Authorization.Authentication
             {
                 var authenticationTicket = _scAuthenticationTicketRepository.Create();
                 authenticationTicket.SessionId = currentSessionId;
-                authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.Value.NewTicketExpiration).UtcDateTime;
+                authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.Value.AnonymousTicketExpiration).UtcDateTime;
                 // Source: https://www.owasp.org/index.php/Session_Management_Cheat_Sheet#Session_ID_Length
                 var bytesLength = 16;
                 authenticationTicket.PersistenceToken = _secureRandom.GenerateRandomHexString(bytesLength);
