@@ -42,12 +42,12 @@ namespace Starcounter.Authorization.Authentication
         /// <inheritdoc />
         public TAuthenticationTicket GetCurrentAuthenticationTicket()
         {
-            var starcounterSessionId = _currentSessionProvider.CurrentSessionId;
-            if (starcounterSessionId == null)
+            var currentSession = _currentSessionProvider.CurrentSession;
+            if (currentSession == null)
             {
                 return default(TAuthenticationTicket);
             }
-            var authenticationTicket = _scAuthenticationTicketRepository.FindBySessionId(starcounterSessionId);
+            var authenticationTicket = _scAuthenticationTicketRepository.FindBySession(currentSession);
             if (authenticationTicket == null)
             {
                 return default(TAuthenticationTicket);
@@ -81,7 +81,7 @@ namespace Starcounter.Authorization.Authentication
 
         public bool AttachToToken(string token)
         {
-            var currentSessionId = _currentSessionProvider.CurrentSessionId;
+            var currentSession = _currentSessionProvider.CurrentSession;
             return _transactionFactory.ExecuteTransaction(() =>
             {
                 var existingTicket = _scAuthenticationTicketRepository.FindByPersistenceToken(token);
@@ -89,10 +89,8 @@ namespace Starcounter.Authorization.Authentication
                 {
                     return false;
                 }
-                if (!existingTicket.SessionId.Contains(currentSessionId))
-                {
-                    existingTicket.SessionId += ";" + currentSessionId;
-                }
+
+                _scAuthenticationTicketRepository.AssociateWithSession(existingTicket, currentSession);
 
                 return true;
             });
@@ -100,15 +98,15 @@ namespace Starcounter.Authorization.Authentication
 
         public TAuthenticationTicket Create()
         {
-            var currentSessionId = _currentSessionProvider.CurrentSessionId ?? throw new InvalidOperationException("Current session is null");
+            var currentSession = _currentSessionProvider.CurrentSession ?? throw new InvalidOperationException("Current session is null");
             return _transactionFactory.ExecuteTransaction(() =>
             {
                 var authenticationTicket = _scAuthenticationTicketRepository.Create();
-                authenticationTicket.SessionId = currentSessionId;
                 authenticationTicket.ExpiresAt = (_systemClock.UtcNow + _options.Value.AnonymousTicketExpiration).UtcDateTime;
                 // Source: https://www.owasp.org/index.php/Session_Management_Cheat_Sheet#Session_ID_Length
                 var bytesLength = 16;
                 authenticationTicket.PersistenceToken = _secureRandom.GenerateRandomHexString(bytesLength);
+                _scAuthenticationTicketRepository.AssociateWithSession(authenticationTicket, currentSession);
 
                 return authenticationTicket;
             });

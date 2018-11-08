@@ -30,18 +30,19 @@ namespace Starcounter.Authorization
         /// <param name="services">Service collection to add to. This will be modified, not copied, by this method.</param>
         /// <param name="configure">Configuration of authorization rules. This will be passed to <see cref="AuthorizationServiceCollectionExtensions.AddAuthorization(IServiceCollection)"/>.</param>
         /// <returns>Original service collection, with new services added.</returns>
-        public static IServiceCollection AddStarcounterAuthorization<TAuthorizationSettings, TAuthenticationTicket, TUser>(
+        public static IServiceCollection AddStarcounterAuthorization<TAuthorizationSettings, TAuthenticationTicket, TTicketToSession, TUser>(
             this IServiceCollection services,
             Action<Microsoft.AspNetCore.Authorization.AuthorizationOptions> configure = null)
             where TAuthorizationSettings: class, IAuthorizationSettings, new()
             where TAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>, new()
+            where TTicketToSession : ITicketToSession<TAuthenticationTicket>, new()
             where TUser : class, IUser
         {
             // it's important this comes first, because it enables the use of IOptions<AuthorizationOptions>
             AddAuthorizationSettings<TAuthorizationSettings>(services);
-            AddCurrentUserProvider<TAuthenticationTicket, TUser>(services);
+            AddCurrentUserProvider<TAuthenticationTicket, TTicketToSession, TUser>(services);
             AddUserAuthenticationBackend<TAuthenticationTicket, TUser>(services);
-            AddAuthenticationTicketProvider<TAuthenticationTicket, TUser>(services);
+            AddAuthenticationTicketProvider<TAuthenticationTicket, TTicketToSession, TUser>(services);
             AddCookieSignInMiddleware<TAuthenticationTicket>(services);
             AddSecurityMiddleware<TAuthenticationTicket>(services);
             if (configure != null)
@@ -63,12 +64,13 @@ namespace Starcounter.Authorization
         /// <param name="services">Service collection to add to. This will be modified, not copied, by this method.</param>
         /// <returns>Original service collection, with new services added.</returns>
         public static IServiceCollection
-            AddCurrentUserProvider<TUserAuthenticationTicket, TUser>(this IServiceCollection services)
+            AddCurrentUserProvider<TUserAuthenticationTicket, TTicketToSession, TUser>(this IServiceCollection services)
             where TUserAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>, new()
+            where TTicketToSession : ITicketToSession<TUserAuthenticationTicket>, new()
             where TUser : class, IUser
         {
             services.TryAddTransient<ICurrentUserProvider<TUser>, CurrentUserProvider<TUserAuthenticationTicket, TUser>>();
-            AddAuthenticationTicketProvider<TUserAuthenticationTicket, TUser>(services);
+            AddAuthenticationTicketProvider<TUserAuthenticationTicket, TTicketToSession, TUser>(services);
             return services;
         }
 
@@ -129,14 +131,15 @@ namespace Starcounter.Authorization
             return services;
         }
 
-        internal static void AddAuthenticationTicketProvider<TAuthenticationTicket, TUser>(this IServiceCollection services)
+        internal static void AddAuthenticationTicketProvider<TAuthenticationTicket, TTicketToSession, TUser>(this IServiceCollection services)
             where TAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>, new()
+            where TTicketToSession : ITicketToSession<TAuthenticationTicket>, new()
             where TUser : class, IUser
         {
             services.TryAddTransient<ISystemClock, SystemClock>();
             services.TryAddTransient<ITransactionFactory, StarcounterTransactionFactory>();
             services.TryAddTransient<ICurrentSessionProvider, DefaultCurrentSessionProvider>();
-            services.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket>>();
+            services.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket, TTicketToSession>>();
             services.TryAddTransient<IAuthenticationTicketService<TAuthenticationTicket>, AuthenticationTicketService<TAuthenticationTicket, TUser>>();
             services.TryAddTransient<ISecureRandom, SecureRandom>();
             services.TryAddEnumerable(ServiceDescriptor.Transient<IStartupFilter, CleanupStartupFilter<TAuthenticationTicket>>());

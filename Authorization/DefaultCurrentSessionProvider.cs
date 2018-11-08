@@ -2,6 +2,6 @@
 {
     internal class DefaultCurrentSessionProvider : ICurrentSessionProvider
     {
-        public string CurrentSessionId => Session.Current?.SessionId;
+        public Session CurrentSession => Session.Ensure();
     }
 }

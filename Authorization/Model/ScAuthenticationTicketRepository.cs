@@ -1,18 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using Starcounter.Linq;
 
 namespace Starcounter.Authorization.Model
 {
-    internal class ScAuthenticationTicketRepository<TAuthenticationTicket> : IScAuthenticationTicketRepository<TAuthenticationTicket> 
-        where TAuthenticationTicket : IScAuthenticationTicket, new()
+    internal class ScAuthenticationTicketRepository<TAuthenticationTicket, TTicketToSession> : IScAuthenticationTicketRepository<TAuthenticationTicket> 
+        where TAuthenticationTicket : class, IScAuthenticationTicket, new()
+        where TTicketToSession : ITicketToSession<TAuthenticationTicket>, new()
     {
-        public TAuthenticationTicket FindBySessionId(string sessionId)
+        public TAuthenticationTicket FindBySession(Session session)
         {
-            return DbLinq.Objects<TAuthenticationTicket>()
-                .FirstOrDefault(ticket => ticket.SessionId.Contains(sessionId));
+            return Db.SQL<TAuthenticationTicket>(
+                $"select a.{nameof(ITicketToSession<TAuthenticationTicket>.Ticket)} from {typeof(TTicketToSession)}" +
+                $" a where {nameof(ITicketToSession<TAuthenticationTicket>.SessionId)} = ?",
+                session.SessionId)
+                .FirstOrDefault();
         }
 
         public TAuthenticationTicket FindByPersistenceToken(string token)
@@ -23,6 +25,11 @@ namespace Starcounter.Authorization.Model
 
         public void Delete(TAuthenticationTicket ticket)
         {
+            foreach (var ticketToSession in DbLinq.Objects<TTicketToSession>().Where(tts => tts.Ticket == ticket))
+            {
+                ticketToSession.Delete();
+            }
+
             ticket.Delete();
         }
 
@@ -35,6 +42,15 @@ namespace Starcounter.Authorization.Model
         {
             DbLinq.Objects<TAuthenticationTicket>()
                 .Delete(ticket => ticket.ExpiresAt < now);
+        }
+
+        public void AssociateWithSession(TAuthenticationTicket ticket, Session session)
+        {
+            new TTicketToSession()
+            {
+                SessionId = session.SessionId,
+                Ticket = ticket
+            };
         }
     }
 }

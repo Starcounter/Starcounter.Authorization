@@ -32,7 +32,7 @@ namespace Starcounter.Authorization.Tests
         public void AddStarcounterAuthorizationWithUserConfigures_AllServices()
         {
             _serviceCollection
-                .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket, User>();
+                .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket, TicketToSession, User>();
 
             ExpectMiddleware<SecurityMiddleware>();
             GetRequiredService<IAuthorizationEnforcement>();
@@ -71,14 +71,14 @@ namespace Starcounter.Authorization.Tests
         [Test]
         public void AddSignInManagerConfigures_SignInManager()
         {
-            _serviceCollection.AddSignInManager<ScUserAuthenticationTicket, User>();
+            _serviceCollection.AddSignInManager<ScUserAuthenticationTicket, TicketToSession, User>();
             GetRequiredService<ISignInManager<User>>();
         }
 
         [Test]
         public void AddUserConfigurationConfigures_CurrentUserProvider()
         {
-            _serviceCollection.AddCurrentUserProvider<ScUserAuthenticationTicket, User>();
+            _serviceCollection.AddCurrentUserProvider<ScUserAuthenticationTicket, TicketToSession, User>();
             GetRequiredService<ICurrentUserProvider<User>>();
         }
 

@@ -2,6 +2,6 @@
 {
     internal interface ICurrentSessionProvider
     {
-        string CurrentSessionId { get; }
+        Session CurrentSession { get; }
     }
 }

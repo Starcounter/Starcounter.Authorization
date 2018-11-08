@@ -8,7 +8,9 @@ using Starcounter.Authorization.Authentication;
 using Starcounter.Authorization.Model;
 using Starcounter.Authorization.Settings;
 using Starcounter.Authorization.SignIn;
+using Starcounter.Authorization.Tests.PageSecurity.Utils.TestUtils;
 using Starcounter.Authorization.Tests.TestModel;
+using Starcounter.XSON.Dependencies;
 
 namespace Starcounter.Authorization.Tests.Authentication
 {
@@ -19,7 +21,7 @@ namespace Starcounter.Authorization.Tests.Authentication
         private Mock<ICurrentSessionProvider> _sessionProviderMock;
         private Mock<ISystemClock> _clockMock;
         private Mock<IScAuthenticationTicketRepository<ScUserAuthenticationTicket>> _authenticationTicketRepositoryMock;
-        private string _starcounterSessionId;
+        private Session _starcounterSession;
         private ScUserAuthenticationTicket _existingTicket;
         private DateTime _now;
         private AuthorizationOptions _options;
@@ -39,17 +41,21 @@ namespace Starcounter.Authorization.Tests.Authentication
                 Mock.Of<ILogger<AuthenticationTicketService<ScUserAuthenticationTicket, User>>>(),
                 Mock.Of<ISecureRandom>(),
                 new FakeTransactionFactory());
-
-            _starcounterSessionId = "sessionId";
+            // this is required for Session ctor to work
+            XSONInjections.SetSessionDependencies(new Mock<IXSONSessionDependencies>()
+            {
+                DefaultValue = DefaultValue.Mock
+            }.Object);
+            _starcounterSession = new Session();
             _now = DateTime.UtcNow;
             _existingTicket = new ScUserAuthenticationTicket()
             {
                 ExpiresAt = _now.AddDays(1)
             };
 
-            _sessionProviderMock.Setup(provider => provider.CurrentSessionId)
-                .Returns(() => _starcounterSessionId);
-            _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySessionId(_starcounterSessionId))
+            _sessionProviderMock.Setup(provider => provider.CurrentSession)
+                .Returns(() => _starcounterSession);
+            _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySession(_starcounterSession))
                 .Returns(() => _existingTicket);
             _authenticationTicketRepositoryMock.Setup(repository => repository.Create())
                 .Returns(() => new ScUserAuthenticationTicket());
@@ -60,7 +66,7 @@ namespace Starcounter.Authorization.Tests.Authentication
         [Test]
         public void Current_WhenCurrentSessionIsNullThenNullIsReturned()
         {
-            _starcounterSessionId = null;
+            _starcounterSession = null;
 
             ExerciseCurrent();
 
@@ -70,7 +76,7 @@ namespace Starcounter.Authorization.Tests.Authentication
         [Test]
         public void Current_WhenCurrentSessionHasNoCorrespondingUserTicketThenNullIsReturned()
         {
-            _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySessionId(_starcounterSessionId))
+            _authenticationTicketRepositoryMock.Setup(repository => repository.FindBySession(_starcounterSession))
                 .Returns((ScUserAuthenticationTicket) null);
 
             ExerciseCurrent();
@@ -132,7 +138,7 @@ namespace Starcounter.Authorization.Tests.Authentication
 
             ExerciseCreate();
 
-            _returnedAuthenticationTicket.SessionId.Should().Be(_starcounterSessionId);
+            _authenticationTicketRepositoryMock.Verify(repository => repository.AssociateWithSession(_returnedAuthenticationTicket, _starcounterSession));
         }
 
         [Test]
@@ -153,8 +159,8 @@ namespace Starcounter.Authorization.Tests.Authentication
         public void Create_ThrowsWhenCurrentSessionIsNull()
         {
             _sessionProviderMock
-                .SetupGet(provider => provider.CurrentSessionId)
-                .Returns((string)null);
+                .SetupGet(provider => provider.CurrentSession)
+                .Returns((Session)null);
 
             new Action(ExerciseCreate).Should().Throw<InvalidOperationException>();
         }

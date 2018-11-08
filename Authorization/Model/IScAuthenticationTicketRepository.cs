@@ -5,10 +5,11 @@ namespace Starcounter.Authorization.Model
 {
     internal interface IScAuthenticationTicketRepository<TAuthenticationTicket>
     {
-        TAuthenticationTicket FindBySessionId(string sessionId);
+        TAuthenticationTicket FindBySession(Session session);
         TAuthenticationTicket FindByPersistenceToken(string token);
         void Delete(TAuthenticationTicket ticket);
         TAuthenticationTicket Create();
         void DeleteExpired(DateTime now);
+        void AssociateWithSession(TAuthenticationTicket ticket, Session session);
     }
 }
