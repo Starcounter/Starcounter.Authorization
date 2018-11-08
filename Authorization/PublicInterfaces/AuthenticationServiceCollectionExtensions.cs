@@ -43,7 +43,7 @@ namespace Starcounter.Authorization
             AddCurrentUserProvider<TAuthenticationTicket, TTicketToSession, TUser>(services);
             AddUserAuthenticationBackend<TAuthenticationTicket, TUser>(services);
             AddAuthenticationTicketProvider<TAuthenticationTicket, TTicketToSession, TUser>(services);
-            AddCookieSignInMiddleware<TAuthenticationTicket>(services);
+            AddAuthCookieService<TAuthenticationTicket>(services);
             AddSecurityMiddleware<TAuthenticationTicket>(services);
             if (configure != null)
             {
@@ -53,6 +53,23 @@ namespace Starcounter.Authorization
             {
                 services.AddAuthorization();
             }
+            return services;
+        }
+
+        public static IServiceCollection AddAuthorizationTicketMaintenance<TAuthorizationSettings,
+            TAuthenticationTicket, TTicketToSession, TUser>(
+            this IServiceCollection services)
+            where TAuthorizationSettings : class, IAuthorizationSettings, new()
+            where TAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>, new()
+            where TTicketToSession : ITicketToSession<TAuthenticationTicket>, new()
+            where TUser : class, IUser
+        {
+            // it's important this comes first, because it enables the use of IOptions<AuthorizationOptions>
+            AddAuthorizationSettings<TAuthorizationSettings>(services);
+            AddAuthenticationTicketProvider<TAuthenticationTicket, TTicketToSession, TUser>(services);
+            AddAuthCookieService<TAuthenticationTicket>(services);
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, TicketCreationStartupFilter>());
+            services.TryAddEnumerable(ServiceDescriptor.Transient<IStartupFilter, CleanupStartupFilter<TAuthenticationTicket>>());
             return services;
         }
 
@@ -142,16 +159,14 @@ namespace Starcounter.Authorization
             services.TryAddTransient<IScAuthenticationTicketRepository<TAuthenticationTicket>, ScAuthenticationTicketRepository<TAuthenticationTicket, TTicketToSession>>();
             services.TryAddTransient<IAuthenticationTicketService<TAuthenticationTicket>, AuthenticationTicketService<TAuthenticationTicket, TUser>>();
             services.TryAddTransient<ISecureRandom, SecureRandom>();
-            services.TryAddEnumerable(ServiceDescriptor.Transient<IStartupFilter, CleanupStartupFilter<TAuthenticationTicket>>());
         }
 
-        private static void AddCookieSignInMiddleware<TAuthenticationTicket>(IServiceCollection services)
+        private static void AddAuthCookieService<TAuthenticationTicket>(IServiceCollection services)
             where TAuthenticationTicket : class, IScAuthenticationTicket, new()
         {
             services.TryAddTransient<IAuthCookieService, AuthCookieService<TAuthenticationTicket>>();
             services.TryAddTransient<ISecureRandom, SecureRandom>();
             services.TryAddTransient<ITransactionFactory, StarcounterTransactionFactory>();
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, EnsureSessionMiddleware>());
         }
     }
 }

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Web;
-using Microsoft.Extensions.Logging;
 using Starcounter.Advanced;
-using Starcounter.Authorization.DatabaseAccess;
 using Starcounter.Startup.Abstractions;
 
 namespace Starcounter.Authorization.Authentication
@@ -28,6 +26,7 @@ namespace Starcounter.Authorization.Authentication
             _authCookieService = authCookieService;
             _signOutService = signOutService;
         }
+
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
             return app => {
@@ -50,17 +49,6 @@ namespace Starcounter.Authorization.Authentication
                         Handle.AddOutgoingCookie(_authCookieService.CookieName, _authCookieService.CreateSignOutCookie());
                         return response;
                     });
-                Application.Current.Use(request =>
-                {
-                    if (request.IsStaticFileRequest)
-                    {
-                        return null;
-                    }
-                    Session.Ensure();
-                    _authCookieService.ReattachOrCreate(request.Cookies);
-                    return null;
-                });
-                
                 next(app);
             };
         }

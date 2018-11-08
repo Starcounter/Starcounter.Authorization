@@ -34,11 +34,22 @@ namespace Starcounter.Authorization.Tests
             _serviceCollection
                 .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket, TicketToSession, User>();
 
+            ExpectStartupFilter<AuthenticationStartupFilter>();
             ExpectMiddleware<SecurityMiddleware>();
             GetRequiredService<IAuthorizationEnforcement>();
             GetRequiredService<ICurrentUserProvider<User>>();
             GetRequiredService<IAuthenticationBackend>().Should()
                 .BeOfType<UserAuthenticationBackend<ScUserAuthenticationTicket, User>>();
+        }
+
+        [Test]
+        public void AddTicketMaintenanceConfigures_StartupFilters()
+        {
+            _serviceCollection
+                .AddAuthorizationTicketMaintenance<TestSettings, ScUserAuthenticationTicket, TicketToSession, User>();
+
+            ExpectStartupFilter<TicketCreationStartupFilter>();
+            ExpectStartupFilter<CleanupStartupFilter<ScUserAuthenticationTicket>>();
         }
 
         [Test]
