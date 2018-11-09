@@ -8,11 +8,6 @@ namespace Starcounter.Authorization
     public interface IScAuthenticationTicket
     {
         /// <summary>
-        /// Corresponds to <see cref="Session.SessionId"/>
-        /// </summary>
-        string SessionId { get; set; }
-        
-        /// <summary>
         /// in UTC. After this time passes this ticket can and should be removed
         /// </summary>
         DateTime ExpiresAt { get; set; }
