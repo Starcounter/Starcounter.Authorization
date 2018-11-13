@@ -24,7 +24,10 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         {
             _authEnforcementMock = new Mock<IAuthorizationEnforcement>();
             _pageSecurity = new Authorization.PageSecurity.PageSecurity(
-                new CheckersCreator(_authEnforcementMock.Object, new AttributeRequirementsResolver(new EmptyPolicyProvider())), 
+                new CheckersCreator(
+                    _authEnforcementMock.Object,
+                    new AttributeRequirementsResolver(new EmptyPolicyProvider()),
+                    new CheckersCache()), 
                 Options.Create(new SecurityMiddlewareOptions()));
         }
 

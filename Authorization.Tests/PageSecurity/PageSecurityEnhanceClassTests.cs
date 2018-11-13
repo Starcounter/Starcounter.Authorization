@@ -1,41 +1,15 @@
-﻿using System;
-using System.IO;
-using System.Linq.Expressions;
-using FluentAssertions;
-using Microsoft.Extensions.Options;
-using Moq;
+﻿using Moq;
 using NUnit.Framework;
-using Starcounter.Authorization.Core;
-using Starcounter.Authorization.PageSecurity;
 using Starcounter.Authorization.Tests.PageSecurity.Fixtures;
-using Starcounter.Authorization.Tests.PageSecurity.Utils.TestUtils;
+using Starcounter.Authorization.Tests.PageSecurity.Fixtures.Sharing;
 using Starcounter.Authorization.Tests.TestModel;
-using Starcounter.Templates;
 using static Starcounter.Authorization.Tests.PageSecurity.Utils.TestUtils.AuthorizationEnforecementMockUtils;
 
 
 namespace Starcounter.Authorization.Tests.PageSecurity
 {
-    public class PageSecurityEnhanceClassTests
+    public class PageSecurityEnhanceClassTests : EnhanceClassTestsBase
     {
-        private Mock<IAuthorizationEnforcement> _authEnforcementMock;
-        private Authorization.PageSecurity.PageSecurity _pageSecurity;
-        private Mock<Action<object, object>> _checkDeniedMock;
-
-        [SetUp]
-        public void Setup()
-        {
-            _authEnforcementMock = new Mock<IAuthorizationEnforcement>();
-            _checkDeniedMock = new Mock<Action<object, object>>();
-            Func<Type, Expression, Expression, Expression> checkDeniedHandler = (pageType, permissionExpression, pageExpression) => Expression.Invoke(
-                Expression.Constant(_checkDeniedMock.Object),
-                permissionExpression,
-                pageExpression);
-            _pageSecurity = new Authorization.PageSecurity.PageSecurity(
-                new CheckersCreator(_authEnforcementMock.Object, new AttributeRequirementsResolver(new EmptyPolicyProvider())), 
-                Options.Create(new SecurityMiddlewareOptions().WithCheckDeniedHandler(checkDeniedHandler)));
-        }
-
         [Test]
         public void HandlerMarkedWithAllowAnonymous_ShouldSucceed()
         {
@@ -55,7 +29,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             
             ChangePropertyInPage(page, p => p.Template.ChangeThing);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         [Test]
@@ -89,7 +63,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
 
             ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         [Test]
@@ -121,13 +95,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExamplePage>();
             page.Data = thing;
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingViewer, thing))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingViewer, thing))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page, p => p.Template.ViewSpecificThing);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         [Test]
@@ -161,13 +135,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void PropertyWithoutHandler_RequirePermission_ShouldAskForProperPermission()
         {
             var page = CreatePage<ExamplePage>();
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page, p => p.Template.PropertyOne);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         [Test]
@@ -198,13 +172,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExampleDataPage>();
             page.Data = thing;
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingViewer, thing))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingViewer, thing))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page, p => p.Template.PropertyOne);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         [Test]
@@ -238,20 +212,20 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldAskForProperPagePermission()
         {
             var page = CreatePage<ExamplePage>().Elements.Add();
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page, p => p.Template.ChangeSubThing);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         [Test]
         public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldNotWorkWhenPagePermissionIsRejected()
         {
             var subpage = CreatePage<ExamplePage>().Elements.Add();
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
                 .ReturnsAsync(false);
 
             ChangePropertyInPage(subpage, p => p.Template.ChangeSubThing);
@@ -263,7 +237,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void SubpageHandlerWithNoAttribute_RequirePermission_ShouldWorkWhenPagePermissionIsGranted()
         {
             var subpage = CreatePage<ExamplePage>().Elements.Add();
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
                 .ReturnsAsync(true);
 
             ChangePropertyInPage(subpage, p => p.Template.ChangeSubThing);
@@ -276,12 +250,12 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         public void ShouldCallCheckDeniedHandlerWhenPermissionIsDenied()
         {
             var page = CreatePage<ExamplePage>();
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRole(Roles.ThingViewer))
                 .ReturnsAsync(false);
 
             ChangePropertyInPage(page, p => p.Template.ActionNotMarked);
 
-            _checkDeniedMock.Verify(action => action(It.IsAny<object>(), page), Times.Once());
+            CheckDeniedMock.Verify(action => action(It.IsAny<object>(), page), Times.Once());
         }
 
         [Test]
@@ -292,7 +266,7 @@ namespace Starcounter.Authorization.Tests.PageSecurity
 
             ChangePropertyInPage(subpage, p => p.Template.ChangeSecuredSubThing);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         [Test]
@@ -313,13 +287,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var thing = new Thing();
             var page = CreatePage<ExampleDataPage>();
             page.Data = thing;
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingViewer, thing))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingViewer, thing))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(page.PropertyTwo, p => p.Template.SomeProperty);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         // TODO this no longer holds, because we can't determine what type of .Data we are looking for from the policy name
@@ -333,13 +307,13 @@ namespace Starcounter.Authorization.Tests.PageSecurity
             var nestedPage = page.PropertyTwo.NestedElements.Add();
             page.Data = thing;
             nestedPage.Data = new OtherThingItem();
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingEditor, thing))
+            AuthEnforcementMock.Setup(CheckRequirementsCallWithRoleAndResource(Roles.SpecificThingEditor, thing))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             ChangePropertyInPage(nestedPage, p => p.Template.SomeSecuredNestedProperty);
 
-            _authEnforcementMock.Verify();
+            AuthEnforcementMock.Verify();
         }
 
         [Test]
@@ -372,45 +346,8 @@ namespace Starcounter.Authorization.Tests.PageSecurity
         [Test]
         public void EmptyArrayDoesntCauseProblems()
         {
-            _pageSecurity.EnhanceClass(typeof(EmptyArrayPage));
+            PageSecurity.EnhanceClass(typeof(CommonPart));
             // no exception thrown
         }
-
-        private void VerifyChangedAndCheckDeniedHandlerNotCalled(long property)
-        {
-            property.Should().Be(1);
-            _checkDeniedMock.Verify(action => action(It.IsAny<object>(), It.IsAny<object>()), Times.Never());
-        }
-
-        private void VerifyHandlerWorked(IExamplePage page, string nameOfProperty)
-        {
-            page.Changed.Should().Be(nameOfProperty);
-        }
-
-        private void VerifyUnchanged(IExamplePage page, long property)
-        {
-            property.Should().Be(0);
-            page.Changed.Should().BeNull();
-        }
-
-        private void ChangePropertyInPage<T>(T page, Func<T, Property<long>> propertySelector) where T:Json
-        {
-            propertySelector(page).ProcessInput(page, 1);
-        }
-
-        private T CreatePage<T>() where T : new()
-        {
-            _pageSecurity.EnhanceClass(typeof(T));
-            return new T();
-        }
-
-        private void SetupPolicyToReturn(string policyName, bool valueToReturn)
-        {
-            _authEnforcementMock.Setup(CheckRequirementsCallWithRole(policyName))
-                .ReturnsAsync(valueToReturn)
-                .Verifiable();
-        }
-
-        
     }
 }

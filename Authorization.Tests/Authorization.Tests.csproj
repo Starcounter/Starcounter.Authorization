@@ -12,6 +12,7 @@
     <AssemblyName>Starcounter.Authorization.Tests</AssemblyName>
     <RootNamespace>Starcounter.Authorization.Tests</RootNamespace>
     <ProjectGuid>d45c58d4-d94c-4d3b-b166-cfa4affaaab8</ProjectGuid>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.2.0" />
