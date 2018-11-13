@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Starcounter.Authorization.Core;
 
 namespace Starcounter.Authorization.PageSecurity
 {
@@ -16,12 +15,16 @@ namespace Starcounter.Authorization.PageSecurity
     {
         private readonly IAuthorizationEnforcement _authorizationEnforcement;
         private readonly IAttributeRequirementsResolver _attributeRequirementsResolver;
+        private readonly CheckersCache _checkersCache;
 
         public CheckersCreator(IAuthorizationEnforcement authorizationEnforcement,
-            IAttributeRequirementsResolver attributeRequirementsResolver)
+            IAttributeRequirementsResolver attributeRequirementsResolver,
+            CheckersCache checkersCache
+            )
         {
             _authorizationEnforcement = authorizationEnforcement;
             _attributeRequirementsResolver = attributeRequirementsResolver;
+            _checkersCache = checkersCache;
         }
 
         public Check WrapCheck(Check existingCheck, Type pageType, int numberOfLayers)
@@ -30,20 +33,42 @@ namespace Starcounter.Authorization.PageSecurity
             {
                 return existingCheck;
             }
-            var pageParameterExpression = Expression.Parameter(pageType, "page");
-            Expression pageExpression = pageParameterExpression;
-            var parentMemberInfo = typeof(Json).GetProperty(nameof(Json.Parent));
-            foreach (var i in Enumerable.Range(0, numberOfLayers))
+            var entries = _checkersCache.GetUpdateEntry(existingCheck, pageType);
+            var checkAction = (Delegate) ReflectionHelper.InvokePrivateGenericMethod(
+                this,
+                nameof(WrapCheckTemplate),
+                new[]
+                {
+                    pageType,
+                },
+                numberOfLayers,
+                entries);
+            return new Check(pageType,
+                checkAction);
+        }
+
+        private Func<TInner, bool> WrapCheckTemplate<TInner>(int numberOfLayers, IReadOnlyCollection<CheckersCache.Entry> entries)
+        where TInner: Json
+        {
+            return page =>
             {
-                pageExpression = Expression.MakeMemberAccess(pageExpression, parentMemberInfo);
-            }
-            var existingPageType = existingCheck.PageType;
-            var checkLambda = Expression.Lambda(
-                Expression.Invoke(
-                    Expression.Constant(existingCheck.CheckAction),
-                    Expression.Convert(pageExpression, existingPageType)),
-                pageParameterExpression).Compile();
-            return new Check(pageType, checkLambda);
+                Json p = page;
+                for (int i = 0; i < numberOfLayers; i++)
+                {
+                    p = p.Parent;
+                }
+
+                var pType = p.GetType();
+                // Entry is a struct, so its default value has Check == null
+                var checkFromCache = entries.FirstOrDefault(entry => pType == entry.OuterType).Check;
+                if (checkFromCache != null)
+                {
+                    return (bool) checkFromCache.DynamicInvoke(p);
+                }
+                
+                // since cache didn't contain an entry, it means we're in a view-model that never passed through EnhanceClass
+                return true;
+            };
         }
 
         /// <summary>

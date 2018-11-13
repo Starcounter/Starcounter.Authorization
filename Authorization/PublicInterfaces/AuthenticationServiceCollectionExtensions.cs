@@ -139,6 +139,7 @@ namespace Starcounter.Authorization
             services.TryAddSingleton<IAuthorizationEnforcement, AuthorizationEnforcement>();
             services.TryAddSingleton<PageSecurity.PageSecurity>();
             services.TryAddSingleton<CheckersCreator>();
+            services.TryAddSingleton<CheckersCache>(provider => CheckersCacheProvider.Instance);
             services.TryAddSingleton<IAttributeRequirementsResolver, AttributeRequirementsResolver>();
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, SecurityMiddleware>());
             services.TryAddTransient<ISignOutService, SignOutService<TAuthenticationTicket>>();

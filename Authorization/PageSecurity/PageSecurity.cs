@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using Starcounter.Authorization.Core;
 using Starcounter.Templates;
 
 namespace Starcounter.Authorization.PageSecurity
@@ -30,6 +30,7 @@ namespace Starcounter.Authorization.PageSecurity
         {
             _checkDeniedHandler = options.Value.CheckDeniedHandler;
             _checkersCreator = checkersCreator;
+            
         }
 
         /// <summary>
@@ -162,8 +163,7 @@ namespace Starcounter.Authorization.PageSecurity
                 .Where(tuple => tuple.Item2 != null)
                 .ToList();
 
-            var existingHandlersList = existingHandlers.ToList();
-            var handlersWithChecks = existingHandlersList
+            var handlersWithChecks = existingHandlers
                 .Select(
                     tpl =>
                         Tuple.Create(tpl.Item1, tpl.Item2,
@@ -189,10 +189,13 @@ namespace Starcounter.Authorization.PageSecurity
 
             if (pageCheck != null)
             {
-                var handlersWithoutOwnChecks = existingHandlersList
+                var handlersWithoutOwnChecks = existingHandlers
                     .Except(handlersWithChecks.Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2)))
                     .Select(tpl => Tuple.Create(tpl.Item1, tpl.Item2, pageCheck, pageType))
                     .ToList();
+                if (handlersWithoutOwnChecks.Any())
+                {
+                }
 
                 var propertiesWithoutHandlers = pageProperties
                     .Except(existingHandlers.Select(tuple => tuple.Item2))
@@ -246,14 +249,6 @@ namespace Starcounter.Authorization.PageSecurity
             }
         }
 
-        private static object InvokePrivateGenericMethod(object @this, string name, Type[] typeParameter, params object[] arguments)
-        {
-            return @this.GetType()
-                .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)
-                .MakeGenericMethod(typeParameter)
-                .Invoke(@this, arguments);
-        }
-
         /// <summary>
         /// Governs creation of arguments to <see cref="Property{T}.AddHandler"/> method, namely 'createInputEvent' and 'handler'
         /// </summary>
@@ -266,7 +261,7 @@ namespace Starcounter.Authorization.PageSecurity
             /// <returns></returns>
             public object CreateEmptyInputEvent(Type propertyType)
             {
-                return InvokePrivateGenericMethod(this, nameof(CreateEmptyInputEventTemplate), new[] { propertyType });
+                return ReflectionHelper.InvokePrivateGenericMethod(this, nameof(CreateEmptyInputEventTemplate), new[] { propertyType });
             }
 
             private Func<Json, Property<T>, T, Input<T>> CreateEmptyInputEventTemplate<T>()
@@ -317,7 +312,7 @@ namespace Starcounter.Authorization.PageSecurity
                     body = Expression.IfThen(Expression.IsFalse(checkInvocation), cancelEvent);
                 }
 
-                return Expression.Lambda(body, jsonParameter, inputParameter).Compile();
+                return Expression.Lambda(body, jsonParameter, inputParameter).Compile(DebugInfoGenerator.CreatePdbGenerator());
                 // reflection based body, for reference:
                 //            return (Json pup, Input<T> input) => {
                 //                var page = (TApp)pup;
@@ -363,7 +358,7 @@ namespace Starcounter.Authorization.PageSecurity
                 {
                     throw new Exception("tApp is null");
                 }
-                return InvokePrivateGenericMethod(this, nameof(CreateInputEventTemplate),
+                return ReflectionHelper.InvokePrivateGenericMethod(this, nameof(CreateInputEventTemplate),
                     new[] { propertyType, tInput, tApp, tTemplate });
             }
 
