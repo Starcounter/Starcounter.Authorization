@@ -7,11 +7,11 @@ This library helps implement authorization in Starcounter apps. It is built on t
 - [Getting started](#getting-started)
 - [Securing view-models](#securing-view-models)
 - [Available services](#available-services)
-  * [IAuthenticationTicketService<UserSession>](#iauthenticationticketservice-usersession-)
-  * [ICurrentUserProvider<TUser>](#icurrentuserprovider-tuser-)
+  * [IAuthenticationTicketService<UserSession>](#iauthenticationticketservice-usersession)
+  * [ICurrentUserProvider<TUser>](#icurrentuserprovider-tuser)
   * [ISignOutService](#isignoutservice)
   * [IAuthorizationEnforcement](#iauthorizationenforcement)
-- [What happens when permissions are denied?](#what-happens-when-permissions-are-denied-)
+- [What happens when permissions are denied?](#what-happens-when-permissions-are-denied)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -44,7 +44,7 @@ public partial class DogsViewModel: Json
 
 This has two effects:
 * A [middleware](https://github.com/Starcounter/Starcounter.Startup#middleware) prevents this view-model from loading if the current user is not signed in
-* An [input handler](https://docs.starcounter.io/topic-guides/typed-json/code-behind#handling-input-events) is generated for every property of this view-model, checking if the user is signed in. Existing input handlers are wrapped in this checkers. What happens if the user is not signed in is configurable TODO
+* An [input handler](https://docs.starcounter.io/topic-guides/typed-json/code-behind#handling-input-events) is generated for every property of this view-model, checking if the user is signed in. Existing input handlers are wrapped in this checkers. What happens if the user is not signed in is [configurable](#what-happens-when-permissions-are-denied)
 
 In summary, only signed in users can interact with this view-model.
 
