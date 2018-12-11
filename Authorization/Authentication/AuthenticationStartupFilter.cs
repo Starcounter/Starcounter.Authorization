@@ -2,6 +2,7 @@
 using System.Net;
 using System.Web;
 using Starcounter.Advanced;
+using Starcounter.Blending.Codehost;
 using Starcounter.Startup.Abstractions;
 
 namespace Starcounter.Authorization.Authentication
