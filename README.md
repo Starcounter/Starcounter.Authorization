@@ -29,7 +29,7 @@ services.AddStarcounterAuthorization<AuthorizationSettings, UserSession, TicketT
 1. If your project won't build because of TODO weaver error, do the following:
   1. Add `<DisallowDatabaseClasses>True</DisallowDatabaseClasses>` to `<PropertyGroup>` section of your app's csproj
   1. Add references to `Starcounter.QueryProcessor` and `Starcounter.BindingInterfaces` to your app's project (References -> Add -> Assemblies -> Extensions)
-  1. Add a new project to your solution, move all of your database classes there and reference it from your app's project
+  1. Add a new "Starcounter Class Library" project to your solution, move all of your database classes there and reference it from your app's project
 
 If you want, you can now alter the `User` and `UserSession` classes to suit your needs.
 
