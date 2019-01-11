@@ -35,7 +35,7 @@ namespace Starcounter.Authorization.Tests
                 .AddStarcounterAuthorization<TestSettings, ScUserAuthenticationTicket, TicketToSession, User>();
 
             ExpectStartupFilter<AuthenticationStartupFilter>();
-            ExpectMiddleware<SecurityMiddleware>();
+            ExpectMiddleware<SecurityMiddleware<ScUserAuthenticationTicket, User>>();
             GetRequiredService<IAuthorizationEnforcement>();
             GetRequiredService<ICurrentUserProvider<User>>();
             GetRequiredService<IAuthenticationBackend>().Should()
@@ -58,9 +58,9 @@ namespace Starcounter.Authorization.Tests
             _serviceCollection
                 .AddAuthorization()
                 .AddSingleton(Mock.Of<IAuthenticationBackend>())
-                .AddSecurityMiddleware<ScUserAuthenticationTicket>();
+                .AddSecurityMiddleware<ScUserAuthenticationTicket, TicketToSession, User>();
 
-            ExpectMiddleware<SecurityMiddleware>();
+            ExpectMiddleware<SecurityMiddleware<ScUserAuthenticationTicket, User>>();
         }
 
         private void ExpectMiddleware<T>()
@@ -75,7 +75,7 @@ namespace Starcounter.Authorization.Tests
         [Test]
         public void AddSecurityMiddlewareConfigures_AuthenticationUriProvider()
         {
-            _serviceCollection.AddSecurityMiddleware<ScUserAuthenticationTicket>();
+            _serviceCollection.AddSecurityMiddleware<ScUserAuthenticationTicket, TicketToSession, User>();
             GetRequiredService<IAuthenticationUriProvider>();
         }
 

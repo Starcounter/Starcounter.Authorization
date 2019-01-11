@@ -19,6 +19,10 @@ namespace Starcounter.Authorization.Middleware
             {
                 options.UnauthenticatedResponseCreator = CreateDefaultUnauthenticatedResponse;
             }
+            if (options.UnauthorizedResponseCreator == null)
+            {
+                options.UnauthorizedResponseCreator = CreateDefaultUnauthorizedResponse;
+            }
         }
 
         private Json CreateDefaultUnauthenticatedResponse(string deniedUri)
@@ -28,6 +32,16 @@ namespace Starcounter.Authorization.Middleware
                 ["Html"] = _authenticationUriProvider.RedirectionViewUri,
                 ["RedirectUrl"] = UriHelper.WithArguments(_authenticationUriProvider.UnauthenticatedUriTemplate, HttpUtility.UrlEncode(deniedUri))
             };
+        }
+
+        private Response CreateDefaultUnauthorizedResponse(string deniedUri)
+        {
+            //return new Json
+            //{
+            //    ["Html"] = _authenticationUriProvider.UnauthorizedViewUri,
+            //    ["RedirectUrl"] = UriHelper.WithArguments(_authenticationUriProvider.UnauthorizedUriTemplate, HttpUtility.UrlEncode(deniedUri))
+            //};
+            return new Response() { StatusCode = (ushort)System.Net.HttpStatusCode.NotFound };
         }
     }
 }

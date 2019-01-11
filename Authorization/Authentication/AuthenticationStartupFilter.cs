@@ -40,6 +40,12 @@ namespace Starcounter.Authorization.Authentication
                     {
                         ["Html"] = _authenticationUriProvider.UnauthenticatedViewUri
                     });
+                //Blender.MapUri(_authenticationUriProvider.UnauthorizedUriTemplate, string.Empty, new[] { "redirection" });
+                //Handle.GET(_authenticationUriProvider.UnauthorizedUriTemplate,
+                //    (string redirectToUnused) => new Json
+                //    {
+                //        ["Html"] = _authenticationUriProvider.UnauthorizedViewUri
+                //    });
                 // middleware will set the auth cookie
                 Handle.GET(_authenticationUriProvider.SetTokenUriTemplate,
                     (string redirectTo, Request request) => CreateRedirectionResponse(redirectTo));
@@ -50,6 +56,12 @@ namespace Starcounter.Authorization.Authentication
                         Handle.AddOutgoingCookie(_authCookieService.CookieName, _authCookieService.CreateSignOutCookie());
                         return response;
                     });
+                //Handle.GET(_authenticationUriProvider.UnauthorizedViewUri,
+                //    () => {
+                //        var response = Response.FromStatusCode((int)HttpStatusCode.NotFound, UnauthenticatedPageViewContent);
+                //        response.ContentType = "text/html";
+                //        return response;
+                //    });
                 next(app);
             };
         }
