@@ -34,13 +34,8 @@ namespace Starcounter.Authorization.Middleware
             };
         }
 
-        private Response CreateDefaultUnauthorizedResponse(string deniedUri)
+        private Response CreateDefaultUnauthorizedResponse()
         {
-            //return new Json
-            //{
-            //    ["Html"] = _authenticationUriProvider.UnauthorizedViewUri,
-            //    ["RedirectUrl"] = UriHelper.WithArguments(_authenticationUriProvider.UnauthorizedUriTemplate, HttpUtility.UrlEncode(deniedUri))
-            //};
             return new Response() { StatusCode = (ushort)System.Net.HttpStatusCode.NotFound };
         }
     }

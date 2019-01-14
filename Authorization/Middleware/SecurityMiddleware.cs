@@ -11,7 +11,7 @@ namespace Starcounter.Authorization.Middleware
     {
         private readonly PageSecurity.PageSecurity _pageSecurity;
         private readonly Func<string, Json> _unauthenticatedResponseFactory;
-        private readonly Func<string, Response> _unauthorizedResponseFactory;
+        private readonly Func<Response> _unauthorizedResponseFactory;
         private readonly IAuthenticationTicketService<TUserAuthenticationTicket> _authenticationTicketService;
 
         public SecurityMiddleware(
@@ -32,12 +32,19 @@ namespace Starcounter.Authorization.Middleware
 
             if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Context).Result)
             {
+                if (!Handle.IncomingRequest.HandlerAppName.Equals(routingInfo.Request.HandlerAppName))
+                {
+                    return null;
+                }
+
                 if (_authenticationTicketService.GetCurrentAuthenticationTicket()?.User == null)
                 {
                     return _unauthenticatedResponseFactory(routingInfo.Request.Uri);
                 }
-                else return _unauthorizedResponseFactory(routingInfo.Request.Uri);
+
+                return _unauthorizedResponseFactory();
             }
+
             return next();
         }
     }

@@ -14,11 +14,6 @@ namespace Starcounter.Authorization
         string UnauthenticatedUriTemplate { get; }
 
         /// <summary>
-        /// URI template for the handler that serves unauthorized request.
-        /// </summary>
-        string UnauthorizedUriTemplate { get; }
-
-        /// <summary>
         /// URI for the sign-out handler
         /// </summary>
         string SignOutUriTemplate { get; }
@@ -27,11 +22,6 @@ namespace Starcounter.Authorization
         /// The URI under which the HTML file with view for <see cref="UnauthenticatedUriTemplate"/> will be registered
         /// </summary>
         string UnauthenticatedViewUri { get; }
-
-        /// <summary>
-        /// The URI under which the HTML file with view for <see cref="UnauthorizedUriTemplate"/> will be registered
-        /// </summary>
-        string UnauthorizedViewUri { get; }
 
         /// <summary>
         /// The URI under which the HTML file with redirection will be registered

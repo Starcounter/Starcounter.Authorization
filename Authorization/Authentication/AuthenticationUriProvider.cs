@@ -6,8 +6,6 @@ namespace Starcounter.Authorization.Authentication
     {
         public string UnauthenticatedUriTemplate => $"/{Application.Current}/Starcounter.Authorization.Unauthenticated/{{?}}";
 
-        public string UnauthorizedUriTemplate => $"/{Application.Current}/Starcounter.Authorization.Unauthorized/{{?}}";
-
         public string SignOutUriTemplate => $"/{Application.Current}/Starcounter.Authorization.SignOut/{{?}}";
 
         public string SetTokenUriTemplate =>
@@ -15,9 +13,6 @@ namespace Starcounter.Authorization.Authentication
 
         public string UnauthenticatedViewUri =>
             $"/{Application.Current}/Starcounter.Authorization.Unauthenticated.html";
-
-        public string UnauthorizedViewUri =>
-            $"/{Application.Current}/Starcounter.Authorization.Unauthorized.html";
 
         public string RedirectionViewUri =>
             $"/{Application.Current}/Starcounter.Authorization.Redirection.html";
