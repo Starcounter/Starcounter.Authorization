@@ -32,7 +32,7 @@ namespace Starcounter.Authorization.Middleware
 
             if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Context).Result)
             {
-                if (!Handle.IncomingRequest.HandlerAppName.Equals(routingInfo.Request.HandlerAppName))
+                if (!routingInfo.Request.IsExternal)
                 {
                     return null;
                 }
