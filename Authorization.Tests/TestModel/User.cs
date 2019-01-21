@@ -7,5 +7,6 @@ namespace Starcounter.Authorization.Tests.TestModel
     {
         public IEnumerable<IClaimTemplate> AssociatedClaims { get; set; }
         public IEnumerable<IGroup> MemberOf { get; set; }
+        public string Username { get; set; }
     }
 }

@@ -29,7 +29,8 @@ namespace Starcounter.Authorization.Tests.SignIn
             _user = new User()
             {
                 AssociatedClaims = Enumerable.Empty<ClaimTemplate>(),
-                MemberOf = Enumerable.Empty<IGroup>()
+                MemberOf = Enumerable.Empty<IGroup>(),
+                Username = "username"
             };
 
             _claimType1 = "t1";
@@ -96,7 +97,8 @@ namespace Starcounter.Authorization.Tests.SignIn
 
             Excercise();
 
-            _gatheredClaims.Should().HaveCount(_fixtureClaimTemplates.Length);
+            // +1 because of automatically added claim with type Name in each gather
+            _gatheredClaims.Should().HaveCount(_fixtureClaimTemplates.Length + 1);
         }
 
         private ClaimTemplate CreateClaimDb(string claimType, string claimValue)
