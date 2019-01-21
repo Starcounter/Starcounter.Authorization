@@ -9,5 +9,7 @@ namespace Starcounter.Authorization
     public interface IUser: IMinimalUser, IClaimHolder
     {
         IEnumerable<IGroup> MemberOf { get; }
+
+        string Username { get; }
     }
 }

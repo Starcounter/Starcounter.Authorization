@@ -44,7 +44,7 @@ namespace Starcounter.Authorization
             AddUserAuthenticationBackend<TAuthenticationTicket, TUser>(services);
             AddAuthenticationTicketProvider<TAuthenticationTicket, TTicketToSession, TUser>(services);
             AddAuthCookieService<TAuthenticationTicket>(services);
-            AddSecurityMiddleware<TAuthenticationTicket>(services);
+            AddSecurityMiddleware<TAuthenticationTicket, TTicketToSession, TUser>(services);
             if (configure != null)
             {
                 services.AddAuthorization(configure);
@@ -133,19 +133,22 @@ namespace Starcounter.Authorization
             services.TryAddTransient<IClaimDbConverter, ClaimDbConverter>();
         }
 
-        internal static IServiceCollection AddSecurityMiddleware<TAuthenticationTicket>(this IServiceCollection services) 
-            where TAuthenticationTicket : class, IScAuthenticationTicket
+        internal static IServiceCollection AddSecurityMiddleware<TAuthenticationTicket, TTicketToSession, TUser>(this IServiceCollection services) 
+            where TAuthenticationTicket : class, IScUserAuthenticationTicket<TUser>, new()
+            where TTicketToSession : ITicketToSession<TAuthenticationTicket>, new()
+            where TUser : class, IUser
         {
             services.TryAddSingleton<IAuthorizationEnforcement, AuthorizationEnforcement>();
             services.TryAddSingleton<PageSecurity.PageSecurity>();
             services.TryAddSingleton<CheckersCreator>();
             services.TryAddSingleton<CheckersCache>(provider => CheckersCacheProvider.Instance);
             services.TryAddSingleton<IAttributeRequirementsResolver, AttributeRequirementsResolver>();
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, SecurityMiddleware>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IPageMiddleware, SecurityMiddleware<TAuthenticationTicket, TUser>>());
             services.TryAddTransient<ISignOutService, SignOutService<TAuthenticationTicket>>();
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, AuthenticationStartupFilter>());
             services.TryAddTransient<IAuthenticationUriProvider, AuthenticationUriProvider>();
             services.TryAddTransient<IPostConfigureOptions<SecurityMiddlewareOptions>, DefaultSecurityMiddlewareOptions>();
+            AddAuthenticationTicketProvider<TAuthenticationTicket, TTicketToSession, TUser>(services);
             return services;
         }
 

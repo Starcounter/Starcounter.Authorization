@@ -15,6 +15,12 @@ namespace Starcounter.Authorization
         /// </summary>
         public Func<string, Json> UnauthenticatedResponseCreator { get; set; }
 
+        /// <summary>
+        /// Used to return a response when current user isn't authorized to the requested resource.
+        /// Default value is provided by <see cref="DefaultSecurityMiddlewareOptions"/>
+        /// </summary>
+        public Func<Response> UnauthorizedResponseCreator { get; set; }
+
         public SecurityMiddlewareOptions WithCheckDeniedHandler(
             Func<Type, Expression, Expression, Expression> checkDeniedHandler)
         {
