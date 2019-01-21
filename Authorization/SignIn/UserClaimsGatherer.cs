@@ -18,6 +18,7 @@ namespace Starcounter.Authorization.SignIn
         public IEnumerable<Claim> Gather(IUser user)
         {
             var dbClaims = new HashSet<IClaimTemplate>();
+
             foreach (var claimDb in user.AssociatedClaims)
             {
                 dbClaims.Add(claimDb);
@@ -28,7 +29,10 @@ namespace Starcounter.Authorization.SignIn
                 AddClaimsFromGroup(userGroup, dbClaims);
             }
 
-            return dbClaims.Select(_claimDbConverter.Unpack);
+            var claims = dbClaims.Select(_claimDbConverter.Unpack).ToList();
+            claims.Add(new Claim(ClaimTypes.Name, user.Username));
+
+            return claims;
         }
 
         private void AddClaimsFromGroup(IGroup @group, ICollection<IClaimTemplate> claimsSet)
