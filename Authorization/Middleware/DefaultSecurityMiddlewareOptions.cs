@@ -1,4 +1,6 @@
-﻿using System.Web;
+﻿using System;
+using System.Net;
+using System.Web;
 using Microsoft.Extensions.Options;
 using Starcounter.Startup.Routing.Middleware;
 
@@ -36,7 +38,22 @@ namespace Starcounter.Authorization.Middleware
 
         private Response CreateDefaultUnauthorizedResponse()
         {
-            return new Response() { StatusCode = (ushort)System.Net.HttpStatusCode.NotFound };
+            var response = Response.FromStatusCode((int)HttpStatusCode.NotFound, Fetch404Template());
+            response.ContentType = "text/html";
+            return response;
+        }
+
+        private static string Fetch404Template()
+        {
+            try
+            {
+                string appShellHTMLUrl = "/sys/error/404.html";
+                return Self.GET(appShellHTMLUrl).Body;
+            }
+            catch
+            {
+                return "Page not found";
+            }
         }
     }
 }
