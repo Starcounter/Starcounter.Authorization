@@ -46,7 +46,8 @@ namespace Starcounter.Authorization.Middleware
             var response = new Response()
             {
                 Resource = json,
-                StatusCode = (int) HttpStatusCode.NotFound
+                StatusCode = (int) HttpStatusCode.NotFound,
+                StatusDescription = "Not Found"
             };
 
             return response;
