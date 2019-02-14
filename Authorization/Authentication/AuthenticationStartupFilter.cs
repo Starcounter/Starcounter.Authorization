@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Web;
-using Starcounter.Advanced;
 using Starcounter.Blending.Codehost;
 using Starcounter.Startup.Abstractions;
 
@@ -14,6 +13,7 @@ namespace Starcounter.Authorization.Authentication
                                                           + @"<template><dom-bind><template is=""dom-bind"">"
                                                           + @"<palindrom-redirect history url$=""{{model.RedirectUrl}}""></palindrom-redirect>"
                                                           + @"</template></dom-bind></template>";
+
         private readonly IAuthenticationUriProvider _authenticationUriProvider;
         private readonly IAuthCookieService _authCookieService;
         private readonly ISignOutService _signOutService;
@@ -33,6 +33,7 @@ namespace Starcounter.Authorization.Authentication
             return app => {
                 RegisterHtmlPage(_authenticationUriProvider.RedirectionViewUri, RedirectionPageViewContent);
                 RegisterHtmlPage(_authenticationUriProvider.UnauthenticatedViewUri, UnauthenticatedPageViewContent);
+                RegisterHtmlPage(_authenticationUriProvider.UnauthorizedViewUri, Fetch404Template());
 
                 Blender.MapUri(_authenticationUriProvider.UnauthenticatedUriTemplate, string.Empty, new[] { "redirection" });
                 Handle.GET(_authenticationUriProvider.UnauthenticatedUriTemplate,
@@ -74,6 +75,19 @@ namespace Starcounter.Authorization.Authentication
                     response.ContentType = "text/html";
                     return response;
                 });
+        }
+
+        private static string Fetch404Template()
+        {
+            try
+            {
+                string notFoundHTMLUrl = "/sys/error/404.html";
+                return Self.GET(notFoundHTMLUrl).Body;
+            }
+            catch
+            {
+                return "404 Page Not Found";
+            }
         }
     }
 }

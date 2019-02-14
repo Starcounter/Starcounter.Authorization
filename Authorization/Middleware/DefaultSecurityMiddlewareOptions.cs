@@ -38,22 +38,18 @@ namespace Starcounter.Authorization.Middleware
 
         private Response CreateDefaultUnauthorizedResponse()
         {
-            var response = Response.FromStatusCode((int)HttpStatusCode.NotFound, Fetch404Template());
-            response.ContentType = "text/html";
-            return response;
-        }
+            var json = new Json
+            {
+                ["Html"] = _authenticationUriProvider.UnauthorizedViewUri
+            };
 
-        private static string Fetch404Template()
-        {
-            try
+            var response = new Response()
             {
-                string appShellHTMLUrl = "/sys/error/404.html";
-                return Self.GET(appShellHTMLUrl).Body;
-            }
-            catch
-            {
-                return "Page not found";
-            }
+                Resource = json,
+                StatusCode = (int) HttpStatusCode.NotFound
+            };
+
+            return response;
         }
     }
 }

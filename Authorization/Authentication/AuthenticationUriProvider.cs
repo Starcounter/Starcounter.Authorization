@@ -14,6 +14,9 @@ namespace Starcounter.Authorization.Authentication
         public string UnauthenticatedViewUri =>
             $"/{Application.Current}/Starcounter.Authorization.Unauthenticated.html";
 
+        public string UnauthorizedViewUri =>
+            $"/{Application.Current}/Starcounter.Authorization.Unauthorized.html";
+
         public string RedirectionViewUri =>
             $"/{Application.Current}/Starcounter.Authorization.Redirection.html";
 
