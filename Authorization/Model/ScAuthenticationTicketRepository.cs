@@ -40,8 +40,12 @@ namespace Starcounter.Authorization.Model
 
         public void DeleteExpired(DateTime now)
         {
-            DbLinq.Objects<TAuthenticationTicket>()
-                .Delete(ticket => ticket.ExpiresAt < now);
+            foreach (var ticket in
+                DbLinq.Objects<TAuthenticationTicket>()
+                    .Where(o => o.ExpiresAt < now))
+            {
+                Delete(ticket);
+            }
         }
 
         public void AssociateWithSession(TAuthenticationTicket ticket, Session session)
