@@ -13,8 +13,8 @@
         public const long DefaultTicketCleanupIntervalSeconds = 1 * 60;
 
         /// <summary>
-        /// Default value for anonymous ticket expiration, in seconds. Equals one year.
+        /// Default value for anonymous ticket expiration, in seconds. Equals fifteen minutes.
         /// </summary>
-        public const long DefaultAnonymousTicketExpiration = 60 * 60 * 24 * 365;
+        public const long DefaultAnonymousTicketExpiration = 15 * 60;
     }
 }
