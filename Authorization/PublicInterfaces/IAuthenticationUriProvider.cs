@@ -24,6 +24,11 @@ namespace Starcounter.Authorization
         string UnauthenticatedViewUri { get; }
 
         /// <summary>
+        /// The URI under which the HTML file with 404 error message will be registered
+        /// </summary>
+        string UnauthorizedViewUri { get; }
+
+        /// <summary>
         /// The URI under which the HTML file with redirection will be registered
         /// </summary>
         string RedirectionViewUri { get; }

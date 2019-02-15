@@ -1,4 +1,6 @@
-﻿using System.Web;
+﻿using System;
+using System.Net;
+using System.Web;
 using Microsoft.Extensions.Options;
 using Starcounter.Startup.Routing.Middleware;
 
@@ -36,7 +38,19 @@ namespace Starcounter.Authorization.Middleware
 
         private Response CreateDefaultUnauthorizedResponse()
         {
-            return new Response() { StatusCode = (ushort)System.Net.HttpStatusCode.NotFound };
+            var json = new Json
+            {
+                ["Html"] = _authenticationUriProvider.UnauthorizedViewUri
+            };
+
+            var response = new Response()
+            {
+                Resource = json,
+                StatusCode = (int) HttpStatusCode.NotFound,
+                StatusDescription = "Not Found"
+            };
+
+            return response;
         }
     }
 }
