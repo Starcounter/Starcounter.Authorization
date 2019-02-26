@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>Starcounter, joozek78</authors>
+    <owners>Starcounter</owners>
+    <licenseUrl>https://github.com/Starcounter/Starcounter.Authorization/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/Starcounter/Starcounter.Authorization</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <summary>$description$</summary>
+    <description>$description$</description>
+    <copyright>$copyright$</copyright>
+    <tags>Starcounter Authorization</tags>
+  </metadata>
+</package>
