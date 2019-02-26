@@ -49,7 +49,7 @@ namespace Starcounter.Authorization.Authentication
         private void CleanUp(object state)
         {
 #pragma warning disable CS0618 // No reason to use Task here
-            Scheduling.ScheduleTask(() =>
+            Scheduling.RunTask(() =>
             {
                 try
                 {
