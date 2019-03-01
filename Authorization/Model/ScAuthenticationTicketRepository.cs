@@ -40,9 +40,9 @@ namespace Starcounter.Authorization.Model
 
         public void DeleteExpired(DateTime now)
         {
-            foreach (var ticket in
-                DbLinq.Objects<TAuthenticationTicket>()
-                    .Where(o => o.ExpiresAt < now))
+            IQueryable<TAuthenticationTicket> query = DbLinq.Objects<TAuthenticationTicket>().Where(o => o.ExpiresAt < now);
+
+            foreach (TAuthenticationTicket ticket in query)
             {
                 Delete(ticket);
             }

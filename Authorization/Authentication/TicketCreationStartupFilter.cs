@@ -7,25 +7,28 @@ namespace Starcounter.Authorization.Authentication
     {
         private readonly IAuthCookieService _authCookieService;
 
-        public TicketCreationStartupFilter(
-            IAuthCookieService authCookieService)
+        public TicketCreationStartupFilter(IAuthCookieService authCookieService)
         {
             _authCookieService = authCookieService;
         }
 
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
-            return app => {
+            return app => 
+            {
                 Application.Current.Use(request =>
                 {
                     if (request.IsStaticFileRequest)
                     {
                         return null;
                     }
+
                     Session.Ensure();
                     _authCookieService.ReattachOrCreate(request.Cookies);
+
                     return null;
                 });
+
                 next(app);
             };
         }
