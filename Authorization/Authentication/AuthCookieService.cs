@@ -8,9 +8,7 @@ namespace Starcounter.Authorization.Authentication
     {
         private readonly IAuthenticationTicketService<TAuthenticationTicket> _authenticationTicketService;
 
-        public AuthCookieService(
-            IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService
-            )
+        public AuthCookieService(IAuthenticationTicketService<TAuthenticationTicket> authenticationTicketService)
         {
             _authenticationTicketService = authenticationTicketService;
         }
@@ -36,15 +34,18 @@ namespace Starcounter.Authorization.Authentication
             {
                 return true;
             }
-            var cookie = availableCookies
-                .FirstOrDefault(c => c.StartsWith($"{CookieName}="));
-            if (cookie == null)
+
+            string cookie = availableCookies.FirstOrDefault(c => c.StartsWith($"{CookieName}="));
+
+            if (string.IsNullOrWhiteSpace(cookie))
             {
                 return false;
             }
-            var token = cookie
-                .Split(new []{ '=' },2)[1] // '=' is guaranteed to exist because of the filter above
+
+            string token = cookie
+                .Split(new[] { '=' }, 2)[1] // '=' is guaranteed to exist because of the filter above
                 .Split(';')[0]; // first part is always guaranteed to exist
+
             return _authenticationTicketService.AttachToToken(token);
         }
 
@@ -52,7 +53,7 @@ namespace Starcounter.Authorization.Authentication
         {
             if (!TryReattachToTicketWithToken(cookies))
             {
-                var authenticationTicket = _authenticationTicketService.Create();
+                TAuthenticationTicket authenticationTicket = _authenticationTicketService.Create();
                 Handle.AddOutgoingCookie(CookieName, CreateAuthCookie(authenticationTicket));
             }
         }
