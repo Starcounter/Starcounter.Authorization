@@ -71,7 +71,15 @@ namespace Starcounter.Authorization.PageSecurity
         {
             // todo cache
             Func<object, Task<bool>> check = _checkersCreator.CreateBoolCheck(pageType);
-            return check == null || await check(context);
+            if (check == null)
+            {
+                return true;
+            }
+            else
+            {
+                EnhanceClass(pageType);
+                return await check(context);
+            }
         }
 
         private void AddHandlers(IEnumerable<Tuple<MethodInfo, Template, Check, Type>> allHandlersTasks)

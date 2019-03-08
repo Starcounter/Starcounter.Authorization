@@ -28,8 +28,6 @@ namespace Starcounter.Authorization.Middleware
 
         public Response Run(RoutingInfo routingInfo, Func<Response> next)
         {
-            _pageSecurity.EnhanceClass(routingInfo.SelectedPageType);
-
             if (!_pageSecurity.CheckClass(routingInfo.SelectedPageType, routingInfo.Context).Result)
             {
                 if (!routingInfo.Request.IsExternal)

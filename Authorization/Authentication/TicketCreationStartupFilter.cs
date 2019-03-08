@@ -23,7 +23,6 @@ namespace Starcounter.Authorization.Authentication
                         return null;
                     }
 
-                    Session.Ensure();
                     _authCookieService.ReattachOrCreate(request.Cookies);
 
                     return null;
