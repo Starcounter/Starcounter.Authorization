@@ -29,8 +29,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="Starcounter.Linq" Version="2.2.0" />
-    <PackageReference Include="Starcounter.Startup" Version="0.7.0" />
+    <PackageReference Include="Starcounter.Linq" Version="2.3.3" />
+    <PackageReference Include="Starcounter.Startup" Version="0.9.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
