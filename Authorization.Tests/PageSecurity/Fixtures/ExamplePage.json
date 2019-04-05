@@ -6,7 +6,7 @@
   "ChangeThing$" : 0,
   "ViewSpecificThing$": 0,
   "PubliclyAccessibleThing$": 0, 
-  "Numbers": [0], 
+  "Numbers": [0],
   "Elements": [
     {
       "ChangeSubThing$": 0,
@@ -14,5 +14,12 @@
       "ChangeSecuredSubThing$": 0,
       "SubProperty$": 0
     }
-  ] 
+  ],
+  "ChilExamples": [
+    {
+      "$": {
+        "Reuse": "Starcounter.Authorization.Tests.PageSecurity.Fixtures.ExamplePage"
+      }
+    }
+  ]
 }

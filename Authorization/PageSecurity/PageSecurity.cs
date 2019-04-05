@@ -123,8 +123,9 @@ namespace Starcounter.Authorization.PageSecurity
             TObject pageDefaultTemplate;
             try
             {
-                // the name "DefaultTemplate" is defined inside each Page class, so couldn't be obtained with nameof
-                pageDefaultTemplate = (TObject)pageType.GetField("DefaultTemplate").GetValue(null);
+                // The name "DefaultTemplate" is defined inside each Page class, so couldn't be obtained with nameof.
+                FieldInfo fi = pageType.GetField("DefaultTemplate");
+                pageDefaultTemplate = (TObject)fi.GetValue(null);
             }
             catch (Exception ex)
             {
@@ -174,13 +175,14 @@ namespace Starcounter.Authorization.PageSecurity
             // todo rewrite to use .ElementType.InstanceType and get info from Schema, not GetGenericTypeParameter
             var arrayProperties = pageProperties
                 .Select(template => Tuple.Create(template, GetGenericTypeParameter(template, typeof(TArray<>))))
-                .Where(tuple => tuple.Item2 != null)
+                .Where(tuple => tuple.Item2 != null && !tuple.Item2.Equals(pageType))
                 .Select(tuple => Tuple.Create(tuple.Item1, tuple.Item2, tuple.Item2.GetField("DefaultTemplate")?.GetValue(null) as TObject))
                 .Where(tuple => tuple.Item3 != null)
                 .SelectMany(tuple => AllHandlersTasks(tuple.Item2, tuple.Item3.Children, _checkersCreator.WrapCheck(pageCheck, tuple.Item2, 2)));
 
             var subPages = pageProperties
                 .OfType<TObject>()
+                .Where(x => !x.GetType().Equals(pageType))
                 .SelectMany(o => AllHandlersTasks(o.InstanceType, o.Children, _checkersCreator.WrapCheck(pageCheck, o.InstanceType, 1)));
 
             IEnumerable<Tuple<MethodInfo, Template, Check, Type>> allHandlersTasks = handlersWithChecks
