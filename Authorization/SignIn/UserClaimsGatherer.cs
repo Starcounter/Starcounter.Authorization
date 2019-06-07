@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Starcounter.Authorization.Model.Serialization;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using Starcounter.Authorization.Model;
-using Starcounter.Authorization.Model.Serialization;
 
 namespace Starcounter.Authorization.SignIn
 {
@@ -29,10 +28,7 @@ namespace Starcounter.Authorization.SignIn
                 AddClaimsFromGroup(userGroup, dbClaims);
             }
 
-            var claims = dbClaims.Select(_claimDbConverter.Unpack).ToList();
-            claims.Add(new Claim(ClaimTypes.Name, user.Username));
-
-            return claims;
+            return dbClaims.Select(_claimDbConverter.Unpack);
         }
 
         private void AddClaimsFromGroup(IGroup @group, ICollection<IClaimTemplate> claimsSet)
