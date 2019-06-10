@@ -97,8 +97,7 @@ namespace Starcounter.Authorization.Tests.SignIn
 
             Excercise();
 
-            // +1 because of automatically added claim with type Name in each gather
-            _gatheredClaims.Should().HaveCount(_fixtureClaimTemplates.Length + 1);
+            _gatheredClaims.Should().HaveCount(_fixtureClaimTemplates.Length);
         }
 
         private ClaimTemplate CreateClaimDb(string claimType, string claimValue)
